@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-CA">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MyAI Health — Your Alberta Health Records, Powered by AI</title>
-  <meta name="description" content="Connect Claude to your Alberta health data. Ask about lab results, immunizations, medications, and more — all in natural language. Your data, your control.">
+  <meta name="description" content="Access your Alberta health records with AI. Connect Claude Desktop to My Health Records and AHS MyChart — ask about lab results, immunizations, medications, vitals, and appointments in plain language.">
+  <link rel="canonical" href="https://www.myaihealth.ca/">
+  <meta name="keywords" content="Alberta health records, My Health Records, AHS MyChart, Connect Care, Claude Desktop, AI health assistant, lab results, immunizations, medications, MyAlberta Digital ID">
 
   <!-- Open Graph (Facebook, iMessage, Slack, Discord, etc.) -->
   <meta property="og:type" content="website">
@@ -69,6 +71,62 @@
       transform: translateY(0);
     }
   </style>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "MyAI Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "macOS, Windows",
+    "description": "Claude Desktop extension that connects to Alberta's My Health Records and AHS MyChart. Access lab results, immunizations, medications, vitals, and appointments using natural language.",
+    "url": "https://www.myaihealth.ca",
+    "image": "https://www.myaihealth.ca/og-image.png",
+    "author": {
+      "@type": "Person",
+      "name": "Jeremy Crossman"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "CAD"
+    },
+    "aggregateRating": null
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is MyAI Health?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MyAI Health is a Claude Desktop extension that connects to Alberta's My Health Records portal and AHS MyChart (Connect Care). It lets you ask about your lab results, immunizations, medications, vitals, and appointments in plain language."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my health data stored?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. The extension never stores your health data. It fetches information from Alberta's official health portals for your conversation, then discards it. Only encrypted session cookies are stored locally on your machine."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What do I need to use MyAI Health?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body class="bg-white text-navy-900">
 
@@ -538,6 +596,59 @@
         </div>
       </div>
       <p class="text-sm text-gray-500 mt-4">This extension currently only works with the Claude Desktop app — not the web version at claude.ai.</p>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-24 px-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
+      </div>
+      <div class="space-y-6 fade-in">
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group" open>
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            What is MyAI Health?
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">MyAI Health is a Claude Desktop extension that connects to Alberta's My Health Records portal and AHS MyChart (Connect Care). It lets you ask about your lab results, immunizations, medications, vitals, and appointments in plain language — no medical jargon required.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Is my health data stored or shared?
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">No. The extension never stores your health data. It fetches information from Alberta's official health portals for your conversation, then discards it. Only encrypted session cookies are stored locally on your machine. Your credentials are entered directly in Alberta's sign-in page and never touch the extension.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            What do I need to use it?
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer. No API keys, no terminal, no configuration files.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Does this provide medical advice?
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">No. MyAI Health is an information retrieval tool, not a medical device. It helps you access and understand your health records, but it does not provide medical advice, diagnose conditions, or recommend treatments. Always consult your doctor or healthcare provider for medical decisions.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Which health portals are supported?
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">MyAI Health connects to two Alberta health portals: <strong>My Health Records</strong> (myhealthrecords.alberta.ca) for lab results, immunizations, medications, vitals, imaging, and procedures; and <strong>AHS MyChart / Connect Care</strong> (myahsconnect.albertahealthservices.ca) for appointments, messages, care team, allergies, clinical documents, and test results.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Is it free?
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source.</p>
+        </details>
+      </div>
     </div>
   </section>
 

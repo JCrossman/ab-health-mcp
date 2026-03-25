@@ -3,7 +3,8 @@
     "apiRuntime": "node:18"
   },
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "*.{css,js,png,jpg,svg,ico,json,woff2,txt,xml}"]
   },
   "routes": [
     {
@@ -11,11 +12,6 @@
       "allowedRoles": ["anonymous"]
     }
   ],
-  "responseOverrides": {
-    "404": {
-      "rewrite": "/index.html"
-    }
-  },
   "globalHeaders": {
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",
