@@ -1,0 +1,34 @@
+{
+  "name": "ab-health-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Alberta My Health Records",
+  "main": "build/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "start:http": "node build/server/http-index.js",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "mupdf": "^1.27.0",
+    "puppeteer-core": "^24.38.0",
+    "tough-cookie": "^6.0.0",
+    "undici": "^7.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.5",
+    "@types/tough-cookie": "^4.0.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

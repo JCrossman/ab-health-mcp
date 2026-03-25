@@ -1,0 +1,12 @@
+node_modules/
+build/
+*.enc
+.env
+.env.local
+.env.*
+!.env.example
+*.log
+.DS_Store
+*.har
+*.mcpb
+local.settings.json

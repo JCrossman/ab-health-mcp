@@ -1,0 +1,9 @@
+{
+  "name": "myaihealth-api",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@azure/storage-blob": "^12.26.0",
+    "@azure/communication-email": "^1.0.0"
+  }
+}

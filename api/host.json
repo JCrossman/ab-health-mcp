@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "extensions": {
+    "http": {
+      "maxOutstandingRequests": 50,
+      "maxConcurrentRequests": 10,
+      "routePrefix": "api"
+    }
+  },
+  "logging": {
+    "logLevel": {
+      "default": "Warning",
+      "Function.request-access": "Information"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+# .mcpbignore — Controls what's excluded from the .mcpb bundle
+#
+# CRITICAL: Use root-relative paths (starting with /) for project directories.
+# Bare patterns like "src/" match at ANY depth, including inside node_modules/,
+# which silently strips critical runtime code (e.g., node_modules/debug/src/).
+# See COPILOT.md "Building the .mcpb Bundle" for full documentation.
+
+# Project source (compiled output is in build/)
+/src/
+*.ts
+
+# Chrome extension (separate distribution)
+/extension/
+
+# Web portal (separate distribution)
+/portal/
+
+# Azure Functions (landing page backend, not part of MCP)
+/api/
+
+# Development files
+/scripts/
+/static/
+.git/
+.github/
+.vscode/
+tsconfig.json
+Dockerfile
+.dockerignore
+.gitignore
+staticwebapp.config.json
+
+# Documentation (not needed in bundle)
+ARCHITECTURE.md
+API-SPEC.md
+AUTH-FLOW-SPEC.md
+COPILOT.md
+IMPLEMENTATION-PLAN.md
+MCP-TOOLS-SPEC.md
+
+# Dev dependencies and config
+package-lock.json
+*.test.*
+*.spec.*
+
+# Dev dependency packages (not needed at runtime)
+node_modules/typescript/
+node_modules/vitest/
+node_modules/@vitest/
+node_modules/tsx/
+node_modules/esbuild/
+node_modules/@esbuild/
+node_modules/vite/
+node_modules/rollup/
+node_modules/@rollup/
+node_modules/@types/
+node_modules/fsevents/
