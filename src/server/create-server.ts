@@ -71,7 +71,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'ab-health-mcp',
-      version: '1.1.0',
+      version: '1.1.1',
     },
     {
       instructions: [

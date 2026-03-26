@@ -380,6 +380,20 @@ swa deploy ./static \
 - [ ] **Update notifications** — Email existing users when a new version is available
 - [ ] **MFA support** — Relay MFA challenges for Alberta accounts with multi-factor enabled
 
+## Privacy Policy
+
+This extension accesses personal health information on your behalf. Here is how your data is handled:
+
+- **No health data is stored.** Data fetched from Alberta Health portals is returned to Claude and immediately discarded. Nothing is written to disk or any server.
+- **Session cookies only.** The only data persisted is an encrypted session cookie (AES-256-GCM) stored locally at `~/.mhr-records/session.enc`. It contains no health data — only authentication tokens.
+- **Credentials never leave your machine.** You log in through the real Alberta SSO page in your browser. Credentials are never sent to or processed by this extension.
+- **Canadian data residency.** All cloud infrastructure runs in Azure Canada Central (HIA/POPA compliant). No data crosses outside Canada.
+- **No analytics or telemetry.** No usage data, prompts, or identifiers are collected.
+
+Full privacy policy: **https://www.myaihealth.ca/#privacy**
+
+For privacy concerns, open an issue at https://github.com/JCrossman/ab-health-mcp/issues or contact via the website.
+
 ## License
 
-ISC
+MIT
