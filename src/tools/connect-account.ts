@@ -15,6 +15,7 @@ import { authenticate } from '../api/auth-client.js';
 import { MHRClient } from '../api/mhr-client.js';
 import { sessionManager, loadSessionData, invalidateSessionCache, formatError } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { isDemoMode } from '../helpers/demo-data.js';
 
 export const connectAccountTool = {
   name: 'connect_account',
@@ -30,6 +31,24 @@ export const connectAccountTool = {
   },
   handler: async (params: { force?: boolean }) => {
     try {
+      // Demo mode: return success immediately without browser auth
+      if (isDemoMode()) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({
+              connected: true,
+              message: 'Connected in demo mode (sample data).',
+              userName: 'Demo User',
+              authorizedRecords: 1,
+              mhrConnected: true,
+              myChartConnected: true,
+              disclaimer: MEDICAL_DISCLAIMER,
+            }),
+          }],
+        };
+      }
+
       // Check for existing valid session (skip browser if possible)
       if (!params.force && await sessionManager.exists()) {
         const data = await loadSessionData();

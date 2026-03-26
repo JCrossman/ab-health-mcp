@@ -16,6 +16,7 @@ import { MyChartClient } from '../api/mychart-client.js';
 import { AuthRequiredError, SessionExpiredError, ApiError, NetworkError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import { sessionContext } from '../server/session-context.js';
+import { isDemoMode, createDemoMHRClient, createDemoMyChartClient } from './demo-data.js';
 
 const sessionManager = new SessionManager();
 
@@ -91,6 +92,8 @@ async function keepAliveMHR(): Promise<void> {
  * Fire-and-forget cross-keepalive ping keeps MyChart alive.
  */
 export async function ensureSession(): Promise<MHRClient> {
+  if (isDemoMode()) return createDemoMHRClient();
+
   const data = await loadSession();
   if (!data) {
     throw new AuthRequiredError();
@@ -109,6 +112,8 @@ export async function ensureSession(): Promise<MHRClient> {
  * Fire-and-forget cross-keepalive ping keeps MHR alive.
  */
 export async function ensureMyChartSession(): Promise<MyChartClient> {
+  if (isDemoMode()) return createDemoMyChartClient();
+
   const data = await loadSession();
   if (!data) {
     throw new AuthRequiredError();

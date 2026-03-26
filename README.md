@@ -72,7 +72,24 @@ Restart Claude Desktop. You'll see the tools appear in the connectors panel.
 3. Once logged in, your session is established (covers both MHR and MyChart)
 4. Ask Claude anything: **"Summarize my recent lab results"**, **"Am I up to date on immunizations?"**, etc.
 
+### Example Prompts
+
+Here are working examples that demonstrate core functionality:
+
+| Prompt | Tools Used |
+|--------|-----------|
+| "Show me my lab results from the last year and flag anything outside reference ranges" | `get_lab_results` |
+| "Am I up to date on all my vaccinations?" | `get_immunizations`, `mc_get_immunizations` |
+| "Give me a complete health summary — profile, medications, allergies, and recent labs" | `get_health_overview` |
+| "What medications am I currently on according to AHS Connect Care?" | `mc_get_medications` |
+| "Show me my upcoming appointments and any messages from my doctors" | `mc_get_visits`, `mc_get_messages` |
+| "Download my latest diagnostic imaging report and explain the findings" | `get_diagnostic_imaging`, `download_attachment` |
+| "Show me my blood work trends over the last 3 years for CBC and lipids" | `get_lab_results` (with `test_name` filter) |
+| "Do I have any active referrals or pending orders?" | `mc_get_referrals`, `mc_get_upcoming_orders` |
+
 ## Architecture
+
+The MCP server acts as a passthrough to Alberta's public health portals. There is no official API — the REST endpoints were reverse-engineered from the portal web applications. The server authenticates as the user (via browser-based SSO), then makes the same API calls the portals' own frontend JavaScript makes. All data accessed belongs to the authenticated user.
 
 ```
 Claude Desktop ──MCP (stdio)──▶ MCP Server (local) ──REST──▶ myhealthrecords.alberta.ca

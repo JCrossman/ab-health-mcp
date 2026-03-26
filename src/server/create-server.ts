@@ -110,12 +110,13 @@ export function createMcpServer(): McpServer {
     connectAccountTool.name,
     connectAccountTool.description,
     { force: z.boolean().optional().describe('Force re-authentication even if a valid session exists.') },
+    { title: 'Connect Account',readOnlyHint: false, destructiveHint: false },
     connectAccountTool.handler,
   );
 
-  server.tool(checkConnectionTool.name, checkConnectionTool.description, {}, checkConnectionTool.handler);
-  server.tool(disconnectAccountTool.name, disconnectAccountTool.description, {}, disconnectAccountTool.handler);
-  server.tool(getHealthOverviewTool.name, getHealthOverviewTool.description, {}, getHealthOverviewTool.handler);
+  server.tool(checkConnectionTool.name, checkConnectionTool.description, {}, { title: 'Check Connection',readOnlyHint: true, destructiveHint: false }, checkConnectionTool.handler);
+  server.tool(disconnectAccountTool.name, disconnectAccountTool.description, {}, { title: 'Disconnect Account',readOnlyHint: false, destructiveHint: false }, disconnectAccountTool.handler);
+  server.tool(getHealthOverviewTool.name, getHealthOverviewTool.description, {}, { title: 'Health Overview',readOnlyHint: true, destructiveHint: false }, getHealthOverviewTool.handler);
 
   // Shared pagination params (reused across many tools)
   const maxResultsParam = z.number().min(1).max(500).optional().describe('Results per page (default varies by tool, max 500). Increase to see more at once.');
@@ -133,10 +134,11 @@ export function createMcpServer(): McpServer {
       max_results: maxResultsParam,
       offset: offsetParam,
     },
+    { title: 'Lab Results',readOnlyHint: true, destructiveHint: false },
     getLabResultsTool.handler,
   );
 
-  server.tool(getUserProfileTool.name, getUserProfileTool.description, {}, getUserProfileTool.handler);
+  server.tool(getUserProfileTool.name, getUserProfileTool.description, {}, { title: 'User Profile',readOnlyHint: true, destructiveHint: false }, getUserProfileTool.handler);
 
   server.tool(
     getImmunizationsTool.name,
@@ -148,10 +150,11 @@ export function createMcpServer(): McpServer {
       max_results: maxResultsParam,
       offset: offsetParam,
     },
+    { title: 'Immunizations',readOnlyHint: true, destructiveHint: false },
     getImmunizationsTool.handler,
   );
 
-  server.tool(getMedicationsTool.name, getMedicationsTool.description, { max_results: maxResultsParam, offset: offsetParam }, getMedicationsTool.handler);
+  server.tool(getMedicationsTool.name, getMedicationsTool.description, { max_results: maxResultsParam, offset: offsetParam }, { title: 'Medications',readOnlyHint: true, destructiveHint: false }, getMedicationsTool.handler);
 
   server.tool(
     getReferralsTool.name,
@@ -161,30 +164,34 @@ export function createMcpServer(): McpServer {
       max_results: maxResultsParam,
       offset: offsetParam,
     },
+    { title: 'Referrals',readOnlyHint: true, destructiveHint: false },
     getReferralsTool.handler,
   );
 
   const dateRangeParam = z.enum(['All', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Date range filter. Defaults to All.');
   const dateRangePaginationParams = { date_range: dateRangeParam, max_results: maxResultsParam, offset: offsetParam };
 
-  server.tool(getVitalsTool.name, getVitalsTool.description, dateRangePaginationParams, getVitalsTool.handler);
-  server.tool(getBloodOxygenTool.name, getBloodOxygenTool.description, dateRangePaginationParams, getBloodOxygenTool.handler);
-  server.tool(getBloodPressureTool.name, getBloodPressureTool.description, dateRangePaginationParams, getBloodPressureTool.handler);
-  server.tool(getHeightWeightTool.name, getHeightWeightTool.description, dateRangePaginationParams, getHeightWeightTool.handler);
-  server.tool(getExerciseTool.name, getExerciseTool.description, dateRangePaginationParams, getExerciseTool.handler);
-  server.tool(getDiagnosticImagingTool.name, getDiagnosticImagingTool.description, dateRangePaginationParams, getDiagnosticImagingTool.handler);
-  server.tool(getProceduresTool.name, getProceduresTool.description, dateRangePaginationParams, getProceduresTool.handler);
-  server.tool(getBloodGlucoseTool.name, getBloodGlucoseTool.description, dateRangePaginationParams, getBloodGlucoseTool.handler);
-  server.tool(getSleepTool.name, getSleepTool.description, dateRangePaginationParams, getSleepTool.handler);
-  server.tool(getDietaryIntakeTool.name, getDietaryIntakeTool.description, dateRangePaginationParams, getDietaryIntakeTool.handler);
-  server.tool(getInsulinTool.name, getInsulinTool.description, dateRangePaginationParams, getInsulinTool.handler);
-  server.tool(getPeakFlowTool.name, getPeakFlowTool.description, dateRangePaginationParams, getPeakFlowTool.handler);
-  server.tool(getWaistCircumferenceTool.name, getWaistCircumferenceTool.description, dateRangePaginationParams, getWaistCircumferenceTool.handler);
+  // Read-only annotation for all data retrieval tools
+  const readOnly = { readOnlyHint: true as const, destructiveHint: false as const };
+
+  server.tool(getVitalsTool.name, getVitalsTool.description, dateRangePaginationParams, { title: 'Vitals',...readOnly}, getVitalsTool.handler);
+  server.tool(getBloodOxygenTool.name, getBloodOxygenTool.description, dateRangePaginationParams, { title: 'Blood Oxygen',...readOnly}, getBloodOxygenTool.handler);
+  server.tool(getBloodPressureTool.name, getBloodPressureTool.description, dateRangePaginationParams, { title: 'Blood Pressure',...readOnly}, getBloodPressureTool.handler);
+  server.tool(getHeightWeightTool.name, getHeightWeightTool.description, dateRangePaginationParams, { title: 'Height & Weight',...readOnly}, getHeightWeightTool.handler);
+  server.tool(getExerciseTool.name, getExerciseTool.description, dateRangePaginationParams, { title: 'Exercise',...readOnly}, getExerciseTool.handler);
+  server.tool(getDiagnosticImagingTool.name, getDiagnosticImagingTool.description, dateRangePaginationParams, { title: 'Diagnostic Imaging',...readOnly}, getDiagnosticImagingTool.handler);
+  server.tool(getProceduresTool.name, getProceduresTool.description, dateRangePaginationParams, { title: 'Procedures',...readOnly}, getProceduresTool.handler);
+  server.tool(getBloodGlucoseTool.name, getBloodGlucoseTool.description, dateRangePaginationParams, { title: 'Blood Glucose',...readOnly}, getBloodGlucoseTool.handler);
+  server.tool(getSleepTool.name, getSleepTool.description, dateRangePaginationParams, { title: 'Sleep',...readOnly}, getSleepTool.handler);
+  server.tool(getDietaryIntakeTool.name, getDietaryIntakeTool.description, dateRangePaginationParams, { title: 'Dietary Intake',...readOnly}, getDietaryIntakeTool.handler);
+  server.tool(getInsulinTool.name, getInsulinTool.description, dateRangePaginationParams, { title: 'Insulin',...readOnly}, getInsulinTool.handler);
+  server.tool(getPeakFlowTool.name, getPeakFlowTool.description, dateRangePaginationParams, { title: 'Peak Flow',...readOnly}, getPeakFlowTool.handler);
+  server.tool(getWaistCircumferenceTool.name, getWaistCircumferenceTool.description, dateRangePaginationParams, { title: 'Waist Circumference',...readOnly}, getWaistCircumferenceTool.handler);
   server.tool(getSymptomJournalTool.name, getSymptomJournalTool.description, {
     date_range: z.enum(['AllData', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Date range filter. Defaults to AllData.'),
     max_results: maxResultsParam,
     offset: offsetParam,
-  }, getSymptomJournalTool.handler);
+  }, { title: 'Symptom Journal',...readOnly}, getSymptomJournalTool.handler);
 
   server.tool(
     downloadAttachmentTool.name,
@@ -193,6 +200,7 @@ export function createMcpServer(): McpServer {
       thing_id: z.string().describe('The thingId from the attachment metadata returned by get_lab_results or get_diagnostic_imaging.'),
       filename: z.string().describe('The attachment filename from the metadata.'),
     },
+    { title: 'Download Attachment',readOnlyHint: true, destructiveHint: false },
     downloadAttachmentTool.handler,
   );
 
@@ -205,13 +213,14 @@ export function createMcpServer(): McpServer {
       time_frame: z.enum(['upcoming', 'past', 'all']).optional().describe('Filter by upcoming, past, or all visits. Defaults to all.'),
       visit_id: z.string().optional().describe('CSN identifier for a specific visit to get details.'),
     },
+    { title: 'Visits (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcGetVisitsTool.handler,
   );
 
-  server.tool(mcGetHealthSummaryTool.name, mcGetHealthSummaryTool.description, {}, mcGetHealthSummaryTool.handler);
-  server.tool(mcGetAllergiesTool.name, mcGetAllergiesTool.description, {}, mcGetAllergiesTool.handler);
-  server.tool(mcGetHealthIssuesTool.name, mcGetHealthIssuesTool.description, {}, mcGetHealthIssuesTool.handler);
-  server.tool(mcGetCareTeamTool.name, mcGetCareTeamTool.description, {}, mcGetCareTeamTool.handler);
+  server.tool(mcGetHealthSummaryTool.name, mcGetHealthSummaryTool.description, {}, { title: 'Health Summary (MyChart)',...readOnly}, mcGetHealthSummaryTool.handler);
+  server.tool(mcGetAllergiesTool.name, mcGetAllergiesTool.description, {}, { title: 'Allergies (MyChart)',...readOnly}, mcGetAllergiesTool.handler);
+  server.tool(mcGetHealthIssuesTool.name, mcGetHealthIssuesTool.description, {}, { title: 'Health Issues (MyChart)',...readOnly}, mcGetHealthIssuesTool.handler);
+  server.tool(mcGetCareTeamTool.name, mcGetCareTeamTool.description, {}, { title: 'Care Team (MyChart)',...readOnly}, mcGetCareTeamTool.handler);
 
   server.tool(
     mcGetMessagesTool.name,
@@ -221,10 +230,11 @@ export function createMcpServer(): McpServer {
       message_id: z.string().optional().describe('Conversation ID to get full details.'),
       page: z.number().optional().describe('Page number for pagination (default: 1). Use to load older messages.'),
     },
+    { title: 'Messages (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcGetMessagesTool.handler,
   );
 
-  server.tool(mcGetMedicalHistoryTool.name, mcGetMedicalHistoryTool.description, {}, mcGetMedicalHistoryTool.handler);
+  server.tool(mcGetMedicalHistoryTool.name, mcGetMedicalHistoryTool.description, {}, { title: 'Medical History (MyChart)',...readOnly}, mcGetMedicalHistoryTool.handler);
 
   server.tool(
     mcGetDocumentsTool.name,
@@ -233,10 +243,11 @@ export function createMcpServer(): McpServer {
       document_id: z.string().optional().describe('Document ID (dcsId) to get details for a specific document.'),
       file_extension: z.string().optional().describe('File extension of the document (e.g., PDF, JPG, HTML). Defaults to PDF.'),
     },
+    { title: 'Documents (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcGetDocumentsTool.handler,
   );
 
-  server.tool(mcGetUpcomingOrdersTool.name, mcGetUpcomingOrdersTool.description, {}, mcGetUpcomingOrdersTool.handler);
+  server.tool(mcGetUpcomingOrdersTool.name, mcGetUpcomingOrdersTool.description, {}, { title: 'Upcoming Orders (MyChart)',...readOnly}, mcGetUpcomingOrdersTool.handler);
 
   server.tool(
     mcGetTestResultsTool.name,
@@ -246,28 +257,31 @@ export function createMcpServer(): McpServer {
       order_id: z.string().optional().describe('Order key to get details for a specific test result.'),
       report_id: z.string().optional().describe('Report ID to fetch full report content (procedure narratives, findings). Found in the test result details response.'),
     },
+    { title: 'Test Results (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcGetTestResultsTool.handler,
   );
 
-  server.tool(mcGetFamilyTreeTool.name, mcGetFamilyTreeTool.description, {}, mcGetFamilyTreeTool.handler);
-  server.tool(mcGetGoalsTool.name, mcGetGoalsTool.description, {}, mcGetGoalsTool.handler);
+  server.tool(mcGetFamilyTreeTool.name, mcGetFamilyTreeTool.description, {}, { title: 'Family History (MyChart)',...readOnly}, mcGetFamilyTreeTool.handler);
+  server.tool(mcGetGoalsTool.name, mcGetGoalsTool.description, {}, { title: 'Health Goals (MyChart)',...readOnly}, mcGetGoalsTool.handler);
 
   server.tool(
     mcGetReferralsTool.name,
     mcGetReferralsTool.description,
     { referral_id: z.string().optional().describe('Referral ID to get details for a specific referral.') },
+    { title: 'Referrals (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcGetReferralsTool.handler,
   );
 
-  server.tool(mcGetMedicationsTool.name, mcGetMedicationsTool.description, {}, mcGetMedicationsTool.handler);
-  server.tool(mcGetImmunizationsTool.name, mcGetImmunizationsTool.description, {}, mcGetImmunizationsTool.handler);
-  server.tool(mcGetAppointmentRequestsTool.name, mcGetAppointmentRequestsTool.description, {}, mcGetAppointmentRequestsTool.handler);
-  server.tool(mcGetProxyAccessListTool.name, mcGetProxyAccessListTool.description, {}, mcGetProxyAccessListTool.handler);
+  server.tool(mcGetMedicationsTool.name, mcGetMedicationsTool.description, {}, { title: 'Medications (MyChart)',...readOnly}, mcGetMedicationsTool.handler);
+  server.tool(mcGetImmunizationsTool.name, mcGetImmunizationsTool.description, {}, { title: 'Immunizations (MyChart)',...readOnly}, mcGetImmunizationsTool.handler);
+  server.tool(mcGetAppointmentRequestsTool.name, mcGetAppointmentRequestsTool.description, {}, { title: 'Appointment Requests (MyChart)',...readOnly}, mcGetAppointmentRequestsTool.handler);
+  server.tool(mcGetProxyAccessListTool.name, mcGetProxyAccessListTool.description, {}, { title: 'Proxy Access List (MyChart)',...readOnly}, mcGetProxyAccessListTool.handler);
 
   server.tool(
     mcSwitchContextTool.name,
     mcSwitchContextTool.description,
     { proxy_id: z.string().describe('Patient proxy ID from mc_list_proxy_access, or "self" to switch back to your own records.') },
+    { title: 'Switch Patient Context',readOnlyHint: false, destructiveHint: false },
     mcSwitchContextTool.handler,
   );
 
@@ -278,6 +292,7 @@ export function createMcpServer(): McpServer {
       order_id: z.string().describe('Order key from mc_get_test_results details.'),
       component_ids: z.array(z.string()).describe('Array of component IDs from the test result details to get historical trends for.'),
     },
+    { title: 'Historical Results (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcGetHistoricalResultsTool.handler,
   );
 
@@ -288,6 +303,7 @@ export function createMcpServer(): McpServer {
       dcs_id: z.string().describe('Document content service ID (dcsId) from test result scans or document listings.'),
       file_extension: z.string().describe('File extension (e.g., JPG, PNG, PDF) from the scan/document metadata.'),
     },
+    { title: 'Download Document (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcDownloadDocumentTool.handler,
   );
 
