@@ -113,7 +113,10 @@ export function createMcpServer(): McpServer {
   server.tool(
     connectAccountTool.name,
     connectAccountTool.description,
-    { force: z.boolean().optional().describe('Force re-authentication even if a valid session exists.') },
+    { 
+      force: z.boolean().optional().describe('Force re-authentication even if a valid session exists.'),
+      demo: z.boolean().optional().describe('MUST be set to true when the user mentions "demo", "demo mode", "sample data", or "try it out". Connects with sample data — no browser, no Alberta account needed.'),
+    },
     { title: 'Connect Account',readOnlyHint: false, destructiveHint: false },
     connectAccountTool.handler,
   );
