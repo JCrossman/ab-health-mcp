@@ -176,7 +176,12 @@ module.exports = async function (context, req) {
     };
 
     const poller = await emailClient.beginSend(message);
-    await poller.pollUntilDone();
+    // Don't await full delivery — respond as soon as the email is queued.
+    // pollUntilDone() can take 10-30s and causes timeouts on cold starts.
+    const pollResult = poller.getOperationState();
+    if (pollResult.error) {
+      throw new Error(`Email send failed: ${pollResult.error.message}`);
+    }
 
     context.res = {
       status: 200,

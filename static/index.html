@@ -709,11 +709,15 @@
       }
 
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 25000);
         const response = await fetch('/api/request-access', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
 
         if (response.ok) {
           form.classList.add('hidden');
@@ -724,7 +728,31 @@
           if (window.turnstile) turnstile.reset();
           setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
         }
-      } catch {
+      } catch (err) {
+        // First attempt may fail due to Azure cold start — auto-retry once
+        if (!e.target.dataset.retried) {
+          e.target.dataset.retried = 'true';
+          btn.textContent = 'Still working, please wait...';
+          if (window.turnstile) turnstile.reset();
+          // Wait for Turnstile to regenerate token, then retry
+          await new Promise(r => setTimeout(r, 2000));
+          const newToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+          if (newToken) {
+            data.turnstileToken = newToken;
+          }
+          try {
+            const retryRes = await fetch('/api/request-access', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            if (retryRes.ok) {
+              form.classList.add('hidden');
+              success.classList.remove('hidden');
+              return;
+            }
+          } catch {}
+        }
         btn.textContent = 'Network error — try again';
         btn.disabled = false;
         if (window.turnstile) turnstile.reset();
