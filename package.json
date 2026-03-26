@@ -9,7 +9,8 @@
     "start": "node build/index.js",
     "start:http": "node build/server/http-index.js",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "deploy": "node scripts/deploy.js"
   },
   "keywords": [],
   "author": "",

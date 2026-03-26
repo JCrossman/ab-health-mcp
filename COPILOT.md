@@ -58,24 +58,33 @@ npm run lint           # tsc --noEmit
 
 Test auth flow: `npx tsx scripts/test-auth.ts`
 
-### Building the .mcpb Bundle
+### Deploying a New Version
 
-The `.mcpb` file is the one-click installer for Claude Desktop. **Always use the `mcpb` CLI** (installed globally via `npm install -g @anthropic-ai/mcpb`) — never raw `zip`.
+**Always use `npm run deploy`** — it auto-bumps the version, builds, packs, verifies, uploads to Azure, and deploys the landing page in one command:
 
 ```bash
-npm run build                          # compile TypeScript first
-mcpb validate manifest.json            # check manifest is valid
-mcpb pack . ab-health-mcp.mcpb         # build the bundle (~16MB)
+npm run deploy              # bump patch (1.0.0 → 1.0.1)
+npm run deploy -- minor     # bump minor (1.0.1 → 1.1.0)
+npm run deploy -- major     # bump major (1.1.0 → 2.0.0)
 ```
 
-After building, upload to Azure Blob Storage:
+This updates the version in all 5 locations automatically:
+- `package.json`
+- `manifest.json`
+- `static/version.json` (checked by installed extensions for update notifications)
+- `src/tools/connect-account.ts` (`CURRENT_VERSION`)
+- `src/server/create-server.ts` (server info)
+
+**Do NOT** manually run `mcpb pack` or `az storage blob upload` — use `npm run deploy` instead.
+
+### Building Without Deploying
+
+For local development only (no version bump, no upload):
+
 ```bash
-az storage blob upload \
-  --account-name myaihealthdownloads \
-  --container-name downloads \
-  --name ab-health-mcp.mcpb \
-  --file ab-health-mcp.mcpb \
-  --overwrite --auth-mode key
+npm run build                          # compile TypeScript
+mcpb validate manifest.json            # check manifest is valid
+mcpb pack . ab-health-mcp.mcpb         # build the bundle (~16MB)
 ```
 
 ### .mcpbignore — Critical Rules
