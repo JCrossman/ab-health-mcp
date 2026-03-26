@@ -377,6 +377,7 @@ swa deploy ./static \
 - [x] **Landing Page** — myaihealth.ca with gated download access via Azure Communication Services email
 - [x] **Open Source** — [Public repository](https://github.com/JCrossman/ab-health-mcp) with security-audited codebase
 - [ ] **Phase 3: Remote Mode** — OAuth 2.1 remote connector, Azure Container Apps deployment, zero-storage architecture
+- [ ] **Update notifications** — Email existing users when a new version is available
 - [ ] **MFA support** — Relay MFA challenges for Alberta accounts with multi-factor enabled
 
 ## License
