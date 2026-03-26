@@ -347,9 +347,16 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 - **Hosting:** Azure Static Web Apps (Free tier, `myaihealth` resource in `ab-health-mcp` resource group)
 - **API function:** `api/request-access/` — Azure Function that generates a 7-day SAS download URL and emails it via Azure Communication Services
 - **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified)
-- **Downloads:** `.mcpb` stored in Azure Blob Storage (`myaihealthdownloads` account, `downloads` container)
+- **Downloads:** `.mcpb` stored in Azure Blob Storage (`myaihealthdownloads` account, `downloads` container). **Not distributed via GitHub releases** — users must request access through the portal.
 - **Deploy landing page:** `swa deploy ./static --api-location ./api --api-language node --api-version 18 --app-name myaihealth --env production`
 - **Deploy mcpb:** `mcpb pack . ab-health-mcp.mcpb` then `az storage blob upload --account-name myaihealthdownloads --container-name downloads --name ab-health-mcp.mcpb --file ab-health-mcp.mcpb --overwrite --auth-mode key`
+
+## Repository
+
+- **Visibility:** Public (open source, MIT license)
+- **Branch protection:** `main` branch has force push and deletion blocked, enforce_admins enabled
+- **Distribution:** The `.mcpb` bundle is NOT in the repo or GitHub releases. It's gated behind the myaihealth.ca access request form. Users can clone and build from source if they prefer.
+- **Do NOT** create GitHub releases with `.mcpb` attachments — this bypasses the access request flow.
 
 ## Adding New Tools
 

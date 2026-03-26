@@ -358,6 +358,7 @@ swa deploy ./static \
 - [x] **Session auto-refresh** — Cross-keepalive between MHR and MyChart, retry-once-with-keepalive on 401/403
 - [x] **Desktop Extension** — One-click `.mcpb` install for Claude Desktop
 - [x] **Landing Page** — myaihealth.ca with gated download access via Azure Communication Services email
+- [x] **Open Source** — [Public repository](https://github.com/JCrossman/ab-health-mcp) with security-audited codebase
 - [ ] **Phase 3: Remote Mode** — OAuth 2.1 remote connector, Azure Container Apps deployment, zero-storage architecture
 - [ ] **MFA support** — Relay MFA challenges for Alberta accounts with multi-factor enabled
 
