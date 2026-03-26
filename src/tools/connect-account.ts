@@ -16,6 +16,27 @@ import { MHRClient } from '../api/mhr-client.js';
 import { sessionManager, loadSessionData, invalidateSessionCache, formatError } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER } from './tool-factory.js';
 import { isDemoMode } from '../helpers/demo-data.js';
+import { logger } from '../utils/logger.js';
+
+const CURRENT_VERSION = '1.0.0';
+const VERSION_CHECK_URL = 'https://www.myaihealth.ca/version.json';
+
+async function checkForUpdate(): Promise<string | undefined> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(VERSION_CHECK_URL, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return undefined;
+    const data = await res.json() as { version?: string };
+    if (data.version && data.version !== CURRENT_VERSION) {
+      return data.version;
+    }
+  } catch {
+    // Version check is best-effort — never block auth
+  }
+  return undefined;
+}
 
 export const connectAccountTool = {
   name: 'connect_account',
@@ -59,19 +80,24 @@ export const connectAccountTool = {
             if (!status.isSessionExpired) {
               const user = await existingClient.getUser();
               const myChartConnected = !!(data.myChartJar && data.myChartCsrfToken);
+              const latestVersion = await checkForUpdate();
+              const response: Record<string, unknown> = {
+                connected: true,
+                message: 'Already connected (existing session reused).',
+                userName: user.name,
+                authorizedRecords: user.authorizedRecords.length,
+                mhrConnected: true,
+                myChartConnected,
+                sessionTimeRemaining: Math.round(status.numberOfMilliSecondsLeftForSessionExpire / 1000),
+                disclaimer: MEDICAL_DISCLAIMER,
+              };
+              if (latestVersion) {
+                response.updateAvailable = `A new version (v${latestVersion}) is available. Visit https://www.myaihealth.ca to download the latest version.`;
+              }
               return {
                 content: [{
                   type: 'text' as const,
-                  text: JSON.stringify({
-                    connected: true,
-                    message: 'Already connected (existing session reused).',
-                    userName: user.name,
-                    authorizedRecords: user.authorizedRecords.length,
-                    mhrConnected: true,
-                    myChartConnected,
-                    sessionTimeRemaining: Math.round(status.numberOfMilliSecondsLeftForSessionExpire / 1000),
-                    disclaimer: MEDICAL_DISCLAIMER,
-                  }),
+                  text: JSON.stringify(response),
                 }],
               };
             }
@@ -96,24 +122,28 @@ export const connectAccountTool = {
       });
       invalidateSessionCache();
 
+      const latestVersion = await checkForUpdate();
+      const response: Record<string, unknown> = {
+        connected: true,
+        message: 'Successfully connected to My Health Records and MyChart (AHS Connect).',
+        userName: user.name,
+        authorizedRecords: user.authorizedRecords.length,
+        mhrConnected: true,
+        myChartConnected: !!myChartCookieJar,
+        disclaimer: MEDICAL_DISCLAIMER,
+      };
+      if (latestVersion) {
+        response.updateAvailable = `A new version (v${latestVersion}) is available. Visit https://www.myaihealth.ca to download the latest version.`;
+      }
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({
-            connected: true,
-            message: 'Successfully connected to My Health Records and MyChart (AHS Connect).',
-            userName: user.name,
-            authorizedRecords: user.authorizedRecords.length,
-            mhrConnected: true,
-            myChartConnected: !!myChartCookieJar,
-            disclaimer: MEDICAL_DISCLAIMER,
-          }),
+          text: JSON.stringify(response),
         }],
       };
     } catch (error) {
       // Log the actual error to stderr for diagnostics (never log PII)
       const errMsg = error instanceof Error ? error.message : String(error);
-      const { logger } = await import('../utils/logger.js');
       logger.error(`connect_account failed: ${errMsg}`);
 
       // Return a generic message — never expose internal error details to the caller

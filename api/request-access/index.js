@@ -136,7 +136,7 @@ module.exports = async function (context, req) {
     const credential = new StorageSharedKeyCredential(accountName, accountKey);
 
     const expiresOn = new Date();
-    expiresOn.setDate(expiresOn.getDate() + 7);
+    expiresOn.setMonth(expiresOn.getMonth() + 3);
 
     const sasToken = generateBlobSASQueryParameters({
       containerName,
@@ -165,7 +165,7 @@ module.exports = async function (context, req) {
           <p><strong>Email:</strong> <a href="mailto:${escapeHtml(email.trim())}">${escapeHtml(email.trim())}</a></p>
           ${safeReason ? `<p><strong>Reason:</strong> ${escapeHtml(safeReason)}</p>` : ''}
           <hr>
-          <h3>Download Link (expires in 7 days)</h3>
+          <h3>Download Link (expires in 3 months)</h3>
           <p>Copy and paste this link in your reply to ${escapeHtml(name.trim())}:</p>
           <p style="background: #f0f9ff; padding: 12px; border-radius: 8px; word-break: break-all;">
             <a href="${downloadUrl}">${downloadUrl}</a>
