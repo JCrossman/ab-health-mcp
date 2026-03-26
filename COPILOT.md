@@ -253,8 +253,18 @@ All MyChart tools use `__RequestVerificationToken` CSRF header instead of Contro
 
 ### Landing Page ✅
 - Static site at www.myaihealth.ca (Azure Static Web Apps)
-- Gated download access via request form → Azure Communication Services email → SAS URL
+- Gated download access via request form → Azure Communication Services email → 3-month SAS URL
+- SEO: robots.txt, sitemap.xml, Schema.org JSON-LD, FAQ section
 - Azure resources: Static Web App (`myaihealth`), Blob Storage (`myaihealthdownloads`), Communication Services (`myaihealth-comm`), Email Service (`myaihealth-email`)
+
+### Recent Additions (v1.1.0)
+- **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)
+- **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. For Anthropic reviewer testing.
+- **Version check** — `connect_account` checks `myaihealth.ca/version.json` and notifies users of available updates
+- **Medical disclaimers** — embedded in `connect_account` responses and all factory-generated tool responses
+- **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation
+- **Deploy automation** — `npm run deploy` handles version bump, build, pack, upload, and landing page deploy
+- **Open source** — Public GitHub repo with squashed history, branch protection enabled
 
 ## Authentication
 
@@ -354,18 +364,20 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 
 - **URL:** www.myaihealth.ca
 - **Hosting:** Azure Static Web Apps (Free tier, `myaihealth` resource in `ab-health-mcp` resource group)
-- **API function:** `api/request-access/` — Azure Function that generates a 7-day SAS download URL and emails it via Azure Communication Services
+- **API function:** `api/request-access/` — Azure Function that generates a 3-month SAS download URL and emails it via Azure Communication Services
 - **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified)
 - **Downloads:** `.mcpb` stored in Azure Blob Storage (`myaihealthdownloads` account, `downloads` container). **Not distributed via GitHub releases** — users must request access through the portal.
-- **Deploy landing page:** `swa deploy ./static --api-location ./api --api-language node --api-version 18 --app-name myaihealth --env production`
-- **Deploy mcpb:** `mcpb pack . ab-health-mcp.mcpb` then `az storage blob upload --account-name myaihealthdownloads --container-name downloads --name ab-health-mcp.mcpb --file ab-health-mcp.mcpb --overwrite --auth-mode key`
+- **Version endpoint:** `static/version.json` — checked by installed extensions to notify users of updates
+- **Deploy:** Use `npm run deploy` — handles everything (see "Deploying a New Version" section above)
 
 ## Repository
 
 - **Visibility:** Public (open source, MIT license)
+- **Version:** v1.1.0 (use `npm run deploy` to bump)
 - **Branch protection:** `main` branch has force push and deletion blocked, enforce_admins enabled
 - **Distribution:** The `.mcpb` bundle is NOT in the repo or GitHub releases. It's gated behind the myaihealth.ca access request form. Users can clone and build from source if they prefer.
 - **Do NOT** create GitHub releases with `.mcpb` attachments — this bypasses the access request flow.
+- **Anthropic Directory:** Submission-ready. Demo mode (`DEMO_MODE=true`) lets reviewers test without an Alberta account.
 
 ## Adding New Tools
 
