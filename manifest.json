@@ -35,6 +35,14 @@
       ]
     }
   },
+  "user_config": {
+    "DEMO_MODE": {
+      "type": "boolean",
+      "title": "Demo Mode",
+      "description": "Enable demo mode with sample data — no Alberta account needed. Great for exploring what the extension can do before signing in.",
+      "default": false
+    }
+  },
   "tools_generated": true,
   "compatibility": {
     "platforms": [

@@ -15,7 +15,7 @@ import { authenticate } from '../api/auth-client.js';
 import { MHRClient } from '../api/mhr-client.js';
 import { sessionManager, loadSessionData, invalidateSessionCache, formatError } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER } from './tool-factory.js';
-import { isDemoMode } from '../helpers/demo-data.js';
+import { isDemoMode, setDemoMode } from '../helpers/demo-data.js';
 import { logger } from '../utils/logger.js';
 
 const CURRENT_VERSION = '1.1.1';
@@ -40,7 +40,7 @@ async function checkForUpdate(): Promise<string | undefined> {
 
 export const connectAccountTool = {
   name: 'connect_account',
-  description: 'Sign in to your MyAlberta account to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser window for you to enter your credentials. Always call this tool when a session is expired or when the user asks to connect — it handles everything automatically. Reuses an existing session if still valid — set force=true to re-authenticate.',
+  description: 'Sign in to your MyAlberta account to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser window for you to enter your credentials. Always call this tool when a session is expired or when the user asks to connect — it handles everything automatically. Reuses an existing session if still valid — set force=true to re-authenticate. IMPORTANT: When the user mentions "demo", "demo mode", "sample data", or "try it out", you MUST set demo=true. Demo mode uses sample data and does NOT open a browser.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -48,11 +48,16 @@ export const connectAccountTool = {
         type: 'boolean',
         description: 'Force re-authentication even if a valid session exists.',
       },
+      demo: {
+        type: 'boolean',
+        description: 'MUST be set to true when the user wants demo mode, sample data, or to try the extension without an Alberta account. Skips browser login entirely.',
+      },
     },
   },
-  handler: async (params: { force?: boolean }) => {
+  handler: async (params: { force?: boolean; demo?: boolean }) => {
     try {
       // Demo mode: return success immediately without browser auth
+      if (params.demo) setDemoMode(true);
       if (isDemoMode()) {
         return {
           content: [{

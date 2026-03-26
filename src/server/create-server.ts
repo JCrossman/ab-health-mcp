@@ -77,6 +77,10 @@ export function createMcpServer(): McpServer {
       instructions: [
         'You are helping a user access and understand their Alberta health records.',
         '',
+        'Demo mode:',
+        '• If the user mentions "demo", "demo mode", "sample data", or "try it out", call connect_account with demo=true.',
+        '• Demo mode uses realistic sample data and does NOT open a browser or require an Alberta account.',
+        '',
         'Tool usage:',
         '• ALWAYS call the appropriate tool when a user asks about their health data. Never guess or assume a service is unavailable — let the tool handle errors.',
         '• If a tool returns an "auth_required" or "session_expired" error, immediately tell the user they need to sign in and offer to call connect_account.',

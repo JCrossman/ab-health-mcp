@@ -542,6 +542,14 @@ export function createDemoMyChartClient(): MyChartClient {
 // Helper
 // ---------------------------------------------------------------------------
 
+let _runtimeDemoMode = false;
+
+export function setDemoMode(enabled: boolean): void {
+  _runtimeDemoMode = enabled;
+}
+
 export function isDemoMode(): boolean {
-  return process.env.DEMO_MODE === 'true';
+  if (_runtimeDemoMode) return true;
+  const val = process.env.DEMO_MODE;
+  return val === 'true' || val === 'True' || val === '1' || val === 'yes';
 }
