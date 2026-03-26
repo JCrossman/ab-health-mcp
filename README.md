@@ -15,7 +15,7 @@ The MCP server authenticates with Alberta's SSO (shared across both portals), fe
 
 ### Option 1: One-Click Install (Recommended)
 
-1. **Download** [`ab-health-mcp.mcpb`](https://github.com/JCrossman/ab-health-mcp/releases/latest/download/ab-health-mcp.mcpb)
+1. **[Request access](https://www.myaihealth.ca/#request-access)** — we'll email you a download link
 2. **Double-click** the downloaded file — Claude Desktop installs it automatically
 3. Tell Claude: **"Connect to My Health Records"**
 4. Chrome opens to Alberta's real login page — sign in with your MyAlberta credentials
