@@ -25,6 +25,32 @@ The MCP server authenticates with Alberta's SSO (shared across both portals), fe
 
 > **Requirements:** [Claude Desktop](https://claude.ai/download) and Google Chrome. You need a [MyAlberta](https://account.alberta.ca) account with My Health Records access.
 
+### Try It First — Demo Mode
+
+Don't have an Alberta account? Want to see what the extension can do before signing in? **Demo mode** uses realistic sample data so you can explore all 44 tools without any credentials.
+
+After installing the extension, try this conversation:
+
+1. **You:** "Connect to health data in demo mode"
+2. **You:** "Pull a comprehensive health report"
+3. **You:** "What health concerns can you identify? What patterns do you see across my labs, medications, and vitals?"
+4. **You:** "Can you put all this in a PDF I can take to the doctor?"
+
+Claude will connect instantly (no browser, no login), pull sample health data, and demonstrate how AI can identify clinically meaningful patterns — like a worsening HbA1c trend, cardiovascular risk factors across multiple tests, or medication interactions worth discussing with a doctor. These are the kinds of insights that are easy to miss when browsing portal pages individually.
+
+**More demo prompts to try:**
+
+| Prompt | What it showcases |
+|--------|-------------------|
+| "Show me my lab results and flag anything outside reference ranges" | AI identifies abnormal values (high LDL, low Vitamin D, elevated HbA1c) |
+| "Are any of my medications interacting with my lab results?" | Cross-references meds with kidney/liver function |
+| "How has my diabetes control changed over the past year?" | Tracks HbA1c trend: 6.2% → 6.5% → 6.8% |
+| "What's my cardiovascular risk profile?" | Connects high cholesterol + diabetes + hypertension + blood pressure trends |
+| "Am I overdue for any screenings or vaccinations?" | Checks immunization records and preventive care gaps |
+| "Summarize what I should discuss with my doctor at my next appointment" | Synthesizes all data into actionable talking points |
+
+> **Note:** Demo data is clearly fictional ("Demo User"). To access your real health records, use Option 1 above.
+
 ### Option 2: Developer Install
 
 <details>
