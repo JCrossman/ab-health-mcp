@@ -37,9 +37,12 @@
               200: '#bae6fd',
               300: '#7dd3fc',
               400: '#38bdf8',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
+              500: '#0277b5',
+              600: '#026a9e',
+              700: '#035f8a',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49',
             },
             navy: {
               800: '#1e293b',
@@ -56,10 +59,14 @@
   <style>
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .gradient-text {
-      background: linear-gradient(135deg, #0ea5e9, #0369a1);
+      background: linear-gradient(135deg, #0277b5, #035f8a);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      color: #0277b5; /* fallback */
+    }
+    html {
+      scroll-behavior: smooth;
     }
     .fade-in {
       opacity: 0;
@@ -69,6 +76,16 @@
     .fade-in.visible {
       opacity: 1;
       transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      html {
+        scroll-behavior: auto;
+      }
     }
   </style>
 
@@ -130,35 +147,41 @@
 </head>
 <body class="bg-white text-navy-900">
 
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-brand-500 focus:text-white focus:rounded-lg focus:outline-none">
+    Skip to main content
+  </a>
+
   <!-- Navigation -->
-  <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-sm border-b border-gray-100 z-50">
+  <nav aria-label="Main navigation" class="fixed top-0 w-full bg-white/90 backdrop-blur-sm border-b border-gray-100 z-50">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
           </svg>
         </div>
         <span class="text-lg font-semibold text-navy-900">MyAI Health</span>
       </div>
       <div class="hidden md:flex items-center gap-8 text-sm text-gray-600">
-        <a href="#features" class="hover:text-brand-500 transition-colors">Features</a>
-        <a href="#how-it-works" class="hover:text-brand-500 transition-colors">How It Works</a>
-        <a href="#demo" class="hover:text-brand-500 transition-colors">Try Demo</a>
-        <a href="#accessibility" class="hover:text-brand-500 transition-colors">Accessibility</a>
-        <a href="#research" class="hover:text-brand-500 transition-colors">Research</a>
-        <a href="#privacy" class="hover:text-brand-500 transition-colors">Privacy</a>
-        <a href="#request-access" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium">Request Access</a>
+        <a href="#features" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Features</a>
+        <a href="#how-it-works" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">How It Works</a>
+        <a href="#demo" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Try Demo</a>
+        <a href="#accessibility" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Accessibility</a>
+        <a href="#research" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Research</a>
+        <a href="#privacy" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Privacy</a>
+        <a href="#request-access" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Request Access</a>
       </div>
     </div>
   </nav>
+
+  <main id="main-content">
 
   <!-- Hero Section -->
   <section class="pt-32 pb-20 px-6">
     <div class="max-w-6xl mx-auto text-center">
       <div class="fade-in">
         <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 text-brand-700 rounded-full text-sm font-medium mb-8">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
           </svg>
           Built for Alberta · Your data, your control
@@ -177,7 +200,7 @@
           </a>
           <a href="#demo" class="px-8 py-4 text-gray-600 hover:text-brand-500 transition-colors text-lg font-medium flex items-center gap-2">
             Try demo mode
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
@@ -193,10 +216,10 @@
   </section>
 
   <!-- Features Section -->
-  <section id="features" class="py-24 px-6 bg-gray-50">
+  <section id="features" aria-labelledby="features-heading" class="py-24 px-6 bg-gray-50">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">What it does</h2>
+        <h2 id="features-heading" class="text-3xl md:text-4xl font-bold mb-4">What it does</h2>
         <p class="text-lg text-gray-600 max-w-xl mx-auto">
           A Claude Desktop extension that connects to Alberta's official health portals.
         </p>
@@ -205,7 +228,7 @@
         <!-- Feature 1 -->
         <div class="bg-white rounded-2xl p-8 border border-gray-100 hover:border-brand-200 transition-colors">
           <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-6">
-            <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
           </div>
@@ -217,7 +240,7 @@
         <!-- Feature 2 -->
         <div class="bg-white rounded-2xl p-8 border border-gray-100 hover:border-brand-200 transition-colors">
           <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-6">
-            <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
             </svg>
           </div>
@@ -229,7 +252,7 @@
         <!-- Feature 3 -->
         <div class="bg-white rounded-2xl p-8 border border-gray-100 hover:border-brand-200 transition-colors">
           <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-6">
-            <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
           </div>
@@ -243,10 +266,10 @@
   </section>
 
   <!-- How It Works Section -->
-  <section id="how-it-works" class="py-24 px-6">
+  <section id="how-it-works" aria-labelledby="how-it-works-heading" class="py-24 px-6">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
+        <h2 id="how-it-works-heading" class="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
         <p class="text-lg text-gray-600 max-w-xl mx-auto">
           Three steps. No technical knowledge required.
         </p>
@@ -281,17 +304,17 @@
   </section>
 
   <!-- Try Demo Mode Section -->
-  <section id="demo" class="py-24 px-6 bg-white">
+  <section id="demo" aria-labelledby="demo-heading" class="py-24 px-6 bg-white">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16 fade-in">
         <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium mb-6">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           No account needed
         </div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Try it right now — Demo Mode</h2>
+        <h2 id="demo-heading" class="text-3xl md:text-4xl font-bold mb-4">Try it right now — Demo Mode</h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
           See what AI-powered health analysis looks like. Demo mode uses realistic sample data so you can explore all 44 tools — no Alberta account required.
         </p>
@@ -347,42 +370,42 @@
           <h3 class="text-xl font-semibold mb-5 text-gray-900">What AI finds in the sample data</h3>
           <div class="grid sm:grid-cols-2 gap-4">
             <div class="flex items-start gap-3">
-              <span class="text-amber-500 text-lg mt-0.5">⚠️</span>
+              <span class="text-amber-500 text-lg mt-0.5"><span role="img" aria-label="Warning">⚠️</span></span>
               <div>
                 <p class="font-medium text-gray-800">Worsening diabetes control</p>
                 <p class="text-sm text-gray-500">HbA1c trending up: 6.2% → 6.5% → 6.8%</p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <span class="text-red-500 text-lg mt-0.5">🔴</span>
+              <span class="text-red-500 text-lg mt-0.5"><span role="img" aria-label="Critical">🔴</span></span>
               <div>
                 <p class="font-medium text-gray-800">High cardiovascular risk</p>
                 <p class="text-sm text-gray-500">Elevated LDL + diabetes + hypertension combined</p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <span class="text-amber-500 text-lg mt-0.5">⚠️</span>
+              <span class="text-amber-500 text-lg mt-0.5"><span role="img" aria-label="Warning">⚠️</span></span>
               <div>
                 <p class="font-medium text-gray-800">Severe Vitamin D deficiency</p>
                 <p class="text-sm text-gray-500">32 nmol/L (normal: 75–250) — common in Alberta</p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <span class="text-amber-500 text-lg mt-0.5">⚠️</span>
+              <span class="text-amber-500 text-lg mt-0.5"><span role="img" aria-label="Warning">⚠️</span></span>
               <div>
                 <p class="font-medium text-gray-800">Kidney function declining</p>
                 <p class="text-sm text-gray-500">eGFR 72 — worth monitoring on Metformin</p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <span class="text-blue-500 text-lg mt-0.5">💊</span>
+              <span class="text-blue-500 text-lg mt-0.5"><span role="img" aria-label="Medication">💊</span></span>
               <div>
                 <p class="font-medium text-gray-800">Medication-lab interactions</p>
                 <p class="text-sm text-gray-500">Statin + borderline liver enzymes need watching</p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <span class="text-blue-500 text-lg mt-0.5">📋</span>
+              <span class="text-blue-500 text-lg mt-0.5"><span role="img" aria-label="Clipboard">📋</span></span>
               <div>
                 <p class="font-medium text-gray-800">Blood pressure inconsistency</p>
                 <p class="text-sm text-gray-500">Mostly controlled but spikes to 145/92</p>
@@ -412,7 +435,7 @@
             <p class="text-sm text-gray-500">Claude charts lab trends over time — spotting patterns like rising LDL and cholesterol — <span class="font-medium">click to enlarge</span></p>
             <!-- Sample PDF download -->
             <a href="/Health_Report_Demo_User.pdf" download class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-brand-200 text-brand-600 rounded-xl hover:bg-brand-50 hover:border-brand-300 transition-all font-medium">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
               Download Sample Health Report (PDF)
@@ -424,7 +447,7 @@
         <div class="text-center mt-10">
           <a href="#request-access" class="inline-flex items-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25">
             Get the Extension
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
           </a>
@@ -435,16 +458,16 @@
   </section>
 
   <!-- Accessibility Benefits Section -->
-  <section id="accessibility" class="pt-24 pb-12 px-6 bg-gray-50">
+  <section id="accessibility" aria-labelledby="accessibility-heading" class="pt-24 pb-12 px-6 bg-gray-50">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16 fade-in">
         <div class="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-medium mb-6">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
           Health data for everyone
         </div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Accessibility benefits</h2>
+        <h2 id="accessibility-heading" class="text-3xl md:text-4xl font-bold mb-4">Accessibility benefits</h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
           Health portals are complex — multiple logins, dense tables, medical jargon. Conversational AI removes those barriers and makes your health data truly accessible.
         </p>
@@ -453,7 +476,7 @@
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto fade-in">
         <!-- Voice -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <div class="text-3xl mb-4">🎤</div>
+          <div class="text-3xl mb-4"><span role="img" aria-label="Microphone">🎤</span></div>
           <h3 class="text-lg font-semibold mb-2">Voice interaction</h3>
           <p class="text-gray-600 text-sm leading-relaxed">
             Speak naturally to access your health data — no typing required. Claude Desktop supports voice input, helping people with motor disabilities, repetitive strain injuries, or vision impairments.
@@ -461,7 +484,7 @@
         </div>
         <!-- Plain language -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <div class="text-3xl mb-4">📖</div>
+          <div class="text-3xl mb-4"><span role="img" aria-label="Book">📖</span></div>
           <h3 class="text-lg font-semibold mb-2">Plain language explanations</h3>
           <p class="text-gray-600 text-sm leading-relaxed">
             AI translates medical jargon into language you understand. Ask follow-up questions, research complex conditions, and arrive at your next appointment informed and prepared.
@@ -469,7 +492,7 @@
         </div>
         <!-- No navigation -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <div class="text-3xl mb-4">🧭</div>
+          <div class="text-3xl mb-4"><span role="img" aria-label="Compass">🧭</span></div>
           <h3 class="text-lg font-semibold mb-2">No complex navigation</h3>
           <p class="text-gray-600 text-sm leading-relaxed">
             One conversation replaces dozens of clicks across two separate portals. No menus, tabs, or page loads — just ask and get answers. Especially helpful for elderly users or anyone overwhelmed by complex interfaces.
@@ -477,7 +500,7 @@
         </div>
         <!-- Screen reader -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <div class="text-3xl mb-4">🔊</div>
+          <div class="text-3xl mb-4"><span role="img" aria-label="Speaker">🔊</span></div>
           <h3 class="text-lg font-semibold mb-2">Screen reader friendly</h3>
           <p class="text-gray-600 text-sm leading-relaxed">
             Claude's text-based responses work naturally with screen readers — unlike the visually dense portal layouts with charts, tables, and multi-column designs that assistive technology struggles with.
@@ -485,7 +508,7 @@
         </div>
         <!-- Doctor prep -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <div class="text-3xl mb-4">📋</div>
+          <div class="text-3xl mb-4"><span role="img" aria-label="Clipboard">📋</span></div>
           <h3 class="text-lg font-semibold mb-2">Doctor visit preparation</h3>
           <p class="text-gray-600 text-sm leading-relaxed">
             Generate PDF summaries, organize health concerns, and prepare questions before appointments. Helpful for anyone who struggles to articulate issues under time pressure, has medical anxiety, or is managing a complex condition.
@@ -493,7 +516,7 @@
         </div>
         <!-- Multilingual -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-          <div class="text-3xl mb-4">🌍</div>
+          <div class="text-3xl mb-4"><span role="img" aria-label="Globe">🌍</span></div>
           <h3 class="text-lg font-semibold mb-2">Multilingual support</h3>
           <p class="text-gray-600 text-sm leading-relaxed">
             Claude can explain your health data in languages other than English — important for Alberta's diverse communities where English may not be a first language.
@@ -502,7 +525,7 @@
         <!-- Caregiver -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm md:col-span-2 lg:col-span-3">
           <div class="flex items-start gap-4 max-w-2xl mx-auto">
-            <div class="text-3xl">👨‍👩‍👧</div>
+            <div class="text-3xl"><span role="img" aria-label="Family">👨‍👩‍👧</span></div>
             <div>
               <h3 class="text-lg font-semibold mb-2">Caregiver empowerment</h3>
               <p class="text-gray-600 text-sm leading-relaxed">
@@ -517,7 +540,7 @@
       <div class="mt-12 max-w-3xl mx-auto fade-in">
         <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6">
           <div class="flex items-start gap-4">
-            <div class="text-2xl flex-shrink-0 mt-0.5">⚕️</div>
+            <div class="text-2xl flex-shrink-0 mt-0.5"><span role="img" aria-label="Medical">⚕️</span></div>
             <div>
               <h3 class="text-lg font-bold text-amber-900 mb-2">Important: Not medical advice</h3>
               <div class="space-y-3 text-sm text-amber-800 leading-relaxed">
@@ -533,10 +556,10 @@
   </section>
 
   <!-- Privacy & Security Section -->
-  <section id="privacy" class="pt-12 pb-24 px-6 bg-gray-50">
+  <section id="privacy" aria-labelledby="privacy-heading" class="pt-12 pb-24 px-6 bg-gray-50">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Your data stays yours</h2>
+        <h2 id="privacy-heading" class="text-3xl md:text-4xl font-bold mb-4">Your data stays yours</h2>
         <p class="text-lg text-gray-600 max-w-xl mx-auto">
           Built with privacy as a non-negotiable. No compromises.
         </p>
@@ -546,7 +569,7 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
@@ -558,7 +581,7 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
             </div>
@@ -570,7 +593,7 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
@@ -582,7 +605,7 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               </svg>
@@ -595,7 +618,7 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
             </div>
@@ -607,7 +630,7 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
               </svg>
             </div>
@@ -696,10 +719,10 @@
   </section>
 
   <!-- PubMed Research Section -->
-  <section id="research" class="py-24 px-6">
+  <section id="research" aria-labelledby="research-heading" class="py-24 px-6">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Research what your results mean</h2>
+        <h2 id="research-heading" class="text-3xl md:text-4xl font-bold mb-4">Research what your results mean</h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
           Add the free PubMed connector to Claude and search millions of medical research articles —
           guided by your own health records.
@@ -711,7 +734,7 @@
         <div class="bg-white rounded-2xl p-8 border border-gray-100">
           <div class="flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
             </div>
@@ -722,7 +745,7 @@
               </p>
               <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-brand-500 hover:text-brand-600 text-sm font-medium mt-3 transition-colors">
                 Visit PubMed
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
               </a>
             </div>
           </div>
@@ -732,7 +755,7 @@
         <div class="bg-green-50 rounded-2xl p-8 border border-green-100">
           <div class="flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
@@ -788,10 +811,10 @@
   </section>
 
   <!-- Request Access Section -->
-  <section id="request-access" class="py-24 px-6">
+  <section id="request-access" aria-labelledby="request-access-heading" class="py-24 px-6">
     <div class="max-w-xl mx-auto">
       <div class="text-center mb-10 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Request early access</h2>
+        <h2 id="request-access-heading" class="text-3xl md:text-4xl font-bold mb-4">Request early access</h2>
         <p class="text-lg text-gray-600">
           We're rolling this out carefully. Submit your info and we'll send you a download link.
         </p>
@@ -800,19 +823,19 @@
         <div>
           <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
           <input type="text" id="name" name="name" required maxlength="200"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all"
             placeholder="Your name">
         </div>
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input type="email" id="email" name="email" required maxlength="254"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all"
             placeholder="you@example.com">
         </div>
         <div>
-          <label for="reason" class="block text-sm font-medium text-gray-700 mb-1">Why are you interested? <span class="text-gray-400">(optional)</span></label>
+          <label for="reason" class="block text-sm font-medium text-gray-700 mb-1">Why are you interested? <span class="text-gray-500">(optional)</span></label>
           <textarea id="reason" name="reason" rows="3" maxlength="2000"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all resize-none"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all resize-none"
             placeholder="Tell us a bit about yourself..."></textarea>
         </div>
         <div class="cf-turnstile" data-sitekey="0x4AAAAAACvoY7v_eP-XzIR1" data-theme="light"></div>
@@ -820,17 +843,18 @@
           class="w-full px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40">
           Request Access
         </button>
-        <p class="text-xs text-gray-400 text-center mt-3">This tool is not medical advice. By requesting access, you agree to our <a href="/terms.html" class="underline hover:text-brand-500">Terms of Use</a>.</p>
+        <p class="text-xs text-gray-500 text-center mt-3">This tool is not medical advice. By requesting access, you agree to our <a href="/terms.html" class="underline hover:text-brand-500">Terms of Use</a>.</p>
       </form>
-      <div id="success-message" class="hidden text-center py-12 fade-in visible">
+      <div id="success-message" role="status" aria-live="polite" class="hidden text-center py-12 fade-in visible">
         <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
         </div>
         <h3 class="text-2xl font-semibold mb-2">Request received!</h3>
         <p class="text-gray-600">We'll review your request and send you a download link by email. This usually takes less than 24 hours.</p>
       </div>
+      <div id="form-status" role="status" aria-live="polite" class="sr-only"></div>
     </div>
   </section>
 
@@ -841,7 +865,7 @@
       <div class="flex flex-wrap justify-center gap-4">
         <a href="https://claude.ai/download" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors inline-flex items-center gap-2">
           Claude Desktop app (required)
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
         </a>
         <div class="px-4 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-600">
           <span class="font-medium text-navy-900">MyAlberta Digital ID</span> — with MHR access
@@ -855,51 +879,51 @@
   </section>
 
   <!-- FAQ Section -->
-  <section id="faq" class="py-24 px-6">
+  <section id="faq" aria-labelledby="faq-heading" class="py-24 px-6">
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-16 fade-in">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
+        <h2 id="faq-heading" class="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
       </div>
       <div class="space-y-6 fade-in">
         <details class="bg-white rounded-xl border border-gray-100 p-6 group" open>
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
             What is MyAI Health?
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">MyAI Health is a Claude Desktop extension that connects to Alberta's My Health Records portal and AHS MyChart (Connect Care). It lets you ask about your lab results, immunizations, medications, vitals, and appointments in plain language — no medical jargon required.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
             Is my health data stored or shared?
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">No. The extension never stores your health data. It fetches information from Alberta's official health portals for your conversation, then discards it. Only encrypted session cookies are stored locally on your machine. Your credentials are entered directly in Alberta's sign-in page and never touch the extension.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
             What do I need to use it?
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer. No API keys, no terminal, no configuration files.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
             Does this provide medical advice?
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">No. MyAI Health is an information retrieval tool, not a medical device. It helps you access and understand your health records, but it does not provide medical advice, diagnose conditions, or recommend treatments. Always consult your doctor or healthcare provider for medical decisions.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
             Which health portals are supported?
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">MyAI Health connects to two Alberta health portals: <strong>My Health Records</strong> (myhealthrecords.alberta.ca) for lab results, immunizations, medications, vitals, imaging, and procedures; and <strong>AHS MyChart / Connect Care</strong> (myahsconnect.albertahealthservices.ca) for appointments, messages, care team, allergies, clinical documents, and test results.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
             Is it free?
-            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source.</p>
         </details>
@@ -910,36 +934,44 @@
   <!-- Built with -->
   <section class="py-12 px-6">
     <div class="max-w-6xl mx-auto text-center fade-in">
-      <p class="text-sm text-gray-400 uppercase tracking-wider font-medium mb-4">Built with</p>
+      <p class="text-sm text-gray-500 uppercase tracking-wider font-medium mb-4">Built with</p>
       <a href="https://github.com/features/copilot" target="_blank" rel="noopener noreferrer">
         <img src="/github-copilot.png" alt="GitHub Copilot" class="h-8 mx-auto opacity-60 hover:opacity-100 transition-opacity">
       </a>
     </div>
   </section>
 
+  </main>
+
   <!-- Footer -->
   <footer class="py-12 px-6 border-t border-gray-100">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="w-6 h-6 rounded bg-brand-500 flex items-center justify-center">
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
           </svg>
         </div>
         <span class="text-sm text-gray-500">© 2026 MyAI Health</span>
       </div>
       <div class="flex items-center gap-6 text-sm text-gray-500">
-        <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="hover:text-brand-500 transition-colors">GitHub</a>
-        <a href="#privacy" class="hover:text-brand-500 transition-colors">Privacy</a>
-        <a href="/terms.html" class="hover:text-brand-500 transition-colors">Terms of Use</a>
-        <a href="mailto:hello@myaihealth.ca" class="hover:text-brand-500 transition-colors">Contact</a>
+        <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">GitHub</a>
+        <a href="#privacy" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Privacy</a>
+        <a href="/terms.html" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Terms of Use</a>
+        <a href="mailto:hello@myaihealth.ca" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Contact</a>
       </div>
     </div>
   </footer>
 
   <!-- Lightbox modal -->
-  <div id="demo-lightbox" class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-zoom-out p-4">
-    <img id="demo-lightbox-img" src="" alt="Demo screenshot enlarged" class="max-w-full max-h-full rounded-lg shadow-2xl">
+  <div id="demo-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged image view"
+       class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-zoom-out p-4">
+    <button id="lightbox-close" class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors p-2" aria-label="Close enlarged image">
+      <svg aria-hidden="true" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+    <img id="demo-lightbox-img" src="" alt="" class="max-w-full max-h-full rounded-lg shadow-2xl">
   </div>
 
   <script>
@@ -973,6 +1005,7 @@
 
       if (!data.turnstileToken) {
         btn.textContent = 'Please complete the verification';
+        document.getElementById('form-status').textContent = 'Error: Please complete the verification checkbox.';
         btn.disabled = false;
         setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
         return;
@@ -992,8 +1025,10 @@
         if (response.ok) {
           form.classList.add('hidden');
           success.classList.remove('hidden');
+          document.getElementById('form-status').textContent = 'Request submitted successfully.';
         } else {
           btn.textContent = 'Something went wrong — try again';
+          document.getElementById('form-status').textContent = 'Error: Something went wrong. Please try again.';
           btn.disabled = false;
           if (window.turnstile) turnstile.reset();
           setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
@@ -1019,42 +1054,60 @@
             if (retryRes.ok) {
               form.classList.add('hidden');
               success.classList.remove('hidden');
+              document.getElementById('form-status').textContent = 'Request submitted successfully.';
               return;
             }
           } catch {}
         }
         btn.textContent = 'Network error — try again';
+        document.getElementById('form-status').textContent = 'Error: Network error. Please try again.';
         btn.disabled = false;
         if (window.turnstile) turnstile.reset();
         setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
       }
     }
 
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-    });
-
     // Lightbox for demo images
     const lightbox = document.getElementById('demo-lightbox');
     const lightboxImg = document.getElementById('demo-lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
+    let lastFocusedEl = null;
+
+    function openLightbox(triggerEl) {
+      lastFocusedEl = triggerEl;
+      lightboxImg.src = triggerEl.href;
+      lightboxImg.alt = triggerEl.querySelector('img')?.alt || 'Enlarged image';
+      lightbox.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      lightboxClose.focus();
+    }
+
+    function closeLightbox() {
+      lightbox.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (lastFocusedEl) lastFocusedEl.focus();
+    }
+
     document.querySelectorAll('#demo-screenshot-link, .lightbox-link').forEach(function(link) {
       link.addEventListener('click', function(e) {
         e.preventDefault();
-        lightboxImg.src = this.href;
-        lightbox.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        openLightbox(this);
       });
     });
-    lightbox?.addEventListener('click', function() {
-      this.classList.add('hidden');
-      document.body.style.overflow = '';
+
+    lightboxClose?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeLightbox();
+    });
+
+    lightbox?.addEventListener('click', function(e) {
+      if (e.target === this) closeLightbox();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+        closeLightbox();
+      }
     });
   </script>
 
