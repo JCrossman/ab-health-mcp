@@ -329,6 +329,23 @@ npx tsx scripts/test-auth.ts
 
 Opens a browser, you log in, and it verifies session + API calls work.
 
+## Accessibility Benefits
+
+Conversational AI removes the barriers that make health portals difficult to use — complex navigation, medical jargon, visually dense layouts, and multiple systems to learn.
+
+| Benefit | Description |
+|---------|-------------|
+| 🎤 **Voice interaction** | Speak naturally to access health data — no typing required. Claude Desktop supports voice input, helping people with motor disabilities, vision impairments, or repetitive strain injuries. |
+| 📖 **Plain language explanations** | AI translates medical jargon into language you understand. Research complex conditions and arrive at appointments informed and prepared. |
+| 🧭 **No complex navigation** | One conversation replaces dozens of clicks across two separate portals. No menus, tabs, or page loads — especially helpful for elderly users or anyone overwhelmed by complex interfaces. |
+| 🔊 **Screen reader friendly** | Text-based responses work naturally with screen readers, unlike visually dense portal layouts with charts, tables, and multi-column designs. |
+| 📋 **Doctor visit preparation** | Generate PDF summaries, organize health concerns, and prepare questions before appointments. |
+| 🌍 **Multilingual support** | Claude can explain health data in languages other than English — important for Alberta's diverse communities. |
+| 👨‍👩‍👧 **Caregiver empowerment** | Family members managing health for elderly parents or dependents can quickly pull comprehensive views across all data sources without learning two portal systems. |
+
+> **⚕️ Important: Not medical advice.**
+> This tool provides information retrieval, not professional medical advice. It is not a medical device or health service. **Always discuss findings, concerns, and health decisions with your doctor.** AI can identify patterns but cannot diagnose or treat conditions. If you are experiencing a medical emergency, **call 911 immediately**.
+
 ## Security
 
 This project handles protected health information under Alberta's Health Information Act (HIA) and Protection of Privacy Act (POPA).
