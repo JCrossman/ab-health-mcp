@@ -398,7 +398,7 @@
           <p class="text-center text-lg font-semibold text-gray-800 mb-6">See it in action</p>
           <div class="flex flex-col items-center gap-6">
             <!-- Clickable screenshot thumbnail -->
-            <a id="demo-screenshot-link" href="/demo-screenshot.png" class="block max-w-2xl w-full cursor-zoom-in group">
+            <a id="demo-screenshot-link" href="/demo-screenshot.png" class="lightbox-link block max-w-2xl w-full cursor-zoom-in group">
               <img src="/demo-screenshot.png" alt="Claude Desktop showing demo health report with abnormal lab values highlighted, alongside a generated PDF summary" class="w-full rounded-2xl shadow-xl border border-gray-200 transition-transform group-hover:scale-[1.02]">
             </a>
             <p class="text-sm text-gray-500">Claude analyzes demo health data and generates a PDF report — <span class="font-medium">click to enlarge</span></p>
@@ -806,6 +806,14 @@
     </div>
   </section>
 
+  <!-- Built with -->
+  <section class="py-12 px-6">
+    <div class="max-w-6xl mx-auto text-center fade-in">
+      <p class="text-sm text-gray-400 uppercase tracking-wider font-medium mb-4">Built with</p>
+      <img src="/github-copilot.png" alt="GitHub Copilot" class="h-8 mx-auto opacity-60 hover:opacity-100 transition-opacity">
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer class="py-12 px-6 border-t border-gray-100">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -825,6 +833,11 @@
       </div>
     </div>
   </footer>
+
+  <!-- Lightbox modal -->
+  <div id="demo-lightbox" class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-zoom-out p-4">
+    <img id="demo-lightbox-img" src="" alt="Demo screenshot enlarged" class="max-w-full max-h-full rounded-lg shadow-2xl">
+  </div>
 
   <script>
     // Scroll animations
@@ -941,10 +954,6 @@
       document.body.style.overflow = '';
     });
   </script>
-  <!-- Lightbox modal -->
-  <div id="demo-lightbox" class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-zoom-out p-4">
-    <img id="demo-lightbox-img" src="" alt="Demo screenshot enlarged" class="max-w-full max-h-full rounded-lg shadow-2xl">
-  </div>
 
 </body>
 </html>
