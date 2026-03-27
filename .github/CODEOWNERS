@@ -1,0 +1,26 @@
+# Require review from @JCrossman for changes to security-sensitive files
+
+# Authentication & session management
+/src/api/auth-client.ts @JCrossman
+/src/auth/ @JCrossman
+
+# API clients (handle health data)
+/src/api/mhr-client.ts @JCrossman
+/src/api/mychart-client.ts @JCrossman
+
+# Server & OAuth
+/src/server/ @JCrossman
+
+# Azure Functions
+/api/ @JCrossman
+
+# Security configuration
+/staticwebapp.config.json @JCrossman
+/Dockerfile @JCrossman
+
+# CI/CD & deployment
+/.github/workflows/ @JCrossman
+/scripts/deploy.js @JCrossman
+
+# Extension manifest
+/manifest.json @JCrossman
