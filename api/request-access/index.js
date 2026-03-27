@@ -153,19 +153,29 @@ module.exports = async function (context, req) {
 
     const accountName = connectionString.match(/AccountName=([^;]+)/)?.[1];
     const accountKey = connectionString.match(/AccountKey=([^;]+)/)?.[1];
-    const credential = new StorageSharedKeyCredential(accountName, accountKey);
 
-    const expiresOn = new Date();
-    expiresOn.setMonth(expiresOn.getMonth() + 3);
+    // Generate a clean download URL via our /api/download redirect
+    const signingKey = process.env.DOWNLOAD_SIGNING_KEY;
+    let downloadUrl;
 
-    const sasToken = generateBlobSASQueryParameters({
-      containerName,
-      blobName,
-      permissions: BlobSASPermissions.parse('r'),
-      expiresOn,
-    }, credential).toString();
-
-    const downloadUrl = `${blobClient.url}?${sasToken}`;
+    if (signingKey) {
+      // Create an HMAC token from the email + timestamp
+      const tokenData = `${email.trim().toLowerCase()}:${Date.now()}`;
+      const token = crypto.createHmac('sha256', signingKey).update(tokenData).digest('hex');
+      downloadUrl = `https://www.myaihealth.ca/api/download?token=${token}`;
+    } else {
+      // Fallback: direct SAS URL if signing key not configured
+      const credential = new StorageSharedKeyCredential(accountName, accountKey);
+      const expiresOn = new Date();
+      expiresOn.setMonth(expiresOn.getMonth() + 3);
+      const sasToken = generateBlobSASQueryParameters({
+        containerName,
+        blobName,
+        permissions: BlobSASPermissions.parse('r'),
+        expiresOn,
+      }, credential).toString();
+      downloadUrl = `${blobClient.url}?${sasToken}`;
+    }
 
     const fromEmail = process.env.ACS_FROM_EMAIL || 'noreply@myaihealth.ca';
     const emailClient = new EmailClient(acsConnectionString);
