@@ -19,13 +19,6 @@ const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions, S
 const { EmailClient } = require('@azure/communication-email');
 const crypto = require('crypto');
 
-let TableClient;
-try {
-  TableClient = require('@azure/data-tables').TableClient;
-} catch {
-  // Table Storage logging unavailable — function continues without it
-}
-
 if (typeof globalThis.crypto === 'undefined') {
   globalThis.crypto = crypto;
 }
@@ -33,10 +26,15 @@ if (typeof globalThis.crypto === 'undefined') {
 // Module-level Table Storage client (created once for connection reuse)
 let tableClient = null;
 function getTableClient() {
-  if (!tableClient && TableClient) {
+  if (!tableClient) {
     const connStr = process.env.STORAGE_CONNECTION_STRING;
     if (connStr) {
-      tableClient = TableClient.fromConnectionString(connStr, 'accessrequests', { allowInsecureConnection: false });
+      try {
+        const { TableClient } = require('@azure/data-tables');
+        tableClient = TableClient.fromConnectionString(connStr, 'accessrequests', { allowInsecureConnection: false });
+      } catch {
+        // Table Storage logging unavailable
+      }
     }
   }
   return tableClient;
