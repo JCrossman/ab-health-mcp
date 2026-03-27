@@ -157,6 +157,8 @@ module.exports = async function (context, req) {
     // Generate a clean download URL via our /api/download redirect
     const signingKey = process.env.DOWNLOAD_SIGNING_KEY;
     let downloadUrl;
+    const expiresOn = new Date();
+    expiresOn.setMonth(expiresOn.getMonth() + 3);
 
     if (signingKey) {
       // Create an HMAC token from the email + timestamp
@@ -166,8 +168,6 @@ module.exports = async function (context, req) {
     } else {
       // Fallback: direct SAS URL if signing key not configured
       const credential = new StorageSharedKeyCredential(accountName, accountKey);
-      const expiresOn = new Date();
-      expiresOn.setMonth(expiresOn.getMonth() + 3);
       const sasToken = generateBlobSASQueryParameters({
         containerName,
         blobName,
