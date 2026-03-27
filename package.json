@@ -1,11 +1,12 @@
 {
   "name": "ab-health-mcp",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "description": "MCP server for Alberta My Health Records",
   "main": "build/index.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "build:css": "npx @tailwindcss/cli -i static/input.css -o static/styles.css --minify",
     "start": "node build/index.js",
     "start:http": "node build/server/http-index.js",
     "test": "vitest run",
@@ -25,9 +26,12 @@
     "undici": "^7.22.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.5",
     "@types/tough-cookie": "^4.0.5",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

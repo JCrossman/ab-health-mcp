@@ -91,6 +91,7 @@ console.log('✓ src/server/create-server.ts');
 
 // 7. Build
 console.log('\n📦 Building...');
+run('npm run build:css');
 run('npm run build');
 
 // 8. Pack

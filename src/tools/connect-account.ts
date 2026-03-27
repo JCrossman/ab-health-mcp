@@ -18,7 +18,7 @@ import { MEDICAL_DISCLAIMER } from './tool-factory.js';
 import { isDemoMode, setDemoMode } from '../helpers/demo-data.js';
 import { logger } from '../utils/logger.js';
 
-const CURRENT_VERSION = '1.1.13';
+const CURRENT_VERSION = '1.1.14';
 const VERSION_CHECK_URL = 'https://www.myaihealth.ca/version.json';
 
 async function checkForUpdate(): Promise<string | undefined> {

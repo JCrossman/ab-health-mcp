@@ -16,6 +16,8 @@
   <meta property="og:image" content="https://www.myaihealth.ca/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_CA">
+  <meta property="og:site_name" content="MyAI Health">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
@@ -25,34 +27,8 @@
 
   <link rel="icon" href="/favicon.png" type="image/png">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              200: '#bae6fd',
-              300: '#7dd3fc',
-              400: '#38bdf8',
-              500: '#0277b5',
-              600: '#026a9e',
-              700: '#035f8a',
-              800: '#075985',
-              900: '#0c4a6e',
-              950: '#082f49',
-            },
-            navy: {
-              800: '#1e293b',
-              900: '#0f172a',
-            },
-          },
-        },
-      },
-    }
-  </script>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -109,7 +85,10 @@
       "price": "0",
       "priceCurrency": "CAD"
     },
-    "aggregateRating": null
+    "softwareVersion": "1.2",
+    "downloadUrl": "https://www.myaihealth.ca/#request-access",
+    "featureList": "Lab results, immunizations, medications, vitals, blood pressure, blood glucose, diagnostic imaging, procedures, referrals, appointments, allergies, care team, messages, clinical documents",
+    "screenshot": "https://www.myaihealth.ca/demo-screenshot.png"
   }
   </script>
   <script type="application/ld+json">
@@ -127,18 +106,42 @@
       },
       {
         "@type": "Question",
-        "name": "Is my health data stored?",
+        "name": "Is my health data stored or shared?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. The extension never stores your health data. It fetches information from Alberta's official health portals for your conversation, then discards it. Only encrypted session cookies are stored locally on your machine."
+          "text": "No. The extension never stores your health data. It fetches information from Alberta's official health portals for your conversation, then discards it. Only encrypted session cookies are stored locally on your machine. Your credentials are entered directly in Alberta's sign-in page and never touch the extension."
         }
       },
       {
         "@type": "Question",
-        "name": "What do I need to use MyAI Health?",
+        "name": "What do I need to use it?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer."
+          "text": "You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer. No API keys, no terminal, no configuration files."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does this provide medical advice?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. MyAI Health is an information retrieval tool, not a medical device. It helps you access and understand your health records, but it does not provide medical advice, diagnose conditions, or recommend treatments. Always consult your doctor or healthcare provider for medical decisions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which health portals are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MyAI Health connects to two Alberta health portals: My Health Records (myhealthrecords.alberta.ca) for lab results, immunizations, medications, vitals, imaging, and procedures; and AHS MyChart / Connect Care (myahsconnect.albertahealthservices.ca) for appointments, messages, care team, allergies, clinical documents, and test results."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is it free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source."
         }
       }
     ]
@@ -210,7 +213,10 @@
 
       <!-- Hero illustration -->
       <div class="mt-16 max-w-3xl mx-auto fade-in">
-        <img src="/hero.png" alt="AI chat interface connected to health data — lab results, heart rate, medications, and appointments" class="w-full rounded-2xl shadow-2xl shadow-brand-500/10 border border-gray-100">
+        <picture>
+          <source srcset="/hero.webp" type="image/webp">
+          <img src="/hero.png" alt="AI chat interface connected to health data — lab results, heart rate, medications, and appointments" width="2752" height="1536" class="w-full rounded-2xl shadow-2xl shadow-brand-500/10 border border-gray-100">
+        </picture>
       </div>
     </div>
   </section>
@@ -423,13 +429,19 @@
           <div class="flex flex-col items-center gap-6">
             <!-- Clickable screenshot thumbnail -->
             <a id="demo-screenshot-link" href="/demo-screenshot.png" class="lightbox-link block max-w-2xl w-full cursor-zoom-in group">
-              <img src="/demo-screenshot.png" alt="Claude Desktop showing demo health report with abnormal lab values highlighted, alongside a generated PDF summary" class="w-full rounded-2xl shadow-xl border border-gray-200 transition-transform group-hover:scale-[1.02]">
+              <picture>
+                <source srcset="/demo-screenshot.webp" type="image/webp">
+                <img src="/demo-screenshot.png" alt="Claude Desktop showing demo health report with abnormal lab values highlighted, alongside a generated PDF summary" width="3186" height="1990" loading="lazy" class="w-full rounded-2xl shadow-xl border border-gray-200 transition-transform group-hover:scale-[1.02]">
+              </picture>
             </a>
             <p class="text-sm text-gray-500">Claude analyzes demo health data and generates a PDF report — <span class="font-medium">click to enlarge</span></p>
             <!-- Lipid trend chart -->
             <a class="lightbox-link block max-w-2xl w-full cursor-zoom-in group" href="/demo-chart.png">
               <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 transition-transform group-hover:scale-[1.02]">
-                <img src="/demo-chart.png" alt="Lipid panel trend chart showing Total Cholesterol, LDL, HDL, Triglycerides, and Non-HDL tracked over 6 years with target reference lines" class="w-full rounded-xl">
+                <picture>
+                  <source srcset="/demo-chart.webp" type="image/webp">
+                  <img src="/demo-chart.png" alt="Lipid panel trend chart showing Total Cholesterol, LDL, HDL, Triglycerides, and Non-HDL tracked over 6 years with target reference lines" width="1468" height="1038" loading="lazy" class="w-full rounded-xl">
+                </picture>
               </div>
             </a>
             <p class="text-sm text-gray-500">Claude charts lab trends over time — spotting patterns like rising LDL and cholesterol — <span class="font-medium">click to enlarge</span></p>
@@ -936,7 +948,7 @@
     <div class="max-w-6xl mx-auto text-center fade-in">
       <p class="text-sm text-gray-500 uppercase tracking-wider font-medium mb-4">Built with</p>
       <a href="https://github.com/features/copilot" target="_blank" rel="noopener noreferrer">
-        <img src="/github-copilot.png" alt="GitHub Copilot" class="h-8 mx-auto opacity-60 hover:opacity-100 transition-opacity">
+        <img src="/github-copilot.png" alt="GitHub Copilot" width="1414" height="278" loading="lazy" class="h-8 mx-auto opacity-60 hover:opacity-100 transition-opacity">
       </a>
     </div>
   </section>
