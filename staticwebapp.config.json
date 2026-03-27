@@ -2,10 +2,6 @@
   "platform": {
     "apiRuntime": "node:20"
   },
-  "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/api/*", "*.{css,js,png,jpg,svg,ico,json,woff2,webp,html,pdf}"]
-  },
   "routes": [
     {
       "route": "/api/*",
