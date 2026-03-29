@@ -55,3 +55,17 @@ node_modules/rollup/
 node_modules/@rollup/
 node_modules/@types/
 node_modules/fsevents/
+
+# Dev transitive deps (tailwind, sharp, vite toolchain)
+node_modules/@tailwindcss/
+node_modules/tailwindcss/
+node_modules/lightningcss/
+node_modules/lightningcss-*/
+node_modules/sharp/
+node_modules/sharp-*/
+node_modules/@img/
+node_modules/rolldown/
+node_modules/@rolldown/
+node_modules/jiti/
+node_modules/source-map/
+node_modules/@jridgewell/
