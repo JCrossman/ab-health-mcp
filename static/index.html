@@ -143,6 +143,14 @@
           "@type": "Answer",
           "text": "The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does Claude Desktop say 'Installing will grant access to everything on your computer'?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Claude Desktop shows this warning for all extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The source code is open source on GitHub so you can verify this yourself."
+        }
       }
     ]
   }
@@ -939,6 +947,13 @@
             <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Why does Claude Desktop say "Installing will grant access to everything on your computer"?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">Claude Desktop shows this warning for <strong>all</strong> extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The <a href="https://github.com/JCrossman/ab-health-mcp" class="text-brand-500 hover:text-brand-600 underline" target="_blank" rel="noopener noreferrer">source code is open source</a> on GitHub so you can verify this yourself.</p>
         </details>
       </div>
     </div>
