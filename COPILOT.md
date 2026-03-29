@@ -145,6 +145,18 @@ node_modules/rollup/
 node_modules/@rollup/
 node_modules/@types/
 node_modules/fsevents/
+node_modules/@tailwindcss/
+node_modules/tailwindcss/
+node_modules/lightningcss/
+node_modules/lightningcss-*/
+node_modules/sharp/
+node_modules/sharp-*/
+node_modules/@img/
+node_modules/rolldown/
+node_modules/@rolldown/
+node_modules/jiti/
+node_modules/source-map/
+node_modules/@jridgewell/
 ```
 
 #### Verifying the bundle after building
@@ -262,7 +274,7 @@ All MyChart tools use `__RequestVerificationToken` CSRF header instead of Contro
 - **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. For Anthropic reviewer testing.
 - **Version check** — `connect_account` checks `myaihealth.ca/version.json` and notifies users of available updates
 - **Medical disclaimers** — embedded in `connect_account` responses and all factory-generated tool responses
-- **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation
+- **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation, rate limiting on OAuth endpoints, TOCTOU race condition fixes
 - **Deploy automation** — `npm run deploy` handles version bump, build, pack, upload, and landing page deploy
 - **Open source** — Public GitHub repo with squashed history, branch protection enabled
 
@@ -351,6 +363,8 @@ Error mapping: `AuthRequiredError` → "Use connect_account", `SessionExpiredErr
 ```json
 {
   "@modelcontextprotocol/sdk": "^1.27.1",
+  "express": "^5.x",
+  "express-rate-limit": "^7.x",
   "mupdf": "^0.5.x",
   "puppeteer-core": "^24.x",
   "tough-cookie": "^6.x",
