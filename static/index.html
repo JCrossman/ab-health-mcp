@@ -330,7 +330,7 @@
           <div class="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
           <h3 class="text-xl font-semibold mb-3">Install</h3>
           <p class="text-gray-600 leading-relaxed">
-            Download the extension file and double-click it. Claude Desktop installs it automatically — just like a browser extension.
+            Download the extension file and double-click it. Claude Desktop installs it automatically. You'll see a security warning — that's normal and means your data stays on your computer.
           </p>
         </div>
         <!-- Step 2 -->
@@ -348,6 +348,22 @@
           <p class="text-gray-600 leading-relaxed">
             "Show me my recent labs." "Am I up to date on my vaccines?" "Explain my blood work." Claude does the rest.
           </p>
+        </div>
+      </div>
+      <!-- Privacy-by-design note -->
+      <div class="mt-12 fade-in">
+        <div class="max-w-3xl mx-auto bg-green-50 rounded-2xl p-6 md:p-8 border border-green-100">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-green-900 text-lg mb-2">Why does it run on your computer?</h3>
+              <p class="text-green-800 leading-relaxed">Your health data goes directly between your computer and Alberta's health portals — it never passes through our servers. Claude Desktop shows a security warning during install because the extension runs locally. <strong>That's the point — it's how we keep your data private.</strong> We chose this approach specifically to protect your health information.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -694,6 +710,18 @@
             <h3 class="font-semibold">Open Source</h3>
           </div>
           <p class="text-sm text-gray-600 leading-relaxed">The full codebase is open source — look at every line of code and see exactly what it does. <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">View on GitHub →</a></p>
+        </div>
+        <!-- Privacy 7 -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold">No Middleman</h3>
+          </div>
+          <p class="text-sm text-gray-600 leading-relaxed">The extension runs on your computer and talks directly to Alberta's health portals. Your health data never passes through our servers — there's no middleman between you and your records.</p>
         </div>
       </div>
     </div>
