@@ -339,6 +339,56 @@ function buildUserEmailHtml({ name, downloadUrl, expiresOn }) {
   <p style="margin:0 0 20px;font-size:12px;color:#9ca3af;text-align:center;">Link expires ${expiryDate}</p>
 </td></tr>
 
+<!-- Security Warning Heads-Up -->
+<tr><td style="padding:0 32px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fff7ed;border:2px solid #fed7aa;border-radius:10px;overflow:hidden;">
+  <tr><td style="padding:20px 24px;">
+
+    <!-- Heading with shield icon -->
+    <table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="vertical-align:middle;padding-right:10px;">
+        <span style="font-size:24px;">🛡️</span>
+      </td>
+      <td style="vertical-align:middle;">
+        <h2 style="margin:0;font-size:17px;font-weight:700;color:#9a3412;">You&rsquo;ll see a warning &mdash; that&rsquo;s a good thing</h2>
+      </td>
+    </tr>
+    </table>
+
+    <p style="margin:14px 0 16px;font-size:15px;line-height:1.6;color:#374151;">When you install the extension, Claude Desktop will show this message:</p>
+
+    <!-- Simulated warning message -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#451a03;border-radius:8px;">
+    <tr><td style="padding:14px 18px;">
+      <table role="presentation" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="vertical-align:middle;padding-right:10px;">
+          <span style="font-size:18px;">⚠️</span>
+        </td>
+        <td style="vertical-align:middle;">
+          <span style="color:#fbbf24;font-size:14px;font-weight:500;">Installing will grant access to everything on your computer.</span>
+        </td>
+      </tr>
+      </table>
+    </td></tr>
+    </table>
+
+    <p style="margin:16px 0 0;font-size:15px;line-height:1.7;color:#374151;"><strong style="color:#9a3412;">This is normal.</strong> Claude Desktop shows this warning for <em>every</em> extension that runs on your computer. Here&rsquo;s what it really means:</p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;font-size:15px;line-height:1.7;color:#374151;">
+      <tr><td style="vertical-align:top;padding-right:8px;color:#16a34a;font-weight:bold;">✓</td><td>Your health data goes <strong>directly between your computer and Alberta&rsquo;s health portals</strong></td></tr>
+      <tr><td style="vertical-align:top;padding-right:8px;color:#16a34a;font-weight:bold;">✓</td><td>Your data <strong>never passes through our servers</strong> &mdash; there is no middleman</td></tr>
+      <tr><td style="vertical-align:top;padding-right:8px;color:#16a34a;font-weight:bold;">✓</td><td>The extension <strong>does not read your files</strong>, browse your folders, or touch anything else on your computer</td></tr>
+      <tr><td style="vertical-align:top;padding-right:8px;color:#16a34a;font-weight:bold;">✓</td><td>We built it this way <strong>on purpose to protect your privacy</strong></td></tr>
+    </table>
+
+    <p style="margin:14px 0 0;font-size:14px;line-height:1.5;color:#6b7280;">The code is open source &mdash; you can see exactly what it does at <a href="https://github.com/JCrossman/ab-health-mcp" style="color:#0277b5;text-decoration:none;font-weight:500;">github.com/JCrossman/ab-health-mcp</a></p>
+
+  </td></tr>
+  </table>
+</td></tr>
+
 <!-- Getting Started -->
 <tr><td style="padding:0 32px 24px;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border-radius:8px;padding:20px 24px;">
