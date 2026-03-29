@@ -11,7 +11,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
-import { readFile, writeFile, mkdir, unlink, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { CookieJar } from 'tough-cookie';

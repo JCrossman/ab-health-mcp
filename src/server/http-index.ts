@@ -17,6 +17,7 @@
  */
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
@@ -60,7 +61,16 @@ async function main(): Promise<void> {
   // at Alberta's real portal. The server converts them to CookieJar format,
   // fetches the MyChart CSRF token, generates an auth code, and marks the
   // flow as complete for the polling authorize page.
-  app.post('/authorize/cookies', async (req, res) => {
+
+  const authorizeLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please wait a minute and try again.' },
+  });
+
+  app.post('/authorize/cookies', authorizeLimiter, async (req, res) => {
     const { flowId, mhrCookies, myChartCookies } = req.body as {
       flowId?: string;
       mhrCookies?: ChromeCookie[];

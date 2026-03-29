@@ -36,7 +36,7 @@ interface AvailableModel {
 }
 
 export default function ChatPage() {
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const router = useRouter();
 
   const [selectedModel, setSelectedModel] = useState("gpt-4o");

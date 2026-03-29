@@ -10,7 +10,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { CookieJar } from 'tough-cookie';
@@ -24,13 +24,16 @@ const SALT_DIR = join(homedir(), '.mhr-records');
 const TOKEN_SALT_PATH = join(SALT_DIR, 'token-salt');
 
 function getOrCreateTokenSalt(): Buffer {
-  if (existsSync(TOKEN_SALT_PATH)) {
-    return readFileSync(TOKEN_SALT_PATH);
+  try {
+    const existing = readFileSync(TOKEN_SALT_PATH);
+    return existing;
+  } catch {
+    // File doesn't exist — create it
+    mkdirSync(SALT_DIR, { recursive: true, mode: 0o700 });
+    const salt = randomBytes(32);
+    writeFileSync(TOKEN_SALT_PATH, salt, { mode: 0o600 });
+    return salt;
   }
-  mkdirSync(SALT_DIR, { recursive: true, mode: 0o700 });
-  const salt = randomBytes(32);
-  writeFileSync(TOKEN_SALT_PATH, salt, { mode: 0o600 });
-  return salt;
 }
 
 let _encryptionKey: Buffer | null = null;

@@ -286,7 +286,7 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
     }
 
     // Extract MHR cookies
-    const { jar: mhrJar, cookies: mhrCookies } = await extractCookiesIntoJar(page, [
+    const { jar: mhrJar } = await extractCookiesIntoJar(page, [
       'https://myhealthrecords.alberta.ca',
       'https://console.myhealthrecords.alberta.ca',
       'https://account.alberta.ca',

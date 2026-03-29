@@ -17,7 +17,6 @@ import type { AuthenticateResult } from './auth-client.js';
 
 const SSO_BASE = 'https://account.alberta.ca';
 const SSO_API = `${SSO_BASE}/app/account/services/api`;
-const MHR_BASE = 'https://myhealthrecords.alberta.ca';
 const MYCHART_BASE = 'https://myahsconnect.albertahealthservices.ca';
 const MYCHART_CSRF_URL = `${MYCHART_BASE}/MyChartPRD/Home/CSRFToken`;
 const MYCHART_SAML_URL = `${MYCHART_BASE}/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False`;

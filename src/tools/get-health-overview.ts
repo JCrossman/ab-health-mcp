@@ -26,6 +26,10 @@ export const getHealthOverviewTool = {
       }
 
       // Fire all API calls in parallel
+      const allergiesPromise = mcClient ? mcClient.getAllergies() : Promise.reject('MyChart not connected');
+      const healthIssuesPromise = mcClient ? mcClient.getHealthIssues() : Promise.reject('MyChart not connected');
+      const immunizationsPromise = mcClient ? mcClient.getImmunizations() : Promise.reject('MyChart not connected');
+
       const [profile, mhrMeds, labs, allergies, healthIssues, immunizations] =
         await Promise.allSettled([
           mhrClient.getUser(),
@@ -35,9 +39,9 @@ export const getHealthOverviewTool = {
             startDate: '',
             endDate: '',
           }),
-          mcClient?.getAllergies() ?? Promise.reject('MyChart not connected'),
-          mcClient?.getHealthIssues() ?? Promise.reject('MyChart not connected'),
-          mcClient?.getImmunizations() ?? Promise.reject('MyChart not connected'),
+          allergiesPromise,
+          healthIssuesPromise,
+          immunizationsPromise,
         ]);
 
       const extract = (result: PromiseSettledResult<unknown>) =>
