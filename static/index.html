@@ -151,6 +151,14 @@
           "@type": "Answer",
           "text": "Claude Desktop shows this warning for all extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The source code is open source on GitHub so you can verify this yourself."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I view health records for family members?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes — if a family member has granted you proxy access through AHS MyChart (Connect Care), you can view their health records too. Just ask Claude to list your shared records, then switch to viewing their data. This works for parents checking their children's records, adult children helping elderly parents, or anyone who has been granted shared access."
+        }
       }
     ]
   }
@@ -225,6 +233,34 @@
           <source srcset="/hero.webp" type="image/webp">
           <img src="/hero.png" alt="AI chat interface connected to health data — lab results, heart rate, medicines, and appointments" width="2752" height="1536" class="w-full rounded-2xl shadow-2xl shadow-brand-500/10 border border-gray-100">
         </picture>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW Feature Announcement: Family & Caregiver Access -->
+  <section class="py-12 px-6">
+    <div class="max-w-4xl mx-auto fade-in">
+      <div class="relative bg-gradient-to-r from-brand-50 to-blue-50 rounded-2xl p-8 md:p-10 border border-brand-100 overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-brand-100/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div class="relative flex flex-col md:flex-row items-start gap-6">
+          <div class="w-14 h-14 rounded-xl bg-brand-500 flex items-center justify-center shrink-0">
+            <svg aria-hidden="true" class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <span class="inline-flex items-center px-3 py-1 bg-brand-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">New</span>
+              <h2 class="text-2xl md:text-3xl font-bold text-navy-900">Family &amp; Caregiver Access</h2>
+            </div>
+            <p class="text-gray-600 leading-relaxed text-lg mb-4">
+              Now you can view health records for family members who have shared access with you through AHS MyChart. Help elderly parents track their medications, check your child's immunizations, or review test results for anyone who has granted you access.
+            </p>
+            <p class="text-gray-500 leading-relaxed">
+              Just ask Claude: <span class="font-medium text-brand-600">"Do I have access to any shared health records?"</span> — then switch to viewing their data with a simple request.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -954,6 +990,13 @@
             <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
           <p class="mt-4 text-gray-600 leading-relaxed">Claude Desktop shows this warning for <strong>all</strong> extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The <a href="https://github.com/JCrossman/ab-health-mcp" class="text-brand-500 hover:text-brand-600 underline" target="_blank" rel="noopener noreferrer">source code is open source</a> on GitHub so you can verify this yourself.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Can I view health records for family members?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">Yes — if a family member has granted you proxy access through AHS MyChart (Connect Care), you can view their health records too. Just ask Claude to list your shared records, then switch to viewing their data. This works for parents checking their children's records, adult children helping elderly parents, or anyone who has been granted shared access.</p>
         </details>
       </div>
     </div>
