@@ -353,7 +353,7 @@ This project handles protected health information under Alberta's Health Informa
 ### Non-Negotiable Rules
 
 1. **No PII in logs.** No names, health data, cookie values, or identifiers in log output.
-2. **No health data stored by the extension.** Only encrypted session cookies are persisted (local mode) or encrypted into tokens (remote mode). All health data is returned to Claude and discarded by the extension. See [Anthropic's privacy policy](https://www.anthropic.com/policies/privacy) for how Claude handles conversation data.
+2. **No health data stored by the extension.** Only encrypted session cookies are persisted (local mode) or encrypted into tokens (remote mode). All health data is returned to Claude and discarded by the extension. See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for how Claude handles conversation data.
 3. **Credentials never touch the server.** In local mode, users enter credentials in the browser via Puppeteer. In remote mode, credentials are entered on the Alberta SSO page in the user's own browser.
 4. **Encryption at rest.** Local: AES-256-GCM at `~/.mhr-records/session.enc`. Remote: AES-256-GCM in the OAuth access token (held on user's machine by Claude Desktop).
 5. **Zero server-side storage (remote mode).** The server stores nothing — no database, no user data. Session cookies are encrypted into the OAuth token. If the server is compromised, there is no stored user data to leak.
@@ -428,7 +428,7 @@ swa deploy ./static \
 
 This extension accesses personal health information on your behalf. Here is how your data is handled:
 
-- **No health data is stored by the extension.** Data fetched from Alberta Health portals is returned to Claude and immediately discarded by the extension. Nothing is written to disk or any server by this extension. See [Anthropic's privacy policy](https://www.anthropic.com/policies/privacy) for how Claude handles conversation data.
+- **No health data is stored by the extension.** Data fetched from Alberta Health portals is returned to Claude and immediately discarded by the extension. Nothing is written to disk or any server by this extension. See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for how Claude handles conversation data.
 - **Session cookies only.** The only data persisted is an encrypted session cookie (AES-256-GCM) stored locally at `~/.mhr-records/session.enc`. It contains no health data — only authentication tokens.
 - **Credentials never leave your machine.** You log in through the real Alberta SSO page in your browser. Credentials are never sent to or processed by this extension.
 - **Canadian data residency (our infrastructure).** All cloud infrastructure runs in Azure Canada Central (HIA/POPA compliant). Note: conversations are processed by Claude (Anthropic) on US-based servers — this extension does not control Anthropic's data handling.
