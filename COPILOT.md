@@ -267,9 +267,11 @@ All MyChart tools use `__RequestVerificationToken` CSRF header instead of Contro
 - Static site at www.myaihealth.ca (Azure Static Web Apps)
 - Gated download access via request form → Azure Communication Services email → 3-month SAS URL
 - SEO: robots.txt, sitemap.xml, Schema.org JSON-LD, FAQ section
+- Privacy-first messaging: pre-frames Claude Desktop security warning on landing page and in access request email
+- Feature announcements: Family & Caregiver (proxy) access banner
 - Azure resources: Static Web App (`myaihealth`), Blob Storage (`myaihealthdownloads`), Communication Services (`myaihealth-comm`), Email Service (`myaihealth-email`)
 
-### Recent Additions (v1.1.0)
+### Recent Additions (v1.1.15)
 - **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)
 - **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. For Anthropic reviewer testing.
 - **Version check** — `connect_account` checks `myaihealth.ca/version.json` and notifies users of available updates
@@ -277,6 +279,8 @@ All MyChart tools use `__RequestVerificationToken` CSRF header instead of Contro
 - **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation, rate limiting on OAuth endpoints, TOCTOU race condition fixes
 - **Deploy automation** — `npm run deploy` handles version bump, build, pack, upload, and landing page deploy
 - **Open source** — Public GitHub repo with squashed history, branch protection enabled
+- **Family & proxy access** — `mc_list_proxy_access` and `mc_switch_context` tools for viewing family members' health records via MyChart shared access
+- **Privacy-first messaging** — Landing page and access request email pre-frame the Claude Desktop security warning, explaining the local architecture is an intentional privacy feature
 
 ## Authentication
 
@@ -378,7 +382,7 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 
 - **URL:** www.myaihealth.ca
 - **Hosting:** Azure Static Web Apps (Free tier, `myaihealth` resource in `ab-health-mcp` resource group)
-- **API function:** `api/request-access/` — Azure Function that generates a 3-month SAS download URL and emails it via Azure Communication Services
+- **API function:** `api/request-access/` — Azure Function that generates a 3-month SAS download URL and emails it via Azure Communication Services. Email includes privacy-first messaging pre-framing the Claude Desktop security warning.
 - **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified)
 - **Downloads:** `.mcpb` stored in Azure Blob Storage (`myaihealthdownloads` account, `downloads` container). **Not distributed via GitHub releases** — users must request access through the portal.
 - **Version endpoint:** `static/version.json` — checked by installed extensions to notify users of updates
@@ -387,7 +391,7 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 ## Repository
 
 - **Visibility:** Public (open source, MIT license)
-- **Version:** v1.1.0 (use `npm run deploy` to bump)
+- **Version:** v1.1.15 (use `npm run deploy` to bump)
 - **Branch protection:** `main` branch has force push and deletion blocked, enforce_admins enabled
 - **Distribution:** The `.mcpb` bundle is NOT in the repo or GitHub releases. It's gated behind the myaihealth.ca access request form. Users can clone and build from source if they prefer.
 - **Do NOT** create GitHub releases with `.mcpb` attachments — this bypasses the access request flow.
