@@ -103,18 +103,19 @@ AHS MyChart (Connect Care) at `myahsconnect.albertahealthservices.ca/MyChartPRD/
 | `mc_get_historical_results` | `api/past-results/GetMultipleHistoricalResultComponents` | POST |
 | `mc_get_appointment_requests` | `Visits/VisitsList/LoadAppointmentRequest` | POST (form) |
 | `mc_list_proxy_access` | `ProxySwitch` | GET |
-| `mc_switch_context` | `api/proxy/SwitchToProxy` | POST |
+| `mc_switch_context` | `inside.asp?mode=proxyswitch` | Navigation |
 
 All endpoints are relative to base URL: `https://myahsconnect.albertahealthservices.ca/MyChartPRD/`
 
-## Step 6: Remote Mode (Not Started)
+## Step 6: Remote Mode (Implemented, Not Yet Productized)
 
-Follow the DATS project pattern:
-1. Add Express HTTP server for Streamable HTTP transport
-2. Add Cosmos DB session storage
-3. Add browser-based auth proxy
-4. Deploy to Azure Container Apps (Canada Central)
-5. Register as Claude connector
+HTTP/OAuth mode is implemented but not yet deployed to production:
+1. ✅ Express HTTP server with Streamable HTTP transport (`src/server/http-index.ts`)
+2. ✅ Zero server-side storage — session cookies encrypted into OAuth access token (`src/server/token-crypto.ts`)
+3. ✅ OAuth 2.1 provider with auth code flow (`src/server/oauth-provider.ts`)
+4. ✅ Chrome extension cookie capture for auth (`src/server/cookie-converter.ts`)
+5. ✅ Azure Container Apps deployment config (Canada Central)
+6. ☐ Production deployment and Claude connector registration
 
 ## Resolved Questions
 

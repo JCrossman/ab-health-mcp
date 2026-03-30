@@ -51,9 +51,9 @@ Claude/Copilot ──MCP (stdio)──▶ MCP Server ──REST──▶ myhealt
                                          └──SSO──▶ account.alberta.ca
 ```
 
-- **Transport:** stdio (local); Streamable HTTP planned for Phase 3
+- **Transport:** stdio (local); Streamable HTTP (remote, implemented)
 - **Auth:** Cookie-based via Alberta SSO — no Bearer tokens or API keys. The entire auth state lives in HTTP cookies managed by `tough-cookie`. Shared SSO authenticates both MHR and MyChart.
-- **Session storage:** Encrypted local file (AES-256-GCM) for stdio; Cosmos DB planned for Phase 3. Stores MHR jar + MyChart jar + CSRF token (v2 format, backward compatible with v1).
+- **Session storage:** Encrypted local file (AES-256-GCM) for stdio; encrypted into OAuth access token for HTTP mode (zero server-side storage). Stores MHR jar + MyChart jar + CSRF token (v2 format, backward compatible with v1).
 - **Session timeout:** ~10 minutes. Call `/api/phr/v1/session?SessionMode=Patient&IsKeypressed=true` to keep alive.
 
 ## Passthrough Principle
@@ -80,7 +80,7 @@ This project handles protected health information under Alberta's HIA and POPA.
 
 ### Tool pattern
 
-One file per MCP tool in `src/tools/`. MHR tools follow `get-*.ts` naming, MyChart tools follow `mc-*.ts` naming (tool names prefixed with `mc_`). Every data tool follows the same structure: validate session → call API (passthrough) → format response → return. See `MCP-TOOLS-SPEC.md` for the `createToolFactory` pattern.
+One file per MCP tool in `src/tools/`. MHR tools follow `get-*.ts` naming, MyChart tools follow `mc-*.ts` naming (tool names prefixed with `mc_`). Every data tool follows the same structure: validate session → call API (passthrough) → format response → return. See `MCP-TOOLS-SPEC.md` for the factory pattern (`simpleMhrTool`, `mhrDateRangeTool`, `simpleMyChartTool`).
 
 ### Error handling
 
@@ -111,6 +111,6 @@ Phase 1 (core): auth client, MHR REST client, session manager, connect/check/dis
 
 Phase 2: Additional MHR data tools (immunizations, medications, etc.). ✅ **Complete.**
 
-MyChart integration: MyChart REST client, 15 `mc_` prefixed tools, shared SSO auth, v2 session format. ✅ **Complete.**
+MyChart integration: MyChart REST client, 20 `mc_` prefixed tools, shared SSO auth, v2 session format. ✅ **Complete.**
 
-Phase 3: Remote mode — HTTP transport, Cosmos DB sessions, browser auth proxy, Azure deployment.
+Phase 3: Remote mode — HTTP transport, zero-storage OAuth tokens, Chrome extension auth, Azure Container Apps. ✅ **Implemented** (not yet productized).

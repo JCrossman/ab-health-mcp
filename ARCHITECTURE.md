@@ -12,7 +12,7 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 ┌──────────────────────────────────┐
 │  Claude Desktop                  │
 └──────────────┬───────────────────┘
-               │ MCP Protocol (stdio)
+               │ MCP Protocol (stdio or Streamable HTTP)
                ▼
 ┌──────────────────────────────────┐
 │   Alberta Health MCP Server      │
@@ -26,12 +26,11 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 └────┬─────┘ └──────────┘ └───────────────────────────────────┘
      │        myhealthrecords   myahsconnect.albertahealthservices
      │        .alberta.ca       .ca/MyChartPRD/
-     ▼ (SAML SSO chain)
+     ▼ (SSO)
 ┌──────────────────────────────────┐
-│ console.myhealthrecords.alberta.ca│
-│   → identity.prd.telushealthspace.com│
-│     → sts.xiduam.ca             │
-│       → account.alberta.ca      │
+│ account.alberta.ca (SSO login)   │
+│   → MyChart SAML auto-auth      │
+│   → MHR SSO auto-auth           │
 └──────────────────────────────────┘
 ```
 
@@ -44,8 +43,10 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 - **Browser Automation:** `puppeteer-core` (for SSO authentication; requires system Chrome)
 - **Cookie Management:** `tough-cookie` (serializable cookie jar)
 - **PDF Processing:** `mupdf` (WASM — text extraction and image rendering for scanned PDFs)
-- **Transport:** stdio (local Claude Desktop)
-- **Session Storage:** Local encrypted file (AES-256-GCM) at `~/.mhr-records/session.enc`
+- **HTTP Server:** `express` (for remote/OAuth mode)
+- **Rate Limiting:** `express-rate-limit` (OAuth endpoints)
+- **Transport:** stdio (local Claude Desktop); Streamable HTTP (remote mode, implemented)
+- **Session Storage:** Local encrypted file (AES-256-GCM) at `~/.mhr-records/session.enc` for stdio; encrypted into OAuth access token for HTTP mode (zero server-side storage)
   - v2 format: MHR cookie jar + MyChart cookie jar + CSRF token (backward compatible with v1)
 - **Browser Profile:** Persistent at `~/.mhr-records/browser-profile`
 - **MHR Auth:** Control-Mapping-Id header per endpoint
@@ -67,7 +68,7 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 Identical to the DATS project. This MCP server:
 
 1. Accepts requests from Claude/Copilot clients
-2. Calls the My Health Records API
+2. Calls the My Health Records and MyChart APIs
 3. Formats the response for display
 4. Returns the data
 
@@ -119,7 +120,15 @@ ab-health-mcp/
 │   │   └── mc-download-document.ts
 │   ├── helpers/
 │   │   ├── session-helpers.ts      # Session validation, cross-keepalive
-│   │   └── content-helpers.ts      # PDF text extraction + image rendering (mupdf WASM)
+│   │   ├── content-helpers.ts      # PDF text extraction + image rendering (mupdf WASM)
+│   │   └── demo-data.ts            # Sample health data for demo mode
+│   ├── server/
+│   │   ├── create-server.ts        # MCP server factory (registers all 44 tools)
+│   │   ├── http-index.ts           # HTTP entry point (Streamable HTTP + OAuth 2.1)
+│   │   ├── oauth-provider.ts       # OAuth 2.1 provider (auth code flow)
+│   │   ├── token-crypto.ts         # Encrypt/decrypt session into OAuth access token
+│   │   ├── session-context.ts      # AsyncLocalStorage for per-request session
+│   │   └── cookie-converter.ts     # Chrome extension cookie → tough-cookie converter
 │   └── utils/
 │       ├── errors.ts               # Typed errors (SessionExpired, AuthRequired, etc.)
 │       ├── logger.ts               # Stderr logging (no PII)
@@ -130,6 +139,8 @@ ab-health-mcp/
 │   └── hero.png / flatIcons.png    # Gemini-generated graphics
 ├── api/                            # Azure Functions (landing page backend)
 │   └── request-access/             # Form handler → SAS URL + ACS email notification
+├── extension/                      # Chrome extension (cookie capture for remote auth)
+├── portal/                         # Next.js web portal (alternative to Claude Desktop)
 ├── staticwebapp.config.json        # Azure Static Web Apps config
 ├── scripts/
 │   └── test-auth.ts                # Standalone auth flow test

@@ -8,15 +8,10 @@ This is fundamentally different from token-based auth. There are no Bearer token
 
 ## Actual Auth Flow (Discovered via HAR Analysis)
 
-The flow navigates through the myhealth.alberta.ca health portal, which establishes both MyChart and MHR sessions after a single SSO login:
+The flow navigates directly to the Alberta SSO login page, then establishes MyChart and MHR sessions separately via explicit navigation:
 
 ```
-1. Navigate to myhealth.alberta.ca (health portal)
-   → May redirect through ahs.queue-it.net (waiting room, if active)
-   → Redirects to sts.xiduam.ca (WS-Federation endpoint)
-   → Redirects to account.alberta.ca/app/account/signin/SignInRedirect
-
-2. account.alberta.ca (Alberta SSO — JS-rendered SPA)
+1. Navigate to account.alberta.ca/ui/sign-in/signin (SSO login page)
    → SPA auto-loads and makes API calls:
      - GET /api/metadata
      - GET /api/is-login-token-valid (401 if not logged in)
@@ -29,15 +24,17 @@ The flow navigates through the myhealth.alberta.ca health portal, which establis
    → WAF generates qd4v5cb38r-* fingerprint headers (anti-bot protection)
    → Post-login: GET /api/is-login-token-valid, /api/account-details
 
-3. Portal redirect chain (establishes both sessions automatically):
-   → account.alberta.ca → sts.xiduam.ca (SAML response)
-   → sts.xiduam.ca → myhealth.alberta.ca/_trust/ (portal trust)
-   → Portal → myahsconnect.albertahealthservices.ca/MyChartPRD/default.asp?token=...
-     (MyChart session established via URL token)
-   → MyChart → myhealth.alberta.ca/_trust/ (portal trust again)
-   → Portal → myhealthrecords.alberta.ca/redirect.aspx?target=APPAUTHSUCCESS
-     (MHR session established)
-   → MHR loads Angular SPA at /ng/
+2. Navigate to MyChart SAML login (auto-authenticates via shared SSO):
+   → GET myahsconnect.albertahealthservices.ca/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False
+   → SAML chain uses SSO cookies to auto-authenticate
+   → Wait for URL to contain /MyChartPRD/Home or /MyChartPRD/default.asp
+   → MyChart session established
+
+3. Navigate to MHR to establish its session:
+   → GET myhealthrecords.alberta.ca
+   → SSO cookies auto-authenticate
+   → Wait for URL to contain /ng/
+   → MHR session established
 
 4. Cookie extraction + CSRF token:
    → Extract MyChart cookies from browser cookie store
@@ -76,17 +73,14 @@ window.chrome = { runtime: {} };     // Chrome extension API stub
 
 ### Entry Point
 
-Uses `myhealth.alberta.ca` as the entry point — the same URL that manual browser login uses. This ensures:
-- Identical auth chain as manual login (no extra SAML hops)
-- Portal redirect chain establishes **both** MyChart and MHR sessions
-- Only 2 rate-limited SSO calls per authentication (account-checks + signin)
+Navigates directly to `account.alberta.ca/ui/sign-in/signin` — the SSO login page. After SSO login completes, the browser navigates explicitly to MyChart (SAML auto-auth) and then MHR (SSO auto-auth) to establish each session separately. This avoids the portal redirect chain (which can trigger queue-it waiting rooms) and gives precise control over session establishment.
 
 ### Session Detection
 
-Monitors the redirect chain for both session establishments:
-- MyChart: watches for `myahsconnect.albertahealthservices.ca/MyChartPRD/` URLs
-- MHR: watches for `myhealthrecords.alberta.ca` URLs
-- Waits for MHR as the final destination before extracting cookies
+After SSO login, sessions are established via explicit navigation:
+- MyChart: navigate to SAML login URL, wait for `/MyChartPRD/Home` or `/MyChartPRD/default.asp`
+- MHR: navigate to `myhealthrecords.alberta.ca`, wait for `/ng/`
+- Response monitoring tracks which sessions have been successfully established
 
 ### Persistent Browser Profile
 
@@ -290,10 +284,12 @@ Use a cookie jar library (e.g., `tough-cookie`) to:
 - Puppeteer uses persistent profile at `~/.mhr-records/browser-profile`
 - Maintains SSO state between sessions, reducing rate limiting
 
-**Remote mode (HTTP) — NOT YET IMPLEMENTED:**
-- Encrypt and store in Cosmos DB (Canada Central)
-- 24-hour TTL
-- Delete on disconnect
+**Remote mode (HTTP) — implemented, not yet productized:**
+- Session cookies encrypted into the OAuth access token (AES-256-GCM)
+- Zero server-side storage — the token IS the session
+- Token includes MHR jar + MyChart jar + CSRF token + expiry
+- Server decrypts on each request, runs MCP tools, discards
+- See `src/server/token-crypto.ts` and `src/server/http-index.ts`
 
 ### Session Keepalive
 

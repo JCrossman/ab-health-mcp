@@ -40,11 +40,12 @@ If a valid session already exists, returns immediately without opening a browser
 ```json
 {
   "connected": true,
-  "message": "Successfully connected to My Health Records.",
+  "message": "Successfully connected to My Health Records and MyChart (AHS Connect).",
   "userName": "Jane Doe",
   "authorizedRecords": 1,
-  "cookieCount": 20,
-  "domains": ["myhealthrecords.alberta.ca", "account.alberta.ca", ".alberta.ca"]
+  "mhrConnected": true,
+  "myChartConnected": true,
+  "disclaimer": "IMPORTANT: This is your health record data..."
 }
 ```
 
@@ -52,10 +53,7 @@ If a valid session already exists, returns immediately without opening a browser
 
 Verifies that the auth session is established and valid.
 
-**Parameters:**
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| session_id | string | No | Session ID from connect_account (remote mode) |
+**Parameters:** None
 
 **Behavior:**
 1. Check if encrypted session exists
@@ -169,7 +167,7 @@ Downloads a PDF or file attachment from a lab result.
 
 **Calls:** `GET /api/phr/v1/attachment/{thingId}/download?bName={filename}`
 
-**Response:** Returns the file as base64 or a download URL.
+**Response:** Returns the file as MCP content blocks — PDFs are text-extracted (or rendered as images if scanned), images are returned inline. Claude can read the document contents directly.
 
 ---
 
@@ -269,7 +267,7 @@ Makes 3 parallel API calls:
 | thing_id | string | Yes | The thingId from attachment metadata |
 | filename | string | Yes | The attachment filename |
 
-**Response:** Returns the PDF as an MCP `EmbeddedResource` with base64-encoded blob, allowing Claude to read the document contents directly.
+**Response:** Returns MCP content blocks (`text` / `image`) produced from the downloaded file. PDFs are text-extracted or rendered as images if scanned, allowing Claude to read the document contents directly.
 
 ---
 
@@ -395,37 +393,19 @@ Makes 2 parallel API calls:
 Every data tool follows the same pattern:
 
 ```typescript
-import { createToolFactory } from './tool-factory.js';
+import { mhrDateRangeTool } from './tool-factory.js';
 
-export const getLabResults = createToolFactory({
-  name: 'get_lab_results',
-  description: 'Get lab test results from your My Health Records account',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      date_range: {
-        type: 'string',
-        enum: ['All', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear'],
-        default: 'All',
-        description: 'Date range filter'
-      }
-    }
-  },
-  handler: async (args, { mhrClient, session }) => {
-    // 1. Validate session
-    ensureSession(session);
+// Simple date-range tool (most MHR tools follow this pattern)
+export const getLabResultsTool = mhrDateRangeTool(
+  'get_lab_results',
+  'Get lab test results from your My Health Records account',
+  (client, params) => client.getLabResults(params),
+  'results',
+);
 
-    // 2. Call API (passthrough)
-    const data = await mhrClient.getLabResults({
-      dateRange: args.date_range ?? 'All',
-      startDate: args.start_date,
-      endDate: args.end_date
-    });
-
-    // 3. Format response
-    return formatLabResults(data, args.test_name);
-  }
-});
+// Other factory helpers:
+// simpleMhrTool(name, description, method, resultKey) — no params
+// simpleMyChartTool(name, description, method) — MyChart tools
 ```
 
 ---
@@ -667,7 +647,7 @@ Switches MyChart to view a different patient's records via Friends & Family prox
 |------|------|----------|-------------|
 | proxy_id | string | Yes | Patient proxy ID from mc_list_proxy_access, or "self" to switch back to own records |
 
-**Calls:** `POST api/proxy/SwitchToProxy` or navigates to `ProxySwitch?selectedId={id}`
+**Calls:** Navigates to `inside.asp?mode=proxyswitch&action=switchcontext&src=0&eid={proxyId}` or `inside.asp?mode=self` (for switching back). Refreshes CSRF token after switch.
 
 **Usage flow:**
 1. Call `mc_list_proxy_access` to see available patients
