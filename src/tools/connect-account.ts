@@ -17,9 +17,46 @@ import { sessionManager, loadSessionData, invalidateSessionCache } from '../help
 import { MEDICAL_DISCLAIMER } from './tool-factory.js';
 import { isDemoMode, setDemoMode } from '../helpers/demo-data.js';
 import { logger } from '../utils/logger.js';
+import { access, writeFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 
 const CURRENT_VERSION = '1.1.15';
 const VERSION_CHECK_URL = 'https://www.myaihealth.ca/version.json';
+
+const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
+
+const PRIVACY_NOTICE = `⚠️ IMPORTANT — Please read before connecting:
+
+When you connect your health account, your health data (lab results, medications, immunizations, etc.) will be sent to Claude for your conversation.
+
+Here's what that means:
+• Claude is made by Anthropic. Their servers are in the United States.
+• Anthropic may keep your conversations for up to 30 days.
+• By default, your conversations may be used to improve Claude's AI.
+
+To protect your privacy:
+→ Open Claude Desktop → Settings → Privacy → Turn off "Improve Claude"
+
+This extension does NOT store your health data — it fetches it for your conversation, then discards it. Your login credentials are entered directly on Alberta's website and never touch this extension.
+
+By proceeding, you acknowledge that your health data will be sent to Anthropic's servers in the United States for AI processing. See Anthropic's privacy policy at https://www.anthropic.com/privacy
+
+If you agree, call connect_account again to proceed.`;
+
+async function hasAcknowledgedPrivacy(): Promise<boolean> {
+  try {
+    await access(CONSENT_FILE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function acknowledgePrivacy(): Promise<void> {
+  await mkdir(join(homedir(), '.mhr-records'), { recursive: true, mode: 0o700 });
+  await writeFile(CONSENT_FILE, new Date().toISOString(), { mode: 0o600 });
+}
 
 async function checkForUpdate(): Promise<string | undefined> {
   try {
@@ -110,6 +147,17 @@ export const connectAccountTool = {
             // Session invalid or expired — fall through to fresh auth
           }
         }
+      }
+
+      // First-run privacy consent — show once before first real connection
+      if (!await hasAcknowledgedPrivacy()) {
+        await acknowledgePrivacy();
+        return {
+          content: [{
+            type: 'text' as const,
+            text: PRIVACY_NOTICE,
+          }],
+        };
       }
 
       // Authenticate with SSO via browser
