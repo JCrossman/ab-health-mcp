@@ -630,100 +630,97 @@
 
   <!-- Privacy & Security Section -->
   <section id="privacy" aria-labelledby="privacy-heading" class="pt-12 pb-24 px-6 bg-gray-50">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16 fade-in">
-        <h2 id="privacy-heading" class="text-3xl md:text-4xl font-bold mb-4">Your data stays yours</h2>
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 fade-in">
+        <h2 id="privacy-heading" class="text-3xl md:text-4xl font-bold mb-4">Where your data goes</h2>
         <p class="text-lg text-gray-600 max-w-xl mx-auto">
-          We built this to keep your data safe. No exceptions.
+          Here's exactly what happens when you use MyAI Health. No fine print.
         </p>
       </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in">
-        <!-- Privacy 1 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">No Data Storage</h3>
+
+      <!-- Data flow diagram -->
+      <div class="fade-in space-y-0">
+
+        <!-- Step 1: You → Alberta -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white rounded-t-2xl border border-gray-100 border-b-0">
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Hospital">🏥</span>
           </div>
-          <p class="text-sm text-gray-600 leading-relaxed">The extension never stores your health data. It's fetched from Alberta's portals and passed to Claude for your conversation. The extension discards it immediately — see <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">Anthropic's privacy policy</a> for how Claude handles conversation data.</p>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Your computer talks directly to Alberta Health</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">The extension runs on your computer and fetches your health data straight from Alberta's official portals. Your data does not pass through our servers — there's no middleman.</p>
+          </div>
         </div>
-        <!-- Privacy 2 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">Encrypted Sessions</h3>
-          </div>
-          <p class="text-sm text-gray-600 leading-relaxed">Your login session is locked with strong encryption (AES-256-GCM) and saved only on your computer. No one else can access them.</p>
+
+        <!-- Arrow -->
+        <div class="flex justify-center py-1 bg-gray-50">
+          <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
         </div>
-        <!-- Privacy 3 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">Canadian Infrastructure</h3>
+
+        <!-- Step 2: You → Claude -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white border border-gray-100 border-b-0">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Robot">🤖</span>
           </div>
-          <p class="text-sm text-gray-600 leading-relaxed">Our supporting servers run in Azure Canada Central. Your conversations are processed by Claude (Anthropic), whose servers are US-based. The extension itself does not store health data. See <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">Anthropic's privacy policy</a> for how Claude handles conversation data.</p>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Your health data is sent to Claude for your conversation</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">Claude is an AI made by Anthropic. Their servers are in the <strong>United States</strong>. When Claude reads your health data to answer your questions, that data is sent to Anthropic's servers. Anthropic may keep your conversations for up to 30 days. See <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">Anthropic's privacy policy</a> for details.</p>
+          </div>
         </div>
-        <!-- Privacy 4 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">Login Details Never Stored</h3>
-          </div>
-          <p class="text-sm text-gray-600 leading-relaxed">You sign in through Alberta's real portal in your browser. Your username and password are never seen or stored by the extension.</p>
+
+        <!-- Arrow -->
+        <div class="flex justify-center py-1 bg-gray-50">
+          <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
         </div>
-        <!-- Privacy 5 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">Read-Only Access</h3>
+
+        <!-- Step 3: Nothing stored by us -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white border border-gray-100 border-b-0">
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Wastebasket">🗑️</span>
           </div>
-          <p class="text-sm text-gray-600 leading-relaxed">The extension can only read your records. It cannot modify, delete, or write anything to your health portals.</p>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Nothing stored by us</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">The extension throws away your health data after each conversation. The only thing saved on your computer is an encrypted login session — no health records, no personal information. Your password is entered directly on Alberta's website and never touches the extension.</p>
+          </div>
         </div>
-        <!-- Privacy 6 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">Open Source</h3>
-          </div>
-          <p class="text-sm text-gray-600 leading-relaxed">The full codebase is open source — look at every line of code and see exactly what it does. <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">View on GitHub →</a></p>
+
+        <!-- Arrow -->
+        <div class="flex justify-center py-1 bg-gray-50">
+          <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
         </div>
-        <!-- Privacy 7 -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-              </svg>
-            </div>
-            <h3 class="font-semibold">No Middleman</h3>
+
+        <!-- Step 4: Protect yourself -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white rounded-b-2xl border border-gray-100">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Shield">🛡️</span>
           </div>
-          <p class="text-sm text-gray-600 leading-relaxed">The extension runs on your computer and talks directly to Alberta's health portals. Your health data never passes through our servers — there's no middleman between you and your records.</p>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Protect yourself: turn off AI training</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">By default, Anthropic may use your conversations to improve Claude. To prevent this, open Claude Desktop and go to <strong>Settings → Privacy → turn off "Improve Claude"</strong>. This tells Anthropic not to use your health conversations for AI training.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Supporting details -->
+      <div class="mt-8 grid md:grid-cols-3 gap-4 fade-in">
+        <div class="bg-white rounded-xl p-5 border border-gray-100 text-center">
+          <div class="text-2xl mb-2">👁️</div>
+          <h4 class="font-semibold text-sm">Read-Only</h4>
+          <p class="text-xs text-gray-500 mt-1">Cannot change or delete anything in your health portals</p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-gray-100 text-center">
+          <div class="text-2xl mb-2">🔓</div>
+          <h4 class="font-semibold text-sm">Open Source</h4>
+          <p class="text-xs text-gray-500 mt-1">See every line of code — <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">View on GitHub</a></p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-gray-100 text-center">
+          <div class="text-2xl mb-2">🇨🇦</div>
+          <h4 class="font-semibold text-sm">Our Servers in Canada</h4>
+          <p class="text-xs text-gray-500 mt-1">Supporting infrastructure runs in Azure Canada Central</p>
         </div>
       </div>
+
     </div>
   </section>
 
