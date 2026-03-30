@@ -43,7 +43,7 @@ This project handles protected health information under Alberta's Health Informa
 
 1. **Never log PII.** No names, health data, cookie values, or identifiers in logs.
 2. **Never store health data.** Only session cookies are persisted, encrypted.
-3. **Canadian data residency.** All remote infrastructure in Canada Central.
+3. **Canadian data residency (our infrastructure).** All project infrastructure in Canada Central. Note: Claude (Anthropic) processes conversations on US-based servers.
 4. **Encrypt at rest.** AES-256-GCM for stored session cookies.
 5. **Credentials never touch the server.** Users enter credentials directly in the Puppeteer browser window. Only session cookies are captured.
 

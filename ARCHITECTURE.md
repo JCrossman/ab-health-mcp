@@ -80,7 +80,7 @@ Identical to the DATS project. This MCP server:
 
 ## Data Residency
 
-All infrastructure in Azure Canada Central. No health data leaves Canada. This is required for POPA and HIA (Health Information Act) compliance.
+All project infrastructure in Azure Canada Central. Note: conversations are processed by Claude (Anthropic) on US-based servers — health data leaves Canada when sent to Claude for interpretation. This extension does not control Anthropic's data handling. Our infrastructure complies with POPA and HIA (Health Information Act).
 
 ## Directory Structure
 

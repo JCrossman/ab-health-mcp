@@ -73,7 +73,7 @@ This project handles protected health information under Alberta's HIA and POPA.
 
 1. **Never log PII** — no names, health data, cookie values, or identifiers in logs
 2. **Never store health data** — only session cookies are persisted, encrypted with AES-256-GCM
-3. **Canadian data residency** — all remote infrastructure in Azure Canada Central
+3. **Canadian data residency (our infrastructure)** — all project infrastructure in Azure Canada Central. Note: Claude (Anthropic) processes conversations on US-based servers.
 4. **Credentials are transient** — used once for auth, then immediately discarded
 
 ## Key Conventions
