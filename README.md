@@ -385,7 +385,7 @@ The MCP server is a pipe. It does **NOT**:
 The project has a landing page at [www.myaihealth.ca](https://www.myaihealth.ca) for explaining the extension and distributing downloads. Includes Open Graph meta tags for rich link previews in chat apps and a section recommending the free PubMed connector for medical research.
 
 - **Hosting:** Azure Static Web Apps (Free tier)
-- **API function:** `/api/request-access` — accepts form submissions, generates a 7-day SAS download link for the `.mcpb` file, and emails the link via Azure Communication Services. Email includes privacy messaging that pre-frames the Claude Desktop security warning.
+- **API function:** `/api/request-access` — accepts form submissions, generates a 3-month SAS download link for the `.mcpb` file, and emails the link via Azure Communication Services. Email includes privacy messaging that pre-frames the Claude Desktop security warning.
 - **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified SPF/DKIM/DMARC)
 - **Download storage:** Azure Blob Storage (`myaihealthdownloads` account, `downloads` container)
 - **Privacy messaging:** Landing page and email explain that the Claude Desktop "grant access" warning applies to all extensions and that the local architecture is an intentional privacy feature (data flows directly between user and Alberta Health, no middleman)
@@ -420,7 +420,7 @@ swa deploy ./static \
 - [x] **Desktop Extension** — One-click `.mcpb` install for Claude Desktop
 - [x] **Landing Page** — myaihealth.ca with gated download access via Azure Communication Services email
 - [x] **Open Source** — [Public repository](https://github.com/JCrossman/ab-health-mcp) with security-audited codebase
-- [ ] **Phase 3: Remote Mode** — OAuth 2.1 remote connector, Azure Container Apps deployment, zero-storage architecture
+- [x] **Phase 3: Remote Mode** — OAuth 2.1 remote connector, Azure Container Apps deployment, zero-storage architecture (implemented, not yet productized)
 - [ ] **Update notifications** — Email existing users when a new version is available
 - [ ] **MFA support** — Relay MFA challenges for Alberta accounts with multi-factor enabled
 

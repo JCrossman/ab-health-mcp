@@ -257,11 +257,11 @@ All MyChart tools use `__RequestVerificationToken` CSRF header instead of Contro
 | `mc_list_proxy_access` | `ProxySwitch` |
 | `mc_switch_context` | `api/proxy/SwitchToProxy` |
 
-### Phase 3: Remote Mode (not started)
+### Phase 3: Remote Mode (implemented, not yet productized)
 - HTTP transport with Streamable HTTP
-- Cosmos DB session storage
-- Browser-based auth proxy
-- Azure Container Apps deployment
+- Zero server-side storage (session encrypted into OAuth access token)
+- Browser-based auth proxy via Chrome extension
+- Azure Container Apps deployment (Canada Central)
 
 ### Landing Page ✅
 - Static site at www.myaihealth.ca (Azure Static Web Apps)
