@@ -37,29 +37,31 @@ Verified with live testing: session ✅, user profile ✅, lab results (59 entri
 
 Additional HAR captures (`Immunications.har`, `new_services.har`, `new_services_2.har`, `new_services_3.har`) verified all Phase 2 endpoints:
 
-| Endpoint | CMID | Source HAR |
-|----------|------|------------|
-| Lab Results | 7736 | Original HAR |
-| Diagnostic Imaging | 7712 | new_services_3.har |
-| Immunizations | 7695 | Immunications.har |
-| Medications | 7701 | new_services.har |
-| Referrals | 7705 | new_services.har |
-| Vital Signs | 7730 | new_services_2.har |
-| Blood Oxygen | 7722 | new_services_2.har |
-| Blood Pressure | 7716 | new_services_2.har |
-| Height | 7749 | new_services_2.har |
-| Weight | 7750 | new_services_2.har |
-| BMI | 7748 | new_services_2.har |
-| Exercise | 7742 | new_services_2.har |
-| Procedures | 7739 | new_services_3.har |
-| Blood Glucose | 7724 | new_services_2.har |
-| Sleep | 7757 | new_services_3.har |
-| Dietary Intake | 7764 | new_services_3.har |
-| Insulin (injection) | 7725 | new_services_3.har |
-| Insulin (usage) | 7726 | new_services_3.har |
-| Peak Flow | 7731 | new_services_3.har |
-| Waist Circumference | 7751 | new_services_3.har |
-| Symptom Journal | 7760 | new_services_3.har |
+| Endpoint | Original CMID | Source HAR | Current Status |
+|----------|---------------|------------|----------------|
+| Lab Results | 7736 | Original HAR | CMID removed — works without it |
+| Diagnostic Imaging | 7712 | new_services_3.har | CMID removed — works without it |
+| Immunizations | 7695 | Immunications.har | CMID removed — works without it |
+| Medications | 7701 → **8050** | new_services.har → mhrMedications.har | **New CMID 8050 required** |
+| Referrals | 7705 | new_services.har | CMID removed — works without it |
+| Vital Signs | 7730 | new_services_2.har | CMID removed — works without it |
+| Blood Oxygen | 7722 | new_services_2.har | CMID removed — works without it |
+| Blood Pressure | 7716 | new_services_2.har | CMID removed — works without it |
+| Height | 7749 | new_services_2.har | CMID removed — works without it |
+| Weight | 7750 | new_services_2.har | CMID removed — works without it |
+| BMI | 7748 | new_services_2.har | CMID removed — works without it |
+| Exercise | 7742 | new_services_2.har | CMID removed — works without it |
+| Procedures | 7739 | new_services_3.har | CMID removed — works without it |
+| Blood Glucose | 7724 | new_services_2.har | CMID removed — works without it |
+| Sleep | 7757 | new_services_3.har | CMID removed — works without it |
+| Dietary Intake | 7764 | new_services_3.har | CMID removed — works without it |
+| Insulin (injection) | 7725 | new_services_3.har | CMID removed — works without it |
+| Insulin (usage) | 7726 | new_services_3.har | CMID removed — works without it |
+| Peak Flow | 7731 | new_services_3.har | CMID removed — works without it |
+| Waist Circumference | 7751 | new_services_3.har | CMID removed — works without it |
+| Symptom Journal | 7760 | new_services_3.har | CMID removed — works without it |
+
+> **March 2026 API change:** Alberta removed the `Control-Mapping-Id` requirement from most endpoints. Sending old 7xxx values causes HTTP 500. Only medications requires CMID `8050` (changed from `7701`).
 
 ## Step 5: MyChart (AHS Connect Care) Integration ✅
 
@@ -120,7 +122,7 @@ HTTP/OAuth mode is implemented but not yet deployed to production:
 ## Resolved Questions
 
 1. **The `p` parameter** — Irrelevant. Puppeteer handles the full SAML chain automatically.
-2. **Additional required headers** — `Control-Mapping-Id` is required for most data endpoints. Values confirmed via HAR captures.
+2. **Additional required headers** — `Control-Mapping-Id` was previously required for most data endpoints (values confirmed via HAR captures). As of March 2026, Alberta removed this requirement from most endpoints — only medications still requires CMID `8050`.
 3. **Referer/Origin enforcement** — The API requires `Referer: https://myhealthrecords.alberta.ca/ng/`.
 4. **Rate limiting** — `account.alberta.ca` enforces rate limiting on `/account-checks` and `/signin`. Mitigated with persistent browser profile at `~/.mhr-records/browser-profile`.
 5. **MFA** — Not encountered in testing. Puppeteer would handle it natively if present.

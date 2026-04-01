@@ -176,33 +176,35 @@ Puppeteer handles this automatically. The persistent browser profile at `~/.mhr-
 
 ### Health Data (MHR)
 
-| Tool | Description | API Endpoint | CMID |
-|------|-------------|-------------|------|
-| `get_health_overview` | Comprehensive health overview from both MHR and MyChart in a single call | Multiple | — |
-| `get_user_profile` | User profile and authorized records (MHR) | `/api/phr/v1/user` | — |
-| `get_lab_results` | Lab test results with date/name filtering (MHR) | `/api/phr/v1/labresult/getData` | 7736 |
-| `get_diagnostic_imaging` | X-rays, ultrasounds, echocardiograms, CT/MRI (MHR) | `/api/phr/v1/labresult/getData` | 7712 |
-| `get_immunizations` | Vaccine records — dates, names, sources (MHR) | `/api/phr/v1/myhealth/immunization-data-manager` | 7695 |
-| `get_medications` | Current and past prescriptions (MHR) | `/api/phr/v1/medication` | 7701 |
-| `get_referrals` | Specialist referral records (MHR) | `/api/phr/v1/referral` | 7705 |
-| `get_vitals` | Clinical vitals — pulse, temp, respiratory rate (MHR) | `/api/phr/v1/VitalSigns` | 7730 |
-| `get_blood_oxygen` | SpO2 saturation readings (MHR) | `/api/phr/v1/myhealth/blood-oxygensaturation-data-manager` | 7722 |
-| `get_blood_pressure` | Blood pressure readings (MHR) | `/api/phr/v1/myhealth/blood-pressure-data-manager` | 7716 |
-| `get_height_weight` | Height, weight, and BMI trends (MHR) | height, weight, BMI endpoints | 7749, 7750, 7748 |
-| `get_exercise` | Exercise and physical activity records (MHR) | `/api/phr/v1/exercise` | 7742 |
-| `get_procedures` | Medical procedure records — surgeries, biopsies (MHR) | `/api/phr/v1/procedure` | 7739 |
-| `get_blood_glucose` | Blood glucose monitoring for diabetes management (MHR) | `/api/phr/v1/myhealth/blood-glucose-data-manager` | 7724 |
-| `get_sleep` | Sleep session records — duration and quality (MHR) | `/api/phr/v1/myhealth/sleep-session-data-manager-v2` | 7757 |
-| `get_dietary_intake` | Food and nutrition tracking data (MHR) | `/api/phr/v1/myhealth/dietary-intake-data-manager` | 7764 |
-| `get_insulin` | Insulin injection and usage records (MHR) | insulin-injection + insulin-injection-use endpoints | 7725, 7726 |
-| `get_peak_flow` | Peak expiratory flow for asthma monitoring (MHR) | `/api/phr/v1/myhealth/peak-flow-data-manager` | 7731 |
-| `get_waist_circumference` | Waist circumference measurements (MHR) | `/api/phr/v1/myhealth/extendable-data-manager/waist-circumference` | 7751 |
-| `get_symptom_journal` | Logged symptoms and health concerns (MHR) | `/api/phr/v1/myhealth/extendable-data-manager/concern` | 7760 |
-| `download_attachment` | Downloads PDF reports from lab/imaging results (MHR) | `/api/phr/v1/attachment/{id}/download` | — |
+> **Note:** As of March 2026, Alberta removed the `Control-Mapping-Id` header requirement from most MHR endpoints. Only medications still requires it (CMID `8050`).
+
+| Tool | Description | API Endpoint |
+|------|-------------|-------------|
+| `get_health_overview` | Comprehensive health overview from both MHR and MyChart in a single call | Multiple |
+| `get_user_profile` | User profile and authorized records (MHR) | `/api/phr/v1/user` |
+| `get_lab_results` | Lab test results with date/name filtering (MHR) | `/api/phr/v1/labresult/getData` |
+| `get_diagnostic_imaging` | X-rays, ultrasounds, echocardiograms, CT/MRI (MHR) | `/api/phr/v1/labresult/getData` |
+| `get_immunizations` | Vaccine records — dates, names, sources (MHR) | `/api/phr/v1/myhealth/immunization-data-manager` |
+| `get_medications` | Current and past prescriptions (MHR) | `/api/phr/v1/medication` (CMID: 8050) |
+| `get_referrals` | Specialist referral records (MHR) | `/api/phr/v1/referral` |
+| `get_vitals` | Clinical vitals — pulse, temp, respiratory rate (MHR) | `/api/phr/v1/VitalSigns` |
+| `get_blood_oxygen` | SpO2 saturation readings (MHR) | `/api/phr/v1/myhealth/blood-oxygensaturation-data-manager` |
+| `get_blood_pressure` | Blood pressure readings (MHR) | `/api/phr/v1/myhealth/blood-pressure-data-manager` |
+| `get_height_weight` | Height, weight, and BMI trends (MHR) | height, weight, BMI endpoints |
+| `get_exercise` | Exercise and physical activity records (MHR) | `/api/phr/v1/exercise` |
+| `get_procedures` | Medical procedure records — surgeries, biopsies (MHR) | `/api/phr/v1/procedure` |
+| `get_blood_glucose` | Blood glucose monitoring for diabetes management (MHR) | `/api/phr/v1/myhealth/blood-glucose-data-manager` |
+| `get_sleep` | Sleep session records — duration and quality (MHR) | `/api/phr/v1/myhealth/sleep-session-data-manager-v2` |
+| `get_dietary_intake` | Food and nutrition tracking data (MHR) | `/api/phr/v1/myhealth/dietary-intake-data-manager` |
+| `get_insulin` | Insulin injection and usage records (MHR) | insulin-injection + insulin-injection-use endpoints |
+| `get_peak_flow` | Peak expiratory flow for asthma monitoring (MHR) | `/api/phr/v1/myhealth/peak-flow-data-manager` |
+| `get_waist_circumference` | Waist circumference measurements (MHR) | `/api/phr/v1/myhealth/extendable-data-manager/waist-circumference` |
+| `get_symptom_journal` | Logged symptoms and health concerns (MHR) | `/api/phr/v1/myhealth/extendable-data-manager/concern` |
+| `download_attachment` | Downloads PDF reports from lab/imaging results (MHR) | `/api/phr/v1/attachment/{id}/download` |
 
 ### Health Data (MyChart / AHS Connect)
 
-MyChart tools access data from AHS Connect Care (`myahsconnect.albertahealthservices.ca/MyChartPRD/`). All MyChart tools are prefixed with `mc_` and require a `__RequestVerificationToken` CSRF header (no Control-Mapping-Id).
+MyChart tools access data from AHS Connect Care (`myahsconnect.albertahealthservices.ca/MyChartPRD/`). All MyChart tools are prefixed with `mc_` and require a `__RequestVerificationToken` CSRF header.
 
 | Tool | Description |
 |------|-------------|

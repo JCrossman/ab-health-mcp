@@ -117,7 +117,6 @@ Returns lab test results with optional date filtering.
 
 **Calls:** `GET /api/phr/v1/labresult/getData?startDate=...&endDate=...&dateRangeOptions=...&labConfiguration=00000000-0000-0000-0000-000000000000&showOtherSection=True&ignoreConfig=True`
 
-**Headers:** `Control-Mapping-Id: 7736`
 
 **Date conversion:** If `start_date`/`end_date` are provided as YYYY-MM-DD, convert to the API's expected format: `{Day} {Mon} {DD} {YYYY}` (e.g., `Mon Jan 01 1753`). Use JavaScript's `new Date(dateStr).toDateString()`.
 
@@ -179,7 +178,6 @@ All of the following tools have been implemented and verified with real API call
 
 **Calls:** `GET /api/phr/v1/myhealth/immunization-data-manager?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7695`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -190,9 +188,9 @@ All of the following tools have been implemented and verified with real API call
 
 ### get_medications
 
-**Calls:** `GET /api/phr/v1/medication?type=all&status=Medication&includeOrphanRefills=false`
+**Calls:** `GET /api/phr/v1/medication?startIndex=-1&endIndex=-1&type=all&status=Medication&includeOrphanRefills=false`
 
-**Headers:** `Control-Mapping-Id: 7701`
+**Headers:** `Control-Mapping-Id: 8050` (required — only MHR endpoint that still needs CMID)
 
 **Parameters:** None
 
@@ -200,7 +198,6 @@ All of the following tools have been implemented and verified with real API call
 
 **Calls:** `GET /api/phr/v1/referral?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7705`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -211,7 +208,6 @@ All of the following tools have been implemented and verified with real API call
 
 **Calls:** `GET /api/phr/v1/labresult/getData?...` (same endpoint as lab results, different CMID)
 
-**Headers:** `Control-Mapping-Id: 7712`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -224,7 +220,6 @@ All of the following tools have been implemented and verified with real API call
 
 **Calls:** `GET /api/phr/v1/VitalSigns?startDate=...&endDate=...&dateRangeOptions=...&types=Res`
 
-**Headers:** `Control-Mapping-Id: 7730`
 
 **Response:** Array of vital sign readings (pulse, temperature, respiratory rate, etc.) from clinical visits. Each has `when`, `title`, `value`, `unit`, `description`.
 
@@ -232,20 +227,18 @@ All of the following tools have been implemented and verified with real API call
 
 **Calls:** `GET /api/phr/v1/myhealth/blood-oxygensaturation-data-manager?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7722`
 
 ### get_blood_pressure
 
 **Calls:** `GET /api/phr/v1/myhealth/blood-pressure-data-manager?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7716`
 
 ### get_height_weight
 
 Makes 3 parallel API calls:
-- `GET /api/phr/v1/myhealth/height-data-manager?...` (CMID: 7749)
-- `GET /api/phr/v1/myhealth/weight-data-manager?...` (CMID: 7750)
-- `GET /api/phr/v1/bmi?...` (CMID: 7748)
+- `GET /api/phr/v1/myhealth/height-data-manager?...`
+- `GET /api/phr/v1/myhealth/weight-data-manager?...`
+- `GET /api/phr/v1/bmi?...`
 
 **Response:** Combined `{ height, weight, bmi }` arrays.
 
@@ -253,7 +246,6 @@ Makes 3 parallel API calls:
 
 **Calls:** `GET /api/phr/v1/exercise?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7742`
 
 **Response:** Array of exercise records with `source`, `calorieUnit`, `distanceUnit`, `durationUnit`, `exerciseValues`.
 
@@ -300,7 +292,6 @@ Composite tool that calls multiple MHR and MyChart endpoints in a single request
 
 **Calls:** `GET /api/phr/v1/procedure?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7739`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -311,7 +302,6 @@ Composite tool that calls multiple MHR and MyChart endpoints in a single request
 
 **Calls:** `GET /api/phr/v1/myhealth/blood-glucose-data-manager?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7724`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -322,7 +312,6 @@ Composite tool that calls multiple MHR and MyChart endpoints in a single request
 
 **Calls:** `GET /api/phr/v1/myhealth/sleep-session-data-manager-v2?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7757`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -333,7 +322,6 @@ Composite tool that calls multiple MHR and MyChart endpoints in a single request
 
 **Calls:** `GET /api/phr/v1/myhealth/dietary-intake-data-manager?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7764`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -343,8 +331,8 @@ Composite tool that calls multiple MHR and MyChart endpoints in a single request
 ### get_insulin
 
 Makes 2 parallel API calls:
-- `GET /api/phr/v1/myhealth/insulin-injection-data-manager?...` (CMID: 7725)
-- `GET /api/phr/v1/myhealth/insulin-injection-use-data-manager?...` (CMID: 7726)
+- `GET /api/phr/v1/myhealth/insulin-injection-data-manager?...`
+- `GET /api/phr/v1/myhealth/insulin-injection-use-data-manager?...`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -357,7 +345,6 @@ Makes 2 parallel API calls:
 
 **Calls:** `GET /api/phr/v1/myhealth/peak-flow-data-manager?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7731`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -368,7 +355,6 @@ Makes 2 parallel API calls:
 
 **Calls:** `GET /api/phr/v1/myhealth/extendable-data-manager/waist-circumference?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7751`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -379,7 +365,6 @@ Makes 2 parallel API calls:
 
 **Calls:** `GET /api/phr/v1/myhealth/extendable-data-manager/concern?startDate=...&endDate=...&dateRangeOptions=...`
 
-**Headers:** `Control-Mapping-Id: 7760`
 
 **Parameters:**
 | Name | Type | Required | Default | Description |

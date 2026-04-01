@@ -95,10 +95,8 @@ The lab results API uses `Date.toDateString()` format in query params (e.g., `Mo
 
 ### Required headers
 
-MHR endpoints need a `Control-Mapping-Id` header:
-- Lab results: `7736`
-- Vitals/latest data: `7962`
-- Dashboard: `7784`
+MHR endpoints previously required a `Control-Mapping-Id` header, but Alberta removed this requirement for most endpoints (as of March 2026). Sending the old CMID values now causes HTTP 500 errors. Only the medications endpoint still requires a CMID:
+- Medications: `8050` (changed from `7701`)
 
 MyChart endpoints need a `__RequestVerificationToken` CSRF header:
 - Token obtained from `/MyChartPRD/Home/CSRFToken` during authentication

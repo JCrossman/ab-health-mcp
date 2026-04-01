@@ -510,37 +510,17 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 ## Control-Mapping-Id Reference
 
-| ID | Endpoint | Description |
-|----|----------|-------------|
-| 7695 | immunization-data-manager | Immunizations |
-| 7701 | medication | Medications |
-| 7705 | referral | Referrals |
-| 7712 | labresult/getData | Diagnostic Imaging |
-| 7715 | VitalSigns (types=Pls,Res,Tmp) | Combined Vitals (pulse, resp, temp) |
-| 7716 | blood-pressure-data-manager | Blood Pressure |
-| 7717 | VitalSigns (types=Pls) | Pulse Only |
-| 7718 | VitalSigns (types=Tmp) | Temperature Only |
-| 7722 | blood-oxygensaturation-data-manager | Blood Oxygen |
-| 7724 | blood-glucose-data-manager | Blood Glucose |
-| 7725 | insulin-injection-data-manager | Insulin Injections |
-| 7726 | insulin-injection-use-data-manager | Insulin Usage |
-| 7730 | VitalSigns (types=Res) | Respiration Only |
-| 7731 | peak-flow-data-manager | Peak Flow |
-| 7732 | asthmainhalerlog | Asthma Inhaler Log |
-| 7736 | labresult/getData | Lab Results |
-| 7739 | procedure | Procedures |
-| 7742 | exercise | Exercise |
-| 7748 | bmi | BMI |
-| 7749 | height-data-manager | Height |
-| 7750 | weight-data-manager | Weight |
-| 7751 | extendable-data-manager/waist-circumference | Waist Circumference |
-| 7754 | hj/getdata | Health Journal |
-| 7757 | sleep-session-data-manager-v2 | Sleep Sessions |
-| 7760 | extendable-data-manager/concern | Symptom Journal |
-| 7764 | dietary-intake-data-manager | Dietary Intake |
-| 7769 | patient-data-export/schedule-data-export | Data Export |
-| 7784 | personalDashboard | Dashboard |
-| 7962 | latestdata | Latest Vital Data |
+> **⚠️ Deprecated (March 2026):** Alberta removed the `Control-Mapping-Id` requirement from most MHR endpoints. Sending the old 7xxx CMID values now causes HTTP 500 errors. Only the medications endpoint still requires a CMID, with a new value of `8050`. The table below is preserved for historical reference.
+
+| ID | Endpoint | Description | Status |
+|----|----------|-------------|--------|
+| **8050** | **medication** | **Medications** | **Active — required** |
+| 7695 | immunization-data-manager | Immunizations | Deprecated — do not send |
+| 7701 | medication | Medications (old) | Replaced by 8050 |
+| 7705 | referral | Referrals | Deprecated — do not send |
+| 7712 | labresult/getData | Diagnostic Imaging | Deprecated — do not send |
+| 7715 | VitalSigns (types=Pls,Res,Tmp) | Combined Vitals | Deprecated — do not send |
+| 7736 | labresult/getData | Lab Results | Deprecated — do not send |
 
 ---
 
@@ -554,15 +534,12 @@ Cache-Control: no-cache
 Referer: https://myhealthrecords.alberta.ca/ng/
 ```
 
-Some endpoints require:
+The medications endpoint additionally requires:
 ```
-Control-Mapping-Id: {id}
+Control-Mapping-Id: 8050
 ```
 
-Known mapping IDs:
-- `7736` for lab results
-- `7962` for latest data (vitals)
-- `7784` for dashboard
+Most other endpoints no longer require or accept a `Control-Mapping-Id` header.
 
 ---
 

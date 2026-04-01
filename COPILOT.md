@@ -206,33 +206,35 @@ unzip -l ab-health-mcp.mcpb | grep "\.js$" | wc -l
 
 **MHR health data tools (21, confirmed via HAR captures):**
 
-| Tool | Endpoint | CMID |
-|------|----------|------|
-| `get_health_overview` | Multiple (composite) | — |
-| `get_user_profile` | `/api/phr/v1/user` | — |
-| `get_lab_results` | `/api/phr/v1/labresult/getData` | 7736 |
-| `get_diagnostic_imaging` | `/api/phr/v1/labresult/getData` | 7712 |
-| `get_immunizations` | `/api/phr/v1/myhealth/immunization-data-manager` | 7695 |
-| `get_medications` | `/api/phr/v1/medication` | 7701 |
-| `get_referrals` | `/api/phr/v1/referral` | 7705 |
-| `get_vitals` | `/api/phr/v1/VitalSigns` | 7730 |
-| `get_blood_oxygen` | `/api/phr/v1/myhealth/blood-oxygensaturation-data-manager` | 7722 |
-| `get_blood_pressure` | `/api/phr/v1/myhealth/blood-pressure-data-manager` | 7716 |
-| `get_height_weight` | height (7749) + weight (7750) + BMI (7748) | — |
-| `get_exercise` | `/api/phr/v1/exercise` | 7742 |
-| `get_procedures` | `/api/phr/v1/procedure` | 7739 |
-| `get_blood_glucose` | `/api/phr/v1/myhealth/blood-glucose-data-manager` | 7724 |
-| `get_sleep` | `/api/phr/v1/myhealth/sleep-session-data-manager-v2` | 7757 |
-| `get_dietary_intake` | `/api/phr/v1/myhealth/dietary-intake-data-manager` | 7764 |
-| `get_insulin` | insulin-injection (7725) + insulin-injection-use (7726) | — |
-| `get_peak_flow` | `/api/phr/v1/myhealth/peak-flow-data-manager` | 7731 |
-| `get_waist_circumference` | `/api/phr/v1/myhealth/extendable-data-manager/waist-circumference` | 7751 |
-| `get_symptom_journal` | `/api/phr/v1/myhealth/extendable-data-manager/concern` | 7760 |
-| `download_attachment` | `/api/phr/v1/attachment/{id}/download` | — |
+> **Note:** As of March 2026, Alberta removed the `Control-Mapping-Id` header requirement from most MHR endpoints. Only the medications endpoint still requires it (CMID `8050`). The old CMID values (7xxx) now cause HTTP 500 errors.
+
+| Tool | Endpoint |
+|------|----------|
+| `get_health_overview` | Multiple (composite) |
+| `get_user_profile` | `/api/phr/v1/user` |
+| `get_lab_results` | `/api/phr/v1/labresult/getData` |
+| `get_diagnostic_imaging` | `/api/phr/v1/labresult/getData` |
+| `get_immunizations` | `/api/phr/v1/myhealth/immunization-data-manager` |
+| `get_medications` | `/api/phr/v1/medication` (CMID: 8050) |
+| `get_referrals` | `/api/phr/v1/referral` |
+| `get_vitals` | `/api/phr/v1/VitalSigns` |
+| `get_blood_oxygen` | `/api/phr/v1/myhealth/blood-oxygensaturation-data-manager` |
+| `get_blood_pressure` | `/api/phr/v1/myhealth/blood-pressure-data-manager` |
+| `get_height_weight` | height + weight + BMI endpoints |
+| `get_exercise` | `/api/phr/v1/exercise` |
+| `get_procedures` | `/api/phr/v1/procedure` |
+| `get_blood_glucose` | `/api/phr/v1/myhealth/blood-glucose-data-manager` |
+| `get_sleep` | `/api/phr/v1/myhealth/sleep-session-data-manager-v2` |
+| `get_dietary_intake` | `/api/phr/v1/myhealth/dietary-intake-data-manager` |
+| `get_insulin` | insulin-injection + insulin-injection-use endpoints |
+| `get_peak_flow` | `/api/phr/v1/myhealth/peak-flow-data-manager` |
+| `get_waist_circumference` | `/api/phr/v1/myhealth/extendable-data-manager/waist-circumference` |
+| `get_symptom_journal` | `/api/phr/v1/myhealth/extendable-data-manager/concern` |
+| `download_attachment` | `/api/phr/v1/attachment/{id}/download` |
 
 **MyChart tools (20, prefixed with `mc_`):**
 
-All MyChart tools use `__RequestVerificationToken` CSRF header instead of Control-Mapping-Id. Base URL: `https://myahsconnect.albertahealthservices.ca/MyChartPRD/`
+All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https://myahsconnect.albertahealthservices.ca/MyChartPRD/`
 
 | Tool | API Endpoint |
 |------|-------------|
