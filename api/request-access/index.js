@@ -426,7 +426,7 @@ function buildUserEmailHtml({ name, downloadUrl, expiresOn }) {
 
 <!-- Footer -->
 <tr><td style="background-color:#0277b5;padding:20px 32px;text-align:center;">
-  <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.85);">&copy; 2025 MyAI Health &middot; <a href="https://www.myaihealth.ca/privacy" style="color:rgba(255,255,255,0.9);text-decoration:underline;">Privacy</a> &middot; <a href="https://www.myaihealth.ca/terms" style="color:rgba(255,255,255,0.9);text-decoration:underline;">Terms</a></p>
+  <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.85);">&copy; 2026 MyAI Health &middot; <a href="https://www.myaihealth.ca/privacy" style="color:rgba(255,255,255,0.9);text-decoration:underline;">Privacy</a> &middot; <a href="https://www.myaihealth.ca/terms" style="color:rgba(255,255,255,0.9);text-decoration:underline;">Terms</a></p>
 </td></tr>
 
 </table>
