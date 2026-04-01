@@ -316,14 +316,20 @@ Cookie-based auth is managed by `tough-cookie`:
 
 ```
 connect_account
-  -> (if valid session exists and force!=true, reuse it and return immediately)
+  -> (if demo mode, return sample data immediately)
+  -> (if valid session exists and force!=true, reuse it — includes update check)
+  -> (if first-ever connection, show privacy notice and return — user calls again)
+  -> CHECK FOR UPDATES via /api/check-update
+     -> if update available: return download URL and block auth
+     -> user downloads, installs, calls connect_account again
   -> launch Puppeteer browser (headless: false, channel: 'chrome')
-  -> user logs in through real Alberta SSO
-  -> extract MHR cookies from browser
-  -> verify MHR session with /api/phr/v1/user
+  -> user logs in through real Alberta SSO at account.alberta.ca
   -> navigate to MyChart SAML login (auto-authenticates via shared SSO)
   -> extract MyChart cookies from browser
+  -> navigate to MHR (auto-authenticates via shared SSO, retry once if needed)
+  -> extract MHR cookies from browser
   -> fetch CSRF token from /MyChartPRD/Home/CSRFToken
+  -> verify MHR session with /api/phr/v1/user
   -> encrypt and store v2 session (MHR jar + MyChart jar + CSRF token)
 
 [any MHR tool call]

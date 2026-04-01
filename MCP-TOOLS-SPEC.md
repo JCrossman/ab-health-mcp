@@ -23,18 +23,20 @@ If a valid session already exists, returns immediately without opening a browser
 | force | boolean | No | Force re-authentication even if a valid session exists. |
 
 **Behavior:**
-1. Check if a valid session already exists — if so, return immediately (unless `force=true`)
-2. Launch Chrome via Puppeteer (`headless: false`)
-3. Navigate to `myhealthrecords.alberta.ca`
-4. Browser follows SAML SSO chain to `account.alberta.ca`
-5. User enters MyAlberta credentials in the browser
-6. Wait for URL to contain `/ng/` (MHR login complete)
-7. Extract MHR cookies from browser, load into tough-cookie CookieJar
+1. If demo mode: return sample data immediately
+2. Check if a valid session already exists — if so, return immediately (unless `force=true`). Includes update check.
+3. If first-ever real connection: show privacy notice (health data sent to Anthropic's US servers). User calls again to proceed.
+4. **Check for updates** via `/api/check-update` — if a newer version exists, return a download URL and block authentication. User must update before connecting.
+5. Launch Chrome via Puppeteer (`headless: false`)
+6. Navigate to `account.alberta.ca/ui/sign-in/signin` (SSO login)
+7. User enters MyAlberta credentials (or auto-authenticates via persistent profile)
 8. Navigate to MyChart SAML login (auto-authenticates via shared SSO)
 9. Extract MyChart cookies and CSRF token
-10. Verify session by calling `/api/phr/v1/user`
-11. Encrypt and store session (v2 format: MHR jar + MyChart jar + CSRF token) at `~/.mhr-records/session.enc`
-12. Close browser, return success with user name and connection status for both systems
+10. Navigate to MHR (auto-authenticates via shared SSO, retry once if needed)
+11. Extract MHR cookies
+12. Verify session by calling `/api/phr/v1/user`
+13. Encrypt and store session (v2 format) at `~/.mhr-records/session.enc`
+14. Close browser, return success with user name and connection status
 
 **Response:**
 ```json
