@@ -21,7 +21,7 @@ import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const CURRENT_VERSION = '1.1.20';
+const CURRENT_VERSION = '1.1.21';
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
