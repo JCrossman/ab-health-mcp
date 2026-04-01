@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 
 const CURRENT_VERSION = '1.1.15';
-const VERSION_CHECK_URL = 'https://www.myaihealth.ca/version.json';
+const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
 
@@ -58,19 +58,24 @@ async function acknowledgePrivacy(): Promise<void> {
   await writeFile(CONSENT_FILE, new Date().toISOString(), { mode: 0o600 });
 }
 
-async function checkForUpdate(): Promise<string | undefined> {
+interface UpdateInfo {
+  latestVersion: string;
+  downloadUrl: string;
+}
+
+async function checkForUpdate(): Promise<UpdateInfo | undefined> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(VERSION_CHECK_URL, { signal: controller.signal });
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(UPDATE_CHECK_URL, { signal: controller.signal });
     clearTimeout(timeout);
     if (!res.ok) return undefined;
-    const data = await res.json() as { version?: string };
-    if (data.version && data.version !== CURRENT_VERSION) {
-      return data.version;
+    const data = await res.json() as { updateAvailable?: boolean; latestVersion?: string; downloadUrl?: string };
+    if (data.updateAvailable && data.latestVersion && data.downloadUrl) {
+      return { latestVersion: data.latestVersion, downloadUrl: data.downloadUrl };
     }
   } catch {
-    // Version check is best-effort — never block auth
+    // Update check is best-effort — never block auth
   }
   return undefined;
 }
@@ -134,7 +139,7 @@ export const connectAccountTool = {
                 disclaimer: MEDICAL_DISCLAIMER,
               };
               if (latestVersion) {
-                response.updateAvailable = `A new version (v${latestVersion}) is available. Visit https://www.myaihealth.ca to download the latest version.`;
+                response.updateAvailable = `A new version (v${latestVersion.latestVersion}) is available. Download it here: ${latestVersion.downloadUrl}`;
               }
               return {
                 content: [{
@@ -186,7 +191,7 @@ export const connectAccountTool = {
         disclaimer: MEDICAL_DISCLAIMER,
       };
       if (latestVersion) {
-        response.updateAvailable = `A new version (v${latestVersion}) is available. Visit https://www.myaihealth.ca to download the latest version.`;
+        response.updateAvailable = `A new version (v${latestVersion.latestVersion}) is available. Download it here: ${latestVersion.downloadUrl}`;
       }
       return {
         content: [{
