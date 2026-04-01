@@ -21,7 +21,7 @@ import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const CURRENT_VERSION = '1.1.17';
+const CURRENT_VERSION = '1.1.18';
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
@@ -161,6 +161,24 @@ export const connectAccountTool = {
           content: [{
             type: 'text' as const,
             text: PRIVACY_NOTICE,
+          }],
+        };
+      }
+
+      // Check for updates before launching browser
+      const updateInfo = await checkForUpdate();
+      if (updateInfo) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({
+              updateAvailable: true,
+              message: `A new version (v${updateInfo.latestVersion}) is available. Please download and install it before connecting.`,
+              downloadUrl: updateInfo.downloadUrl,
+              installedVersion: CURRENT_VERSION,
+              latestVersion: updateInfo.latestVersion,
+              action: 'Download the update, double-click to install, then try connecting again.',
+            }),
           }],
         };
       }
