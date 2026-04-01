@@ -165,7 +165,8 @@ export class MHRClient {
    */
   async getMedications(): Promise<unknown[]> {
     const response = await this.fetch(
-      '/api/phr/v1/medication?type=all&status=Medication&includeOrphanRefills=false',
+      '/api/phr/v1/medication?startIndex=-1&endIndex=-1&type=all&status=Medication&includeOrphanRefills=false',
+      { 'Control-Mapping-Id': '8050' },
     );
     return response.json() as Promise<unknown[]>;
   }
