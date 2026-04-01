@@ -118,14 +118,13 @@ export class MHRClient {
 
     const response = await this.fetch(
       `/api/phr/v1/labresult/getData?${queryParams}`,
-      { 'Control-Mapping-Id': '7736' },
     );
     return response.json() as Promise<LabResult[]>;
   }
 
   /**
    * Get diagnostic imaging results (X-rays, ultrasounds, echocardiograms, etc.)
-   * Same endpoint as lab results but with Control-Mapping-Id 7712.
+   * Same endpoint as lab results (previously distinguished by Control-Mapping-Id).
    */
   async getDiagnosticImaging(params: { dateRange?: string; startDate?: string; endDate?: string } = {}): Promise<unknown[]> {
     const { dateRange = 'All', startDate, endDate } = params;
@@ -139,7 +138,6 @@ export class MHRClient {
     });
     const response = await this.fetch(
       `/api/phr/v1/labresult/getData?${queryParams}`,
-      { 'Control-Mapping-Id': '7712' },
     );
     return response.json() as Promise<unknown[]>;
   }
@@ -158,7 +156,6 @@ export class MHRClient {
 
     const response = await this.fetch(
       `/api/phr/v1/myhealth/immunization-data-manager?${queryParams}`,
-      { 'Control-Mapping-Id': '7695' },
     );
     return response.json() as Promise<ImmunizationRecord[]>;
   }
@@ -169,7 +166,6 @@ export class MHRClient {
   async getMedications(): Promise<unknown[]> {
     const response = await this.fetch(
       '/api/phr/v1/medication?type=all&status=Medication&includeOrphanRefills=false',
-      { 'Control-Mapping-Id': '7701' },
     );
     return response.json() as Promise<unknown[]>;
   }
@@ -184,7 +180,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/referral?${queryParams}`, { 'Control-Mapping-Id': '7705' });
+    const response = await this.fetch(`/api/phr/v1/referral?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -199,7 +195,7 @@ export class MHRClient {
       dateRangeOptions: dateRange,
       types: 'Pls,Res,Tmp',
     });
-    const response = await this.fetch(`/api/phr/v1/VitalSigns?${queryParams}`, { 'Control-Mapping-Id': '7715' });
+    const response = await this.fetch(`/api/phr/v1/VitalSigns?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -213,7 +209,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/blood-oxygensaturation-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7722' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/blood-oxygensaturation-data-manager?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -227,7 +223,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/blood-pressure-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7716' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/blood-pressure-data-manager?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -242,9 +238,9 @@ export class MHRClient {
       dateRangeOptions: dateRange,
     });
     const [heightResp, weightResp, bmiResp] = await Promise.all([
-      this.fetch(`/api/phr/v1/myhealth/height-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7749' }),
-      this.fetch(`/api/phr/v1/myhealth/weight-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7750' }),
-      this.fetch(`/api/phr/v1/bmi?${queryParams}`, { 'Control-Mapping-Id': '7748' }),
+      this.fetch(`/api/phr/v1/myhealth/height-data-manager?${queryParams}`),
+      this.fetch(`/api/phr/v1/myhealth/weight-data-manager?${queryParams}`),
+      this.fetch(`/api/phr/v1/bmi?${queryParams}`),
     ]);
     return {
       height: await heightResp.json() as unknown[],
@@ -263,7 +259,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/exercise?${queryParams}`, { 'Control-Mapping-Id': '7742' });
+    const response = await this.fetch(`/api/phr/v1/exercise?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -277,7 +273,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/procedure?${queryParams}`, { 'Control-Mapping-Id': '7739' });
+    const response = await this.fetch(`/api/phr/v1/procedure?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -291,7 +287,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/blood-glucose-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7724' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/blood-glucose-data-manager?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -305,7 +301,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/sleep-session-data-manager-v2?${queryParams}`, { 'Control-Mapping-Id': '7757' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/sleep-session-data-manager-v2?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -319,7 +315,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/dietary-intake-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7764' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/dietary-intake-data-manager?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -334,8 +330,8 @@ export class MHRClient {
       dateRangeOptions: dateRange,
     });
     const [injectionsResp, usageResp] = await Promise.all([
-      this.fetch(`/api/phr/v1/myhealth/insulin-injection-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7725' }),
-      this.fetch(`/api/phr/v1/myhealth/insulin-injection-use-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7726' }),
+      this.fetch(`/api/phr/v1/myhealth/insulin-injection-data-manager?${queryParams}`),
+      this.fetch(`/api/phr/v1/myhealth/insulin-injection-use-data-manager?${queryParams}`),
     ]);
     return {
       injections: await injectionsResp.json() as unknown[],
@@ -353,7 +349,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/peak-flow-data-manager?${queryParams}`, { 'Control-Mapping-Id': '7731' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/peak-flow-data-manager?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -367,7 +363,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/extendable-data-manager/waist-circumference?${queryParams}`, { 'Control-Mapping-Id': '7751' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/extendable-data-manager/waist-circumference?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 
@@ -381,7 +377,7 @@ export class MHRClient {
       endDate: endDate ? toApiDateFormat(endDate) : DEFAULT_END_DATE,
       dateRangeOptions: dateRange,
     });
-    const response = await this.fetch(`/api/phr/v1/myhealth/extendable-data-manager/concern?${queryParams}`, { 'Control-Mapping-Id': '7760' });
+    const response = await this.fetch(`/api/phr/v1/myhealth/extendable-data-manager/concern?${queryParams}`);
     return response.json() as Promise<unknown[]>;
   }
 }
