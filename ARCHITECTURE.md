@@ -138,7 +138,9 @@ ab-health-mcp/
 │   ├── og-image.png                # Open Graph preview image (1200×630)
 │   └── hero.png / flatIcons.png    # Gemini-generated graphics
 ├── api/                            # Azure Functions (landing page backend)
-│   └── request-access/             # Form handler → SAS URL + ACS email notification
+│   ├── request-access/             # Form handler → SAS URL + ACS email notification
+│   ├── check-update/               # Version check → 30-minute SAS download URL
+│   └── download/                   # Signed download redirect
 ├── extension/                      # Chrome extension (cookie capture for remote auth)
 ├── portal/                         # Next.js web portal (alternative to Claude Desktop)
 ├── staticwebapp.config.json        # Azure Static Web Apps config

@@ -73,6 +73,7 @@ This updates the version in all 5 locations automatically:
 - `manifest.json`
 - `static/version.json` (checked by installed extensions for update notifications)
 - `src/tools/connect-account.ts` (`CURRENT_VERSION`)
+- `src/tools/connect-account.ts` (`CURRENT_VERSION`)
 - `src/server/create-server.ts` (server info)
 
 **Do NOT** manually run `mcpb pack` or `az storage blob upload` — use `npm run deploy` instead.
@@ -276,13 +277,15 @@ All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https
 ### Recent Additions (v1.1.15)
 - **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)
 - **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. For Anthropic reviewer testing.
-- **Version check** — `connect_account` checks `myaihealth.ca/version.json` and notifies users of available updates
+- **Version check** — `connect_account` calls `/api/check-update` and provides a direct download link when a new version is available (30-minute SAS URL)
 - **Medical disclaimers** — embedded in `connect_account` responses and all factory-generated tool responses
 - **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation, rate limiting on OAuth endpoints, TOCTOU race condition fixes
 - **Deploy automation** — `npm run deploy` handles version bump, build, pack, upload, and landing page deploy
 - **Open source** — Public GitHub repo with squashed history, branch protection enabled
 - **Family & proxy access** — `mc_list_proxy_access` and `mc_switch_context` tools for viewing family members' health records via MyChart shared access
 - **Privacy-first messaging** — Landing page and access request email pre-frame the Claude Desktop security warning, explaining the local architecture is an intentional privacy feature
+- **First-run consent** — Privacy notice shown on first `connect_account` call, disclosing that health data is sent to Anthropic's US servers. Stored at `~/.mhr-records/privacy-acknowledged`
+- **In-app update with download link** — `/api/check-update` endpoint generates a 30-minute SAS download URL when a new version is available, shown directly to the user via `connect_account`
 
 ## Authentication
 
@@ -387,7 +390,7 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 - **API function:** `api/request-access/` — Azure Function that generates a 3-month SAS download URL and emails it via Azure Communication Services. Email includes privacy-first messaging pre-framing the Claude Desktop security warning.
 - **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified)
 - **Downloads:** `.mcpb` stored in Azure Blob Storage (`myaihealthdownloads` account, `downloads` container). **Not distributed via GitHub releases** — users must request access through the portal.
-- **Version endpoint:** `static/version.json` — checked by installed extensions to notify users of updates
+- **Version endpoint:** `static/version.json` — source of truth for latest version. Also used by `/api/check-update` endpoint which generates a 30-minute SAS download URL when a newer version is available.
 - **Deploy:** Use `npm run deploy` — handles everything (see "Deploying a New Version" section above)
 
 ## Repository
