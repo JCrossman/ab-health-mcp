@@ -21,7 +21,7 @@ import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const CURRENT_VERSION = '1.1.19';
+const CURRENT_VERSION = '1.1.20';
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
@@ -65,17 +65,22 @@ interface UpdateInfo {
 
 async function checkForUpdate(): Promise<UpdateInfo | undefined> {
   try {
+    logger.info(`Checking for updates at ${UPDATE_CHECK_URL}`);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 15000);
     const res = await fetch(UPDATE_CHECK_URL, { signal: controller.signal });
     clearTimeout(timeout);
-    if (!res.ok) return undefined;
+    if (!res.ok) {
+      logger.warn(`Update check returned HTTP ${res.status}`);
+      return undefined;
+    }
     const data = await res.json() as { updateAvailable?: boolean; latestVersion?: string; downloadUrl?: string };
+    logger.info(`Update check result: updateAvailable=${data.updateAvailable}, latest=${data.latestVersion}`);
     if (data.updateAvailable && data.latestVersion && data.downloadUrl) {
       return { latestVersion: data.latestVersion, downloadUrl: data.downloadUrl };
     }
-  } catch {
-    // Update check is best-effort — never block auth
+  } catch (error) {
+    logger.warn(`Update check failed: ${error instanceof Error ? error.message : error}`);
   }
   return undefined;
 }
@@ -165,21 +170,24 @@ export const connectAccountTool = {
         };
       }
 
-      // Check for updates before launching browser
+      // Check for updates before launching browser — block if outdated
+      logger.info('Checking for updates before auth...');
       const updateInfo = await checkForUpdate();
       if (updateInfo) {
+        logger.info(`Update available: ${updateInfo.latestVersion} (installed: ${CURRENT_VERSION})`);
         return {
           content: [{
             type: 'text' as const,
             text: JSON.stringify({
-              updateAvailable: true,
-              message: `A new version (v${updateInfo.latestVersion}) is available. Please download and install it before connecting.`,
+              error: 'update_required',
+              message: `You must update to v${updateInfo.latestVersion} before connecting. Your installed version (v${CURRENT_VERSION}) is out of date.`,
               downloadUrl: updateInfo.downloadUrl,
               installedVersion: CURRENT_VERSION,
               latestVersion: updateInfo.latestVersion,
-              action: 'Download the update, double-click to install, then try connecting again.',
+              action: `Download the update here: ${updateInfo.downloadUrl} — then double-click the downloaded file to install it. After installing, try connecting again.`,
             }),
           }],
+          isError: true,
         };
       }
 
