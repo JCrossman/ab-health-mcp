@@ -275,14 +275,40 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
     logger.info('Establishing MHR session...');
     try {
       await page.goto(MHR_BASE, { waitUntil: 'networkidle2', timeout: 30_000 });
-      await page.waitForFunction(
-        () => window.location.href.includes('/ng/'),
-        { timeout: 20_000 },
-      );
-      mhrSeen = true;
-      logger.info('MHR session established');
-    } catch {
-      logger.warn('MHR session establishment failed — MHR tools may not work');
+      const mhrUrl = page.url();
+      logger.info(`MHR navigation landed at: ${mhrUrl}`);
+
+      if (mhrUrl.includes('/ng/')) {
+        mhrSeen = true;
+        logger.info('MHR session established (already at /ng/)');
+      } else {
+        // May need to wait for SPA redirect
+        await page.waitForFunction(
+          () => window.location.href.includes('/ng/'),
+          { timeout: 20_000 },
+        );
+        mhrSeen = true;
+        logger.info('MHR session established (after SPA redirect)');
+      }
+    } catch (mhrError) {
+      const mhrUrl = page.url();
+      logger.warn(`MHR session establishment failed at URL: ${mhrUrl}`);
+      logger.warn(`MHR error: ${mhrError instanceof Error ? mhrError.message : mhrError}`);
+
+      // Retry once — MHR sometimes needs a second navigation after SSO
+      try {
+        logger.info('Retrying MHR navigation...');
+        await sleep(2000);
+        await page.goto(MHR_BASE, { waitUntil: 'networkidle2', timeout: 30_000 });
+        await page.waitForFunction(
+          () => window.location.href.includes('/ng/'),
+          { timeout: 20_000 },
+        );
+        mhrSeen = true;
+        logger.info('MHR session established on retry');
+      } catch {
+        logger.warn('MHR retry also failed — MHR tools will not work this session');
+      }
     }
 
     // Extract MHR cookies
