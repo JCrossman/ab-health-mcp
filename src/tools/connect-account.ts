@@ -21,7 +21,7 @@ import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const CURRENT_VERSION = '1.1.21';
+const CURRENT_VERSION = '1.1.22';
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
@@ -180,14 +180,15 @@ export const connectAccountTool = {
             type: 'text' as const,
             text: JSON.stringify({
               error: 'update_required',
-              message: `You must update to v${updateInfo.latestVersion} before connecting. Your installed version (v${CURRENT_VERSION}) is out of date.`,
+              message: `A new version (v${updateInfo.latestVersion}) is available. You are on v${CURRENT_VERSION}.`,
               downloadUrl: updateInfo.downloadUrl,
               installedVersion: CURRENT_VERSION,
               latestVersion: updateInfo.latestVersion,
-              action: `Download the update here: ${updateInfo.downloadUrl} — then double-click the downloaded file to install it. After installing, try connecting again.`,
+              instructions: `Please download and install the update, then ask me to call connect_account again. Download link: ${updateInfo.downloadUrl}`,
+              retryable: true,
+              retryAction: 'After the user confirms they have installed the update, call connect_account again to proceed with authentication.',
             }),
           }],
-          isError: true,
         };
       }
 
