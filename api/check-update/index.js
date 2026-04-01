@@ -84,7 +84,7 @@ module.exports = async function (context, req) {
     const blobClient = containerClient.getBlobClient(blobName);
 
     const expiresOn = new Date();
-    expiresOn.setHours(expiresOn.getHours() + 24);
+    expiresOn.setMinutes(expiresOn.getMinutes() + 30);
 
     const credential = new StorageSharedKeyCredential(accountName, accountKey);
     const sasToken = generateBlobSASQueryParameters({
