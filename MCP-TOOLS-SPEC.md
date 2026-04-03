@@ -20,12 +20,15 @@ If a valid session already exists, returns immediately without opening a browser
 **Parameters:**
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| force | boolean | No | Force re-authentication even if a valid session exists. |
+| force | boolean | No | Force re-authentication even if a valid session exists. Also exits demo mode. |
+| demo | boolean | No | Connect in demo mode with sample data. No browser or Alberta account needed. |
+| accept_privacy | boolean | No | Set to true to acknowledge the privacy notice and proceed. Required on first use. |
 
 **Behavior:**
 1. If demo mode: return sample data immediately
-2. Check if a valid session already exists — if so, return immediately (unless `force=true`). Includes update check.
-3. If first-ever real connection: show privacy notice (health data sent to Anthropic's US servers). User calls again to proceed.
+2. If force=true without demo: exit demo mode
+3. Check if a valid session already exists — if so, return immediately (unless `force=true`). Includes update check.
+4. If first-ever real connection: show privacy notice (health data sent to Anthropic's US servers). User must call again with `accept_privacy=true` to proceed.
 4. **Check for updates** via `/api/check-update` — if a newer version exists, return a download URL and block authentication. User must update before connecting.
 5. Launch Chrome via Puppeteer (`headless: false`)
 6. Navigate to `account.alberta.ca/ui/sign-in/signin` (SSO login)

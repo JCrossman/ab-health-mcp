@@ -275,17 +275,17 @@ All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https
 - Feature announcements: Family & Caregiver (proxy) access banner
 - Azure resources: Static Web App (`myaihealth`), Blob Storage (`myaihealthdownloads`), Communication Services (`myaihealth-comm`), Email Service (`myaihealth-email`)
 
-### Recent Additions (v1.1.15)
+### Recent Additions (v1.1.23)
 - **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)
-- **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. For Anthropic reviewer testing.
+- **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. Comprehensive sample data across all 44 tools with clinically coherent patient narrative. Use `force=true` to exit demo mode.
 - **Version check** — `connect_account` calls `/api/check-update` and provides a direct download link when a new version is available (30-minute SAS URL)
-- **Medical disclaimers** — embedded in `connect_account` responses and all factory-generated tool responses
+- **Medical disclaimers** — embedded in `connect_account` responses and all factory-generated tool responses. Includes data completeness warning (24-72hr delays, out-of-province gaps).
 - **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation, rate limiting on OAuth endpoints, TOCTOU race condition fixes
 - **Deploy automation** — `npm run deploy` handles version bump, build, pack, upload, and landing page deploy
 - **Open source** — Public GitHub repo with squashed history, branch protection enabled
-- **Family & proxy access** — `mc_list_proxy_access` and `mc_switch_context` tools for viewing family members' health records via MyChart shared access
+- **Family & proxy access** — `mc_list_proxy_access` and `mc_switch_context` tools for viewing family members' health records via MyChart shared access. Proxy context switch includes privacy notice.
 - **Privacy-first messaging** — Landing page and access request email pre-frame the Claude Desktop security warning, explaining the local architecture is an intentional privacy feature
-- **First-run consent** — Privacy notice shown on first `connect_account` call, disclosing that health data is sent to Anthropic's US servers. Stored at `~/.mhr-records/privacy-acknowledged`
+- **First-run consent** — Privacy notice shown on first `connect_account` call, disclosing that health data is sent to Anthropic's US servers. Requires explicit `accept_privacy=true` to proceed. Includes OIPC link and right-to-withdraw information.
 - **In-app update with download link** — `/api/check-update` endpoint generates a 30-minute SAS download URL when a new version is available, shown directly to the user via `connect_account`
 
 ## Authentication
@@ -318,8 +318,9 @@ Cookie-based auth is managed by `tough-cookie`:
 ```
 connect_account
   -> (if demo mode, return sample data immediately)
+  -> (if force=true without demo, exit demo mode)
   -> (if valid session exists and force!=true, reuse it — includes update check)
-  -> (if first-ever connection, show privacy notice and return — user calls again)
+  -> (if first-ever connection, show privacy notice and return — user must call again with accept_privacy=true)
   -> CHECK FOR UPDATES via /api/check-update
      -> if update available: return download URL and block auth
      -> user downloads, installs, calls connect_account again
@@ -403,7 +404,7 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 ## Repository
 
 - **Visibility:** Public (open source, MIT license)
-- **Version:** v1.1.15 (use `npm run deploy` to bump)
+- **Version:** v1.1.23 (use `npm run deploy` to bump)
 - **Branch protection:** `main` branch has force push and deletion blocked, enforce_admins enabled
 - **Distribution:** The `.mcpb` bundle is NOT in the repo or GitHub releases. It's gated behind the myaihealth.ca access request form. Users can clone and build from source if they prefer.
 - **Do NOT** create GitHub releases with `.mcpb` attachments — this bypasses the access request flow.

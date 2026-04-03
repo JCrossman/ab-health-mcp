@@ -360,6 +360,7 @@ This project handles protected health information under Alberta's Health Informa
 4. **Encryption at rest.** Local: AES-256-GCM at `~/.mhr-records/session.enc`. Remote: AES-256-GCM in the OAuth access token (held on user's machine by Claude Desktop).
 5. **Zero server-side storage (remote mode).** The server stores nothing — no database, no user data. Session cookies are encrypted into the OAuth token. If the server is compromised, there is no stored user data to leak.
 6. **Canadian data residency (our infrastructure).** Azure Canada Central for HIA/POPA compliance. Note: Claude (Anthropic) processes conversations on US-based servers.
+7. **No clinical action suggestions.** The MCP server never flags lab values, suggests calling healthcare providers, recommends medication changes, or cross-references clinical data to surface concerns. All clinical interpretation is Claude's responsibility.
 
 ### Passthrough Principle
 
@@ -369,6 +370,7 @@ The MCP server is a pipe. It does **NOT**:
 - Calculate trends or averages
 - Make medical assessments
 - Store any health information
+- Suggest clinical actions (calling doctors, 911, changing medications, etc.)
 
 ## Dependencies
 
@@ -432,9 +434,11 @@ swa deploy ./static \
 This extension accesses personal health information on your behalf. Here is how your data is handled:
 
 - **No health data is stored by the extension.** Data fetched from Alberta Health portals is returned to Claude and immediately discarded by the extension. Nothing is written to disk or any server by this extension. See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for how Claude handles conversation data.
+- **First-run privacy consent.** On first connection, a privacy notice explains that health data will be sent to Anthropic's US servers. You must explicitly acknowledge this before proceeding. You can disconnect at any time; data already sent to Anthropic is subject to their retention policy.
 - **Session cookies only.** The only data persisted is an encrypted session cookie (AES-256-GCM) stored locally at `~/.mhr-records/session.enc`. It contains no health data — only authentication tokens.
 - **Credentials never leave your machine.** You log in through the real Alberta SSO page in your browser. Credentials are never sent to or processed by this extension.
 - **Canadian data residency (our infrastructure).** All cloud infrastructure runs in Azure Canada Central (HIA/POPA compliant). Note: conversations are processed by Claude (Anthropic) on US-based servers — this extension does not control Anthropic's data handling.
+- **Data completeness.** Health records may not reflect your complete medical history. Results may take 24-72 hours to appear after testing. Records from out-of-province providers may not be included.
 - **No analytics or telemetry.** No usage data, prompts, or identifiers are collected.
 
 Full privacy policy: **https://www.myaihealth.ca/#privacy**
