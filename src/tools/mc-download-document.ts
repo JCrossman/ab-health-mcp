@@ -69,7 +69,7 @@ export const mcDownloadDocumentTool = {
       const { buffer, contentType } = await client.downloadDocumentBinary(downloadUrl);
       const effectiveMime = contentType || mimeType;
 
-      logger.info(`Downloaded ${displayName}: ${Math.round(buffer.length / 1024)}KB, ${effectiveMime}`);
+      logger.info(`Downloaded document: ${Math.round(buffer.length / 1024)}KB, ${effectiveMime}`);
 
       // Step 3: Convert to MCP content blocks
       const contentBlocks = binaryToContentBlocks(buffer, effectiveMime, displayName);

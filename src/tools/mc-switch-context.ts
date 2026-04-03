@@ -1,4 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
+import { MEDICAL_DISCLAIMER } from './tool-factory.js';
 
 export const mcSwitchContextTool = {
   name: 'mc_switch_context',
@@ -10,7 +11,7 @@ export const mcSwitchContextTool = {
       if (params.proxy_id === 'self') {
         await client.switchToSelf();
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ switched: true, context: 'self' }) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ switched: true, context: 'self', disclaimer: MEDICAL_DISCLAIMER }) }],
         };
       }
 
@@ -20,6 +21,7 @@ export const mcSwitchContextTool = {
       const proxyData = await client.getProxyAccessList() as Record<string, unknown>;
       const subjects = (proxyData.ProxySubjectList ?? []) as Array<Record<string, unknown>>;
       const selected = subjects.find(s => s.IsSelected);
+      const viewingName = (selected?.DisplayName as string) ?? 'unknown';
 
       return {
         content: [{
@@ -27,8 +29,10 @@ export const mcSwitchContextTool = {
           text: JSON.stringify({
             switched: true,
             context: selected?.IsSelf ? 'self' : 'proxy',
-            viewing: selected?.DisplayName ?? 'unknown',
+            viewing: viewingName,
+            privacyNotice: `You are now viewing health records for ${viewingName}. All data retrieved will be sent to Claude. The same privacy considerations apply as for your own records.`,
             note: 'Context switched. Use mc_get_test_results, mc_get_medications, and other mc_* tools to view this patient\'s data. Do NOT use get_lab_results (MHR) — it always returns the logged-in user\'s data.',
+            disclaimer: MEDICAL_DISCLAIMER,
           }),
         }],
       };

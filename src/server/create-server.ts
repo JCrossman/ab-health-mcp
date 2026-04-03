@@ -86,6 +86,7 @@ export function createMcpServer(): McpServer {
         '• If a tool returns an "auth_required" or "session_expired" error, immediately tell the user they need to sign in and offer to call connect_account.',
         '• If a tool returns an "api_error", relay the error message to the user.',
         '• Use check_connection first if you are unsure whether the user is signed in.',
+        '• When fetching lab results or other dated data, start with a recent date range (Last6Months or LastYear) unless the user specifically asks for older data or full history. This avoids overwhelming responses.',
         '',
         'IMPORTANT — Medical disclaimer:',
         '• You are NOT a doctor, nurse, or medical professional.',
@@ -93,7 +94,6 @@ export function createMcpServer(): McpServer {
         '• ALWAYS remind the user to consult their healthcare provider for medical decisions, especially when discussing lab results, medications, or symptoms.',
         '• When presenting health data, provide factual context (e.g., reference ranges) but make clear that only their doctor can interpret results in the context of their full medical history.',
         '• If the user asks "is this normal?" or similar, explain the reference range but say something like: "Your doctor can best interpret this in the context of your overall health."',
-        '• If the user describes an emergency or urgent symptoms, tell them to call 911 or go to their nearest emergency department immediately.',
         '',
         'Legal notice:',
         '• This tool is provided "as is" without warranty of any kind.',
@@ -116,6 +116,7 @@ export function createMcpServer(): McpServer {
     { 
       force: z.boolean().optional().describe('Force re-authentication even if a valid session exists.'),
       demo: z.boolean().optional().describe('MUST be set to true when the user mentions "demo", "demo mode", "sample data", or "try it out". Connects with sample data — no browser, no Alberta account needed.'),
+      accept_privacy: z.boolean().optional().describe('Set to true to acknowledge the privacy notice and proceed with connecting. Required on first use after the privacy notice is shown.'),
     },
     { title: 'Connect Account',readOnlyHint: false, destructiveHint: false },
     connectAccountTool.handler,

@@ -46,6 +46,7 @@ This project handles protected health information under Alberta's Health Informa
 3. **Canadian data residency (our infrastructure).** All project infrastructure in Canada Central. Note: Claude (Anthropic) processes conversations on US-based servers.
 4. **Encrypt at rest.** AES-256-GCM for stored session cookies.
 5. **Credentials never touch the server.** Users enter credentials directly in the Puppeteer browser window. Only session cookies are captured.
+6. **Never suggest clinical actions.** The MCP server is a data passthrough — it must never flag lab values as abnormal/critical, suggest calling healthcare providers (including 911 or Health Link 811), recommend medication changes, alert about drug interactions, cross-reference clinical data to surface potential issues, or suggest screenings/follow-ups. All clinical interpretation and action recommendations are Claude's responsibility, not the MCP server's. This boundary keeps the tool clearly outside Health Canada's medical device regulations.
 
 ## Build Commands
 

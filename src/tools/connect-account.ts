@@ -40,9 +40,14 @@ To protect your privacy:
 
 This extension does NOT store your health data — it fetches it for your conversation, then discards it. Your login credentials are entered directly on Alberta's website and never touch this extension.
 
+Your rights:
+• You can disconnect at any time using the disconnect_account tool.
+• Data already sent to Anthropic is subject to their retention policy (up to 30 days).
+• For privacy concerns, contact Alberta's Office of the Information and Privacy Commissioner (OIPC) at https://www.oipc.ab.ca
+
 By proceeding, you acknowledge that your health data will be sent to Anthropic's servers in the United States for AI processing. See Anthropic's privacy policy at https://www.anthropic.com/privacy
 
-If you agree, call connect_account again to proceed.`;
+To proceed, call connect_account with accept_privacy=true.`;
 
 async function hasAcknowledgedPrivacy(): Promise<boolean> {
   try {
@@ -99,9 +104,13 @@ export const connectAccountTool = {
         type: 'boolean',
         description: 'MUST be set to true when the user wants demo mode, sample data, or to try the extension without an Alberta account. Skips browser login entirely.',
       },
+      accept_privacy: {
+        type: 'boolean',
+        description: 'Set to true to acknowledge the privacy notice and proceed with connecting. Required on first use after the privacy notice is shown.',
+      },
     },
   },
-  handler: async (params: { force?: boolean; demo?: boolean }) => {
+  handler: async (params: { force?: boolean; demo?: boolean; accept_privacy?: boolean }) => {
     try {
       // Demo mode: return success immediately without browser auth
       if (params.demo) setDemoMode(true);
@@ -159,15 +168,19 @@ export const connectAccountTool = {
         }
       }
 
-      // First-run privacy consent — show once before first real connection
+      // First-run privacy consent — show notice, require explicit acceptance
       if (!await hasAcknowledgedPrivacy()) {
-        await acknowledgePrivacy();
-        return {
-          content: [{
-            type: 'text' as const,
-            text: PRIVACY_NOTICE,
-          }],
-        };
+        if (params.accept_privacy) {
+          await acknowledgePrivacy();
+          // Fall through to continue with auth
+        } else {
+          return {
+            content: [{
+              type: 'text' as const,
+              text: PRIVACY_NOTICE,
+            }],
+          };
+        }
       }
 
       // Check for updates before launching browser — block if outdated

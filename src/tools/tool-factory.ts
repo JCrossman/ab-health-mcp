@@ -12,7 +12,7 @@ import { ensureSession, ensureMyChartSession, formatError } from '../helpers/ses
 import type { MHRClient } from '../api/mhr-client.js';
 import type { MyChartClient } from '../api/mychart-client.js';
 
-export const MEDICAL_DISCLAIMER = 'IMPORTANT: This is your health record data for informational purposes only — it is NOT medical advice. Always consult your doctor or healthcare provider to interpret results and make health decisions.';
+export const MEDICAL_DISCLAIMER = 'IMPORTANT: This is your health record data for informational purposes only — it is NOT medical advice. Always consult your doctor or healthcare provider to interpret results and make health decisions. Note: Health records may not reflect your complete medical history. Results may take 24-72 hours to appear after testing. Records from out-of-province providers or some community clinics may not be included.';
 
 const DEFAULT_MAX_RESULTS = 50;
 

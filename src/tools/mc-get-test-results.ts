@@ -90,7 +90,7 @@ export const mcGetTestResultsTool = {
 
       const data = await client.getTestResultsList(params.search_string);
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER }) }],
       };
     } catch (error) {
       return {

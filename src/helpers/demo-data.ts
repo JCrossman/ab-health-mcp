@@ -342,6 +342,172 @@ const demoLabResults: LabResult[] = [
       },
     ],
   },
+  // --- Panel 7: June 2024 — Diabetes + Lipid + Kidney (6 months prior) ---
+  {
+    labTestDate: { date: 15, month: 5, year: 2024, hour: 8, minute: 0, second: 0, hasTimePart: true },
+    labResultDate: '2024-06-15T08:00:00',
+    labResultDisplayDate: 'Jun 15, 2024',
+    labResultDisplayDateText: 'June 15, 2024',
+    laboratoryName: 'Alberta Precision Laboratories',
+    orderedByName: 'Dr. Sarah Mitchell',
+    orderByType: 'Family Medicine',
+    source: 'APL',
+    clientId: 7,
+    thingId: 'demo-thing-007',
+    versionStamp: 'v1',
+    isReadOnly: true,
+    isItemRestricted: false,
+    customData: [],
+    group: [
+      {
+        groupName: 'Diabetes Monitoring',
+        laboratoryName: 'Alberta Precision Laboratories',
+        isOtherSection: false,
+        hasGroupWithOutResult: false,
+        labOrderStatus: 'Final',
+        attachmentCount: 0,
+        attachment: [],
+        customData: [],
+        results: [
+          {
+            when: '2024-06-15T08:00:00', whenDate: '2024-06-15', displayDate: 'Jun 15, 2024',
+            name: 'Hemoglobin A1c (HbA1c)', index: 0, eduContent: '', resultUniqueId: 'demo-r-020',
+            clinicalCode: { text: 'HBA1C', code: [{ value: '4548-4', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '6.2', value: '6.2', unitText: '%', rangeDisplayText: '< 6.0' },
+          },
+          {
+            when: '2024-06-15T08:00:00', whenDate: '2024-06-15', displayDate: 'Jun 15, 2024',
+            name: 'Fasting Glucose', index: 1, eduContent: '', resultUniqueId: 'demo-r-021',
+            clinicalCode: { text: 'GLU', code: [{ value: '1558-6', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '6.9', value: '6.9', unitText: 'mmol/L', rangeDisplayText: '3.6 - 6.0' },
+          },
+        ],
+      },
+      {
+        groupName: 'Lipid Panel',
+        laboratoryName: 'Alberta Precision Laboratories',
+        isOtherSection: false,
+        hasGroupWithOutResult: false,
+        labOrderStatus: 'Final',
+        attachmentCount: 0,
+        attachment: [],
+        customData: [],
+        results: [
+          {
+            when: '2024-06-15T08:00:00', whenDate: '2024-06-15', displayDate: 'Jun 15, 2024',
+            name: 'LDL Cholesterol', index: 0, eduContent: '', resultUniqueId: 'demo-r-022',
+            clinicalCode: { text: 'LDL', code: [{ value: '2089-1', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '3.6', value: '3.6', unitText: 'mmol/L', rangeDisplayText: '< 3.4' },
+          },
+        ],
+      },
+      {
+        groupName: 'Kidney Function',
+        laboratoryName: 'Alberta Precision Laboratories',
+        isOtherSection: false,
+        hasGroupWithOutResult: false,
+        labOrderStatus: 'Final',
+        attachmentCount: 0,
+        attachment: [],
+        customData: [],
+        results: [
+          {
+            when: '2024-06-15T08:00:00', whenDate: '2024-06-15', displayDate: 'Jun 15, 2024',
+            name: 'eGFR (Estimated Glomerular Filtration Rate)', index: 0, eduContent: '', resultUniqueId: 'demo-r-023',
+            clinicalCode: { text: 'EGFR', code: [{ value: '33914-3', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '82', value: '82', unitText: 'mL/min/1.73m\u00B2', rangeDisplayText: '> 90' },
+          },
+        ],
+      },
+    ],
+  },
+  // --- Panel 8: September 2024 — Diabetes + Lipid + Kidney (3 months prior) ---
+  {
+    labTestDate: { date: 5, month: 8, year: 2024, hour: 8, minute: 15, second: 0, hasTimePart: true },
+    labResultDate: '2024-09-05T08:15:00',
+    labResultDisplayDate: 'Sep 05, 2024',
+    labResultDisplayDateText: 'September 5, 2024',
+    laboratoryName: 'Alberta Precision Laboratories',
+    orderedByName: 'Dr. Sarah Mitchell',
+    orderByType: 'Family Medicine',
+    source: 'APL',
+    clientId: 8,
+    thingId: 'demo-thing-008',
+    versionStamp: 'v1',
+    isReadOnly: true,
+    isItemRestricted: false,
+    customData: [],
+    group: [
+      {
+        groupName: 'Diabetes Monitoring',
+        laboratoryName: 'Alberta Precision Laboratories',
+        isOtherSection: false,
+        hasGroupWithOutResult: false,
+        labOrderStatus: 'Final',
+        attachmentCount: 0,
+        attachment: [],
+        customData: [],
+        results: [
+          {
+            when: '2024-09-05T08:15:00', whenDate: '2024-09-05', displayDate: 'Sep 05, 2024',
+            name: 'Hemoglobin A1c (HbA1c)', index: 0, eduContent: '', resultUniqueId: 'demo-r-024',
+            clinicalCode: { text: 'HBA1C', code: [{ value: '4548-4', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '6.5', value: '6.5', unitText: '%', rangeDisplayText: '< 6.0' },
+          },
+          {
+            when: '2024-09-05T08:15:00', whenDate: '2024-09-05', displayDate: 'Sep 05, 2024',
+            name: 'Fasting Glucose', index: 1, eduContent: '', resultUniqueId: 'demo-r-025',
+            clinicalCode: { text: 'GLU', code: [{ value: '1558-6', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '7.2', value: '7.2', unitText: 'mmol/L', rangeDisplayText: '3.6 - 6.0' },
+          },
+        ],
+      },
+      {
+        groupName: 'Lipid Panel',
+        laboratoryName: 'Alberta Precision Laboratories',
+        isOtherSection: false,
+        hasGroupWithOutResult: false,
+        labOrderStatus: 'Final',
+        attachmentCount: 0,
+        attachment: [],
+        customData: [],
+        results: [
+          {
+            when: '2024-09-05T08:15:00', whenDate: '2024-09-05', displayDate: 'Sep 05, 2024',
+            name: 'LDL Cholesterol', index: 0, eduContent: '', resultUniqueId: 'demo-r-026',
+            clinicalCode: { text: 'LDL', code: [{ value: '2089-1', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '3.8', value: '3.8', unitText: 'mmol/L', rangeDisplayText: '< 3.4' },
+          },
+        ],
+      },
+      {
+        groupName: 'Kidney Function',
+        laboratoryName: 'Alberta Precision Laboratories',
+        isOtherSection: false,
+        hasGroupWithOutResult: false,
+        labOrderStatus: 'Final',
+        attachmentCount: 0,
+        attachment: [],
+        customData: [],
+        results: [
+          {
+            when: '2024-09-05T08:15:00', whenDate: '2024-09-05', displayDate: 'Sep 05, 2024',
+            name: 'eGFR (Estimated Glomerular Filtration Rate)', index: 0, eduContent: '', resultUniqueId: 'demo-r-027',
+            clinicalCode: { text: 'EGFR', code: [{ value: '33914-3', family: 'LOINC', type: 'test' }] },
+            customData: [], labOrderStatus: 'Final', labOrderStatusValue: 'F',
+            values: { displayValue: '78', value: '78', unitText: 'mL/min/1.73m\u00B2', rangeDisplayText: '> 90' },
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 const demoImmunizations: ImmunizationRecord[] = [
@@ -377,6 +543,55 @@ const demoImmunizations: ImmunizationRecord[] = [
       { kind: 2, name: 'Date Administered', data: null, displayString: 'March 20, 2022' },
       { kind: 3, name: 'Manufacturer', data: null, displayString: 'Sanofi Pasteur' },
       { kind: 4, name: 'Lot Number', data: null, displayString: 'DEMO-LOT-003' },
+    ],
+  },
+  // --- Childhood immunizations ---
+  {
+    itemKey: { thingId: 'demo-imm-004', versionStamp: 'v1' },
+    effectiveDate: { date: 10, month: 7, year: 1985, hasTimePart: false, hour: 0, minute: 0, second: 0 },
+    isReadOnly: true, isItemRestricted: false, thingBasedStyleClass: '', clientId: '',
+    values: [
+      { kind: 1, name: 'Name', data: null, displayString: 'DTaP (Diphtheria, Tetanus, Pertussis)' },
+      { kind: 2, name: 'Date Administered', data: null, displayString: 'August 10, 1985' },
+      { kind: 3, name: 'Manufacturer', data: null, displayString: 'Connaught Laboratories' },
+      { kind: 4, name: 'Lot Number', data: null, displayString: 'DEMO-LOT-004' },
+      { kind: 5, name: 'Dose', data: null, displayString: '1st dose (infant series)' },
+    ],
+  },
+  {
+    itemKey: { thingId: 'demo-imm-005', versionStamp: 'v1' },
+    effectiveDate: { date: 15, month: 5, year: 1986, hasTimePart: false, hour: 0, minute: 0, second: 0 },
+    isReadOnly: true, isItemRestricted: false, thingBasedStyleClass: '', clientId: '',
+    values: [
+      { kind: 1, name: 'Name', data: null, displayString: 'MMR (Measles, Mumps, Rubella)' },
+      { kind: 2, name: 'Date Administered', data: null, displayString: 'June 15, 1986' },
+      { kind: 3, name: 'Manufacturer', data: null, displayString: 'Merck' },
+      { kind: 4, name: 'Lot Number', data: null, displayString: 'DEMO-LOT-005' },
+      { kind: 5, name: 'Dose', data: null, displayString: '1st dose' },
+    ],
+  },
+  {
+    itemKey: { thingId: 'demo-imm-006', versionStamp: 'v1' },
+    effectiveDate: { date: 5, month: 2, year: 1990, hasTimePart: false, hour: 0, minute: 0, second: 0 },
+    isReadOnly: true, isItemRestricted: false, thingBasedStyleClass: '', clientId: '',
+    values: [
+      { kind: 1, name: 'Name', data: null, displayString: 'Varicella (Chickenpox)' },
+      { kind: 2, name: 'Date Administered', data: null, displayString: 'March 5, 1990' },
+      { kind: 3, name: 'Manufacturer', data: null, displayString: 'Merck' },
+      { kind: 4, name: 'Lot Number', data: null, displayString: 'DEMO-LOT-006' },
+      { kind: 5, name: 'Dose', data: null, displayString: '1st dose' },
+    ],
+  },
+  {
+    itemKey: { thingId: 'demo-imm-007', versionStamp: 'v1' },
+    effectiveDate: { date: 15, month: 8, year: 1998, hasTimePart: false, hour: 0, minute: 0, second: 0 },
+    isReadOnly: true, isItemRestricted: false, thingBasedStyleClass: '', clientId: '',
+    values: [
+      { kind: 1, name: 'Name', data: null, displayString: 'Hepatitis B' },
+      { kind: 2, name: 'Date Administered', data: null, displayString: 'September 15, 1998' },
+      { kind: 3, name: 'Manufacturer', data: null, displayString: 'SmithKline Beecham' },
+      { kind: 4, name: 'Lot Number', data: null, displayString: 'DEMO-LOT-007' },
+      { kind: 5, name: 'Dose', data: null, displayString: '1st dose (Grade 5 school program)' },
     ],
   },
 ];
@@ -625,6 +840,313 @@ const demoReferrals = [
   },
 ];
 
+// Blood oxygen: mostly normal, one low reading during a cold
+const demoBloodOxygen = [
+  {
+    effectiveDate: { date: 20, month: 5, year: 2024 },
+    values: [
+      { displayString: '98', name: 'Oxygen Saturation (%)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 12, month: 6, year: 2024 },
+    values: [
+      { displayString: '97', name: 'Oxygen Saturation (%)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 5, month: 8, year: 2024 },
+    values: [
+      { displayString: '93', name: 'Oxygen Saturation (%)' },
+      { displayString: 'Measured during upper respiratory infection', name: 'Context' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 10, month: 11, year: 2024 },
+    values: [
+      { displayString: '97', name: 'Oxygen Saturation (%)' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Exercise records: walking, cycling, swimming
+const demoExercise = [
+  {
+    effectiveDate: { date: 18, month: 5, year: 2024 },
+    calorieUnit: 'kcal',
+    distanceUnit: 'km',
+    durationUnit: 'min',
+    exerciseValues: [
+      { displayString: 'Walking', name: 'Activity' },
+      { displayString: '45', name: 'Duration' },
+      { displayString: '3.5', name: 'Distance' },
+      { displayString: '210', name: 'Calories Burned' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 25, month: 6, year: 2024 },
+    calorieUnit: 'kcal',
+    distanceUnit: 'km',
+    durationUnit: 'min',
+    exerciseValues: [
+      { displayString: 'Cycling', name: 'Activity' },
+      { displayString: '60', name: 'Duration' },
+      { displayString: '18.0', name: 'Distance' },
+      { displayString: '420', name: 'Calories Burned' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 14, month: 7, year: 2024 },
+    calorieUnit: 'kcal',
+    distanceUnit: 'km',
+    durationUnit: 'min',
+    exerciseValues: [
+      { displayString: 'Swimming', name: 'Activity' },
+      { displayString: '30', name: 'Duration' },
+      { displayString: '1.0', name: 'Distance' },
+      { displayString: '300', name: 'Calories Burned' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 8, month: 9, year: 2024 },
+    calorieUnit: 'kcal',
+    distanceUnit: 'km',
+    durationUnit: 'min',
+    exerciseValues: [
+      { displayString: 'Walking', name: 'Activity' },
+      { displayString: '50', name: 'Duration' },
+      { displayString: '4.0', name: 'Distance' },
+      { displayString: '235', name: 'Calories Burned' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 22, month: 11, year: 2024 },
+    calorieUnit: 'kcal',
+    distanceUnit: 'km',
+    durationUnit: 'min',
+    exerciseValues: [
+      { displayString: 'Cycling', name: 'Activity' },
+      { displayString: '40', name: 'Duration' },
+      { displayString: '12.0', name: 'Distance' },
+      { displayString: '340', name: 'Calories Burned' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Procedures: colonoscopy screening + past appendectomy
+const demoProcedures = [
+  {
+    effectiveDate: { date: 22, month: 2, year: 2015 },
+    values: [
+      { displayString: 'Appendectomy (Laparoscopic)', name: 'Procedure' },
+      { displayString: 'March 22, 2015', name: 'Date' },
+      { displayString: 'Dr. James Wong', name: 'Performed By' },
+      { displayString: 'Foothills Medical Centre, Calgary', name: 'Facility' },
+      { displayString: 'Uncomplicated laparoscopic appendectomy for acute appendicitis', name: 'Findings' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 15, month: 10, year: 2024 },
+    values: [
+      { displayString: 'Colonoscopy (Screening)', name: 'Procedure' },
+      { displayString: 'November 15, 2024', name: 'Date' },
+      { displayString: 'Dr. Karen Li', name: 'Performed By' },
+      { displayString: 'South Health Campus, Calgary', name: 'Facility' },
+      { displayString: 'Normal colonoscopy. No polyps identified. Cecum reached. Recommend repeat in 10 years.', name: 'Findings' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Sleep records: varying duration over Oct-Dec 2024
+const demoSleep = [
+  {
+    effectiveDate: { date: 5, month: 9, year: 2024 },
+    values: [
+      { displayString: '6.5', name: 'Duration (hours)' },
+      { displayString: '11:30 PM', name: 'Bedtime' },
+      { displayString: '6:00 AM', name: 'Wake Time' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 15, month: 9, year: 2024 },
+    values: [
+      { displayString: '5.5', name: 'Duration (hours)' },
+      { displayString: '12:30 AM', name: 'Bedtime' },
+      { displayString: '6:00 AM', name: 'Wake Time' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 2, month: 10, year: 2024 },
+    values: [
+      { displayString: '7.0', name: 'Duration (hours)' },
+      { displayString: '10:30 PM', name: 'Bedtime' },
+      { displayString: '5:30 AM', name: 'Wake Time' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 20, month: 10, year: 2024 },
+    values: [
+      { displayString: '8.0', name: 'Duration (hours)' },
+      { displayString: '10:00 PM', name: 'Bedtime' },
+      { displayString: '6:00 AM', name: 'Wake Time' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 8, month: 11, year: 2024 },
+    values: [
+      { displayString: '6.0', name: 'Duration (hours)' },
+      { displayString: '11:45 PM', name: 'Bedtime' },
+      { displayString: '5:45 AM', name: 'Wake Time' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Dietary intake: 3 days of calorie/macro tracking
+const demoDietaryIntake = [
+  {
+    effectiveDate: { date: 1, month: 10, year: 2024 },
+    values: [
+      { displayString: '2150', name: 'Total Calories (kcal)' },
+      { displayString: '82', name: 'Protein (g)' },
+      { displayString: '245', name: 'Carbohydrates (g)' },
+      { displayString: '78', name: 'Fat (g)' },
+      { displayString: '24', name: 'Fiber (g)' },
+      { displayString: '2800', name: 'Sodium (mg)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 8, month: 10, year: 2024 },
+    values: [
+      { displayString: '1980', name: 'Total Calories (kcal)' },
+      { displayString: '95', name: 'Protein (g)' },
+      { displayString: '210', name: 'Carbohydrates (g)' },
+      { displayString: '65', name: 'Fat (g)' },
+      { displayString: '28', name: 'Fiber (g)' },
+      { displayString: '2200', name: 'Sodium (mg)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 15, month: 10, year: 2024 },
+    values: [
+      { displayString: '2320', name: 'Total Calories (kcal)' },
+      { displayString: '75', name: 'Protein (g)' },
+      { displayString: '280', name: 'Carbohydrates (g)' },
+      { displayString: '85', name: 'Fat (g)' },
+      { displayString: '18', name: 'Fiber (g)' },
+      { displayString: '3100', name: 'Sodium (mg)' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Peak flow: normal range for adult male, occasionally measured during respiratory symptoms
+const demoPeakFlow = [
+  {
+    effectiveDate: { date: 5, month: 8, year: 2024 },
+    values: [
+      { displayString: '420', name: 'Peak Flow (L/min)' },
+      { displayString: 'During upper respiratory infection', name: 'Context' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 12, month: 8, year: 2024 },
+    values: [
+      { displayString: '455', name: 'Peak Flow (L/min)' },
+      { displayString: 'Recovery from cold', name: 'Context' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 5, month: 9, year: 2024 },
+    values: [
+      { displayString: '475', name: 'Peak Flow (L/min)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 10, month: 11, year: 2024 },
+    values: [
+      { displayString: '480', name: 'Peak Flow (L/min)' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Waist circumference: slight improvement trend
+const demoWaistCircumference = [
+  {
+    effectiveDate: { date: 15, month: 5, year: 2024 },
+    values: [
+      { displayString: '98', name: 'Waist Circumference (cm)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 5, month: 8, year: 2024 },
+    values: [
+      { displayString: '97', name: 'Waist Circumference (cm)' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 10, month: 11, year: 2024 },
+    values: [
+      { displayString: '96', name: 'Waist Circumference (cm)' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
+// Symptom journal: fatigue, neuropathy concern, headache
+const demoSymptomJournal = [
+  {
+    effectiveDate: { date: 18, month: 9, year: 2024 },
+    values: [
+      { displayString: 'Fatigue', name: 'Symptom' },
+      { displayString: 'Moderate', name: 'Severity' },
+      { displayString: 'Persistent tiredness in the afternoon despite adequate sleep. Worse on days with higher carb intake.', name: 'Description' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 12, month: 10, year: 2024 },
+    values: [
+      { displayString: 'Numbness / tingling in feet', name: 'Symptom' },
+      { displayString: 'Mild', name: 'Severity' },
+      { displayString: 'Intermittent tingling and numbness in both feet, worse at night. Concerned about peripheral neuropathy — to discuss with Dr. Mitchell.', name: 'Description' },
+    ],
+    note: DEMO_NOTE,
+  },
+  {
+    effectiveDate: { date: 10, month: 11, year: 2024 },
+    values: [
+      { displayString: 'Headache', name: 'Symptom' },
+      { displayString: 'Mild', name: 'Severity' },
+      { displayString: 'Dull frontal headache after elevated BP reading (138/88). Resolved after 2 hours with rest.', name: 'Description' },
+    ],
+    note: DEMO_NOTE,
+  },
+];
+
 // ---------------------------------------------------------------------------
 // MyChart demo data
 // ---------------------------------------------------------------------------
@@ -752,8 +1274,26 @@ const demoMyChartMessages = {
       Snippet: 'Your HbA1c has increased slightly. Let\'s discuss adjusting your medication...',
       note: DEMO_NOTE,
     },
+    {
+      ID: 'demo-msg-002',
+      Subject: 'Prescription Renewal Request — Metformin & Lisinopril',
+      SenderName: 'Demo User',
+      Date: '2024-11-20T09:15:00',
+      IsRead: true,
+      Snippet: 'Hi, I would like to request a renewal for my Metformin 500 mg and Lisinopril 10 mg prescriptions...',
+      note: DEMO_NOTE,
+    },
+    {
+      ID: 'demo-msg-003',
+      Subject: 'Appointment Reminder — Diabetes Follow-up',
+      SenderName: 'South Health Campus',
+      Date: '2024-12-18T08:00:00',
+      IsRead: false,
+      Snippet: 'Reminder: You have an upcoming appointment with Dr. Sarah Mitchell on February 15, 2025 at 10:30 AM...',
+      note: DEMO_NOTE,
+    },
   ],
-  TotalCount: 1,
+  TotalCount: 3,
 };
 
 const demoMyChartCareTeam = {
@@ -840,7 +1380,17 @@ const demoMyChartTestResults = {
 };
 
 const demoMyChartProxyAccess = {
-  ProxySubjects: [],
+  ProxySubjects: [
+    {
+      Name: 'Margaret User',
+      Relationship: 'Mother',
+      Age: 72,
+      DateOfBirth: '1952-03-22',
+      Conditions: ['Type 2 Diabetes Mellitus'],
+      AccessLevel: 'Full',
+      note: DEMO_NOTE,
+    },
+  ],
   CurrentContext: { Name: 'Demo User', IsSelf: true },
   note: DEMO_NOTE,
 };
@@ -859,18 +1409,19 @@ export function createDemoMHRClient(): MHRClient {
     getDiagnosticImaging: async () => demoDiagnosticImaging,
     getHeightWeight: async () => demoHeightWeight,
     getVitalSigns: async () => demoVitalSigns,
-    getBloodOxygen: async () => [],
+    getBloodOxygen: async () => demoBloodOxygen,
     getBloodPressure: async () => demoBloodPressure,
-    getExercise: async () => [],
+    getExercise: async () => demoExercise,
     getReferrals: async () => demoReferrals,
-    getProcedures: async () => [],
+    getProcedures: async () => demoProcedures,
     getBloodGlucose: async () => demoBloodGlucose,
-    getSleep: async () => [],
-    getDietaryIntake: async () => [],
+    getSleep: async () => demoSleep,
+    getDietaryIntake: async () => demoDietaryIntake,
+    // Patient is on Metformin only (HbA1c 6.8%) — not yet on insulin therapy
     getInsulin: async () => ({ injections: [], usage: [] }),
-    getPeakFlow: async () => [],
-    getWaistCircumference: async () => [],
-    getSymptomJournal: async () => [],
+    getPeakFlow: async () => demoPeakFlow,
+    getWaistCircumference: async () => demoWaistCircumference,
+    getSymptomJournal: async () => demoSymptomJournal,
     downloadAttachment: async () => ({
       buffer: Buffer.from(`${DEMO_NOTE} \u2014 no real attachment in demo mode.`),
       contentType: 'text/plain',
@@ -1142,7 +1693,21 @@ export function createDemoMyChartClient(): MyChartClient {
       ],
       note: DEMO_NOTE,
     }),
-    getAppointmentRequests: async () => ({ Requests: [], note: DEMO_NOTE }),
+    getAppointmentRequests: async () => ({
+      Requests: [
+        {
+          RequestID: 'demo-apptreq-001',
+          RequestType: 'Referral Follow-up',
+          Specialty: 'Dermatology',
+          Reason: 'Mole check — new pigmented lesion on upper back noticed during annual physical',
+          SubmittedDate: '2024-12-12',
+          Status: 'Pending scheduling',
+          RequestedBy: 'Demo User',
+          note: DEMO_NOTE,
+        },
+      ],
+      note: DEMO_NOTE,
+    }),
     keepAlive: async () => {},
     downloadDocumentBinary: async () => ({
       buffer: Buffer.from(`${DEMO_NOTE} \u2014 no real document in demo mode.`),
