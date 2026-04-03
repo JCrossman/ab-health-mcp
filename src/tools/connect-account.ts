@@ -114,6 +114,8 @@ export const connectAccountTool = {
     try {
       // Demo mode: return success immediately without browser auth
       if (params.demo) setDemoMode(true);
+      // Exit demo mode when force-connecting without demo flag
+      if (params.force && !params.demo) setDemoMode(false);
       if (isDemoMode()) {
         return {
           content: [{
