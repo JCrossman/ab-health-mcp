@@ -21,7 +21,7 @@ import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const CURRENT_VERSION = '1.1.27';
+const CURRENT_VERSION = '1.1.28';
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
@@ -115,6 +115,15 @@ export const connectAccountTool = {
       // Check for updates first — always, regardless of mode
       const updateInfo = await checkForUpdate();
 
+      // If update available, always return it as a prominent first content block
+      const updateBlock: Array<{ type: 'text'; text: string }> = [];
+      if (updateInfo) {
+        updateBlock.push({
+          type: 'text' as const,
+          text: `⚠️ UPDATE AVAILABLE: You are on v${CURRENT_VERSION}. A new version (v${updateInfo.latestVersion}) is available. Please download and install: ${updateInfo.downloadUrl}`,
+        });
+      }
+
       // Demo mode: only enter when explicitly requested
       if (params.demo) {
         setDemoMode(true);
@@ -124,19 +133,21 @@ export const connectAccountTool = {
 
       if (isDemoMode()) {
         return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              connected: true,
-              message: 'Connected in demo mode (sample data).',
-              userName: 'Demo User',
-              authorizedRecords: 1,
-              mhrConnected: true,
-              myChartConnected: true,
-              ...(updateInfo ? { updateAvailable: `A new version (v${updateInfo.latestVersion}) is available. Download it here: ${updateInfo.downloadUrl}` } : {}),
-              disclaimer: MEDICAL_DISCLAIMER,
-            }),
-          }],
+          content: [
+            ...updateBlock,
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                connected: true,
+                message: 'Connected in demo mode (sample data).',
+                userName: 'Demo User',
+                authorizedRecords: 1,
+                mhrConnected: true,
+                myChartConnected: true,
+                disclaimer: MEDICAL_DISCLAIMER,
+              }),
+            },
+          ],
         };
       }
 
@@ -160,14 +171,14 @@ export const connectAccountTool = {
                 sessionTimeRemaining: Math.round(status.numberOfMilliSecondsLeftForSessionExpire / 1000),
                 disclaimer: MEDICAL_DISCLAIMER,
               };
-              if (updateInfo) {
-                response.updateAvailable = `A new version (v${updateInfo.latestVersion}) is available. Download it here: ${updateInfo.downloadUrl}`;
-              }
               return {
-                content: [{
-                  type: 'text' as const,
-                  text: JSON.stringify(response),
-                }],
+                content: [
+                  ...updateBlock,
+                  {
+                    type: 'text' as const,
+                    text: JSON.stringify(response),
+                  },
+                ],
               };
             }
           } catch {
