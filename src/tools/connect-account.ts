@@ -21,7 +21,7 @@ import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-const CURRENT_VERSION = '1.1.25';
+const CURRENT_VERSION = '1.1.26';
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
 const CONSENT_FILE = join(homedir(), '.mhr-records', 'privacy-acknowledged');
@@ -92,7 +92,7 @@ async function checkForUpdate(): Promise<UpdateInfo | undefined> {
 
 export const connectAccountTool = {
   name: 'connect_account',
-  description: 'Sign in to your MyAlberta account to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser window for you to enter your credentials. Always call this tool when a session is expired or when the user asks to connect — it handles everything automatically. Reuses an existing session if still valid — set force=true to re-authenticate. IMPORTANT: When the user mentions "demo", "demo mode", "sample data", or "try it out", you MUST set demo=true. Demo mode uses sample data and does NOT open a browser.',
+  description: 'Sign in to your MyAlberta account to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser window for you to enter your credentials. Reuses an existing session if still valid — set force=true to re-authenticate. Set demo=true only when the user explicitly asks for demo mode or sample data.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -102,7 +102,7 @@ export const connectAccountTool = {
       },
       demo: {
         type: 'boolean',
-        description: 'MUST be set to true when the user wants demo mode, sample data, or to try the extension without an Alberta account. Skips browser login entirely.',
+        description: 'Set to true only when the user explicitly asks for demo mode or sample data. Do NOT set for normal health data connections.',
       },
       accept_privacy: {
         type: 'boolean',
@@ -112,29 +112,17 @@ export const connectAccountTool = {
   },
   handler: async (params: { force?: boolean; demo?: boolean; accept_privacy?: boolean }) => {
     try {
-      // Demo mode: return success immediately without browser auth
-      if (params.demo) setDemoMode(true);
-      // Exit demo mode when force-connecting without demo flag
-      if (params.force && !params.demo) setDemoMode(false);
+      // Check for updates first — always, regardless of mode
+      const updateInfo = await checkForUpdate();
+
+      // Demo mode: only enter when explicitly requested
+      if (params.demo) {
+        setDemoMode(true);
+      } else {
+        setDemoMode(false);
+      }
+
       if (isDemoMode()) {
-        const updateInfo = await checkForUpdate();
-        if (updateInfo) {
-          return {
-            content: [{
-              type: 'text' as const,
-              text: JSON.stringify({
-                connected: true,
-                message: 'Connected in demo mode (sample data).',
-                userName: 'Demo User',
-                authorizedRecords: 1,
-                mhrConnected: true,
-                myChartConnected: true,
-                updateAvailable: `A new version (v${updateInfo.latestVersion}) is available. Download it here: ${updateInfo.downloadUrl}`,
-                disclaimer: MEDICAL_DISCLAIMER,
-              }),
-            }],
-          };
-        }
         return {
           content: [{
             type: 'text' as const,
@@ -145,6 +133,7 @@ export const connectAccountTool = {
               authorizedRecords: 1,
               mhrConnected: true,
               myChartConnected: true,
+              ...(updateInfo ? { updateAvailable: `A new version (v${updateInfo.latestVersion}) is available. Download it here: ${updateInfo.downloadUrl}` } : {}),
               disclaimer: MEDICAL_DISCLAIMER,
             }),
           }],
@@ -161,7 +150,6 @@ export const connectAccountTool = {
             if (!status.isSessionExpired) {
               const user = await existingClient.getUser();
               const myChartConnected = !!(data.myChartJar && data.myChartCsrfToken);
-              const latestVersion = await checkForUpdate();
               const response: Record<string, unknown> = {
                 connected: true,
                 message: 'Already connected (existing session reused).',
@@ -172,8 +160,8 @@ export const connectAccountTool = {
                 sessionTimeRemaining: Math.round(status.numberOfMilliSecondsLeftForSessionExpire / 1000),
                 disclaimer: MEDICAL_DISCLAIMER,
               };
-              if (latestVersion) {
-                response.updateAvailable = `A new version (v${latestVersion.latestVersion}) is available. Download it here: ${latestVersion.downloadUrl}`;
+              if (updateInfo) {
+                response.updateAvailable = `A new version (v${updateInfo.latestVersion}) is available. Download it here: ${updateInfo.downloadUrl}`;
               }
               return {
                 content: [{
@@ -203,9 +191,7 @@ export const connectAccountTool = {
         }
       }
 
-      // Check for updates before launching browser — block if outdated
-      logger.info('Checking for updates before auth...');
-      const updateInfo = await checkForUpdate();
+      // Block auth if update is available
       if (updateInfo) {
         logger.info(`Update available: ${updateInfo.latestVersion} (installed: ${CURRENT_VERSION})`);
         return {
@@ -240,7 +226,6 @@ export const connectAccountTool = {
       });
       invalidateSessionCache();
 
-      const latestVersion = await checkForUpdate();
       const response: Record<string, unknown> = {
         connected: true,
         message: 'Successfully connected to My Health Records and MyChart (AHS Connect).',
@@ -250,9 +235,6 @@ export const connectAccountTool = {
         myChartConnected: !!myChartCookieJar,
         disclaimer: MEDICAL_DISCLAIMER,
       };
-      if (latestVersion) {
-        response.updateAvailable = `A new version (v${latestVersion.latestVersion}) is available. Download it here: ${latestVersion.downloadUrl}`;
-      }
       return {
         content: [{
           type: 'text' as const,

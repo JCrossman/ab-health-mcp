@@ -1730,7 +1730,5 @@ export function setDemoMode(enabled: boolean): void {
 }
 
 export function isDemoMode(): boolean {
-  if (_runtimeDemoMode) return true;
-  const val = process.env.DEMO_MODE;
-  return val === 'true' || val === 'True' || val === '1' || val === 'yes';
+  return _runtimeDemoMode;
 }

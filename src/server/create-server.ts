@@ -71,7 +71,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'ab-health-mcp',
-      version: '1.1.25',
+      version: '1.1.26',
     },
     {
       instructions: [
@@ -128,8 +128,8 @@ export function createMcpServer(): McpServer {
         '═══════════════════════════════════════════',
         '',
         'Demo mode:',
-        '• If the user mentions "demo", "demo mode", "sample data", or "try it out", call connect_account with demo=true.',
-        '• Demo mode uses realistic sample data and does NOT open a browser or require an Alberta account.',
+        '• ONLY use demo=true when the user explicitly says "demo", "demo mode", or "sample data".',
+        '• Do NOT use demo mode when the user asks to connect to their real health data.',
         '',
         'Tool usage:',
         '• ALWAYS call the appropriate tool when a user asks about their health data. Never guess or assume a service is unavailable — let the tool handle errors.',
@@ -164,7 +164,7 @@ export function createMcpServer(): McpServer {
     connectAccountTool.description,
     { 
       force: z.boolean().optional().describe('Force re-authentication even if a valid session exists.'),
-      demo: z.boolean().optional().describe('MUST be set to true when the user mentions "demo", "demo mode", "sample data", or "try it out". Connects with sample data — no browser, no Alberta account needed.'),
+      demo: z.boolean().optional().describe('Set to true ONLY when the user explicitly asks for demo mode or sample data. Do NOT set for normal connections.'),
       accept_privacy: z.boolean().optional().describe('Set to true to acknowledge the privacy notice and proceed with connecting. Required on first use after the privacy notice is shown.'),
     },
     { title: 'Connect Account',readOnlyHint: false, destructiveHint: false },
