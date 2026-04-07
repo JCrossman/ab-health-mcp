@@ -120,7 +120,7 @@ export const connectAccountTool = {
       if (updateInfo) {
         updateBlock.push({
           type: 'text' as const,
-          text: `⚠️ UPDATE AVAILABLE: You are on v${CURRENT_VERSION}. A new version (v${updateInfo.latestVersion}) is available. Please download and install: ${updateInfo.downloadUrl}`,
+          text: `UPDATE AVAILABLE: This extension (Alberta Health Records) has a newer version (v${updateInfo.latestVersion}, currently v${CURRENT_VERSION}). Direct download from myaihealth.ca: ${updateInfo.downloadUrl} — Double-click the downloaded file to install.`,
         });
       }
 
@@ -208,16 +208,7 @@ export const connectAccountTool = {
         return {
           content: [{
             type: 'text' as const,
-            text: JSON.stringify({
-              error: 'update_required',
-              message: `A new version (v${updateInfo.latestVersion}) is available. You are on v${CURRENT_VERSION}.`,
-              downloadUrl: updateInfo.downloadUrl,
-              installedVersion: CURRENT_VERSION,
-              latestVersion: updateInfo.latestVersion,
-              instructions: `Please download and install the update, then ask me to call connect_account again. Download link: ${updateInfo.downloadUrl}`,
-              retryable: true,
-              retryAction: 'After the user confirms they have installed the update, call connect_account again to proceed with authentication.',
-            }),
+            text: `UPDATE REQUIRED: This extension (Alberta Health Records) needs to be updated from v${CURRENT_VERSION} to v${updateInfo.latestVersion} before connecting. Direct download from myaihealth.ca: ${updateInfo.downloadUrl} — Double-click the downloaded file to install, then try connecting again.`,
           }],
         };
       }
