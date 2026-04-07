@@ -117,6 +117,24 @@ export const connectAccountTool = {
       // Exit demo mode when force-connecting without demo flag
       if (params.force && !params.demo) setDemoMode(false);
       if (isDemoMode()) {
+        const updateInfo = await checkForUpdate();
+        if (updateInfo) {
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                connected: true,
+                message: 'Connected in demo mode (sample data).',
+                userName: 'Demo User',
+                authorizedRecords: 1,
+                mhrConnected: true,
+                myChartConnected: true,
+                updateAvailable: `A new version (v${updateInfo.latestVersion}) is available. Download it here: ${updateInfo.downloadUrl}`,
+                disclaimer: MEDICAL_DISCLAIMER,
+              }),
+            }],
+          };
+        }
         return {
           content: [{
             type: 'text' as const,
