@@ -12,7 +12,7 @@ export const mcGetGoalsTool = {
         client.getPatientGoals(),
         client.getCareTeamGoals(),
       ]);
-      const data = { patientGoals, careTeamGoals, disclaimer: MEDICAL_DISCLAIMER };
+      const data = { patientGoals, careTeamGoals, _displayHint: 'grouped_tables', disclaimer: MEDICAL_DISCLAIMER };
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(data) }],
       };

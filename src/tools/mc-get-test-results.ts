@@ -73,7 +73,7 @@ export const mcGetTestResultsTool = {
 
         contentBlocks.push({
           type: 'text' as const,
-          text: JSON.stringify({ ...result as object, disclaimer: MEDICAL_DISCLAIMER }),
+          text: JSON.stringify({ ...result as object, _displayHint: 'table', _displayColumns: ['Test', 'Value', 'Unit', 'Reference Range', 'Status'], disclaimer: MEDICAL_DISCLAIMER }),
         });
 
         // Add scan summary so Claude knows images are available
@@ -90,7 +90,7 @@ export const mcGetTestResultsTool = {
 
       const data = await client.getTestResultsList(params.search_string);
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'Test', 'Status'], note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER }) }],
       };
     } catch (error) {
       return {

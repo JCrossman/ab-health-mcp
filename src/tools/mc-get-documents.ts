@@ -25,13 +25,13 @@ export const mcGetDocumentsTool = {
         const ext = params.file_extension ?? 'PDF';
         const data = await client.getDocumentDetails(params.document_id, ext);
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'detail', disclaimer: MEDICAL_DISCLAIMER }) }],
         };
       }
 
       const data = await client.getDocuments();
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'Document', 'Type', 'Actions'], disclaimer: MEDICAL_DISCLAIMER }) }],
       };
     } catch (error) {
       return {

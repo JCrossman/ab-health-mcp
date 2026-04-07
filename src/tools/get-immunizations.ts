@@ -51,7 +51,12 @@ export const getImmunizationsTool = {
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({ ...formatted, disclaimer: MEDICAL_DISCLAIMER }),
+          text: JSON.stringify({
+            ...formatted,
+            _displayHint: 'table',
+            _displayColumns: ['Date', 'Vaccine', 'Administrator', 'Source'],
+            disclaimer: MEDICAL_DISCLAIMER,
+          }),
         }],
       };
     } catch (error) {

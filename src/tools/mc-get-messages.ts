@@ -31,7 +31,7 @@ export const mcGetMessagesTool = {
       if (params.message_id) {
         const data = await client.getConversationDetails(params.message_id);
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'detail', disclaimer: MEDICAL_DISCLAIMER }) }],
         };
       }
 
@@ -49,7 +49,7 @@ export const mcGetMessagesTool = {
       }
 
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'From', 'Subject', 'Status'], disclaimer: MEDICAL_DISCLAIMER }) }],
       };
     } catch (error) {
       return {

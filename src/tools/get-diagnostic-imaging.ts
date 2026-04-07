@@ -34,7 +34,7 @@ export const getDiagnosticImagingTool = {
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({ ...formatted, disclaimer: MEDICAL_DISCLAIMER }),
+          text: JSON.stringify({ ...formatted, _displayHint: 'table', _displayColumns: ['Date', 'Study', 'Facility', 'Status', 'Attachments'], disclaimer: MEDICAL_DISCLAIMER }),
         }],
       };
     } catch (error) {

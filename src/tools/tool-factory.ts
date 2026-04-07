@@ -41,6 +41,7 @@ export function simpleMyChartTool(
   name: string,
   description: string,
   method: (client: MyChartClient) => Promise<unknown>,
+  displayHint?: { hint: string; columns?: string[] },
 ) {
   return {
     name,
@@ -49,7 +50,11 @@ export function simpleMyChartTool(
       try {
         const client = await ensureMyChartSession();
         const data = await method(client);
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify({
+          ...data as object,
+          ...(displayHint ? { _displayHint: displayHint.hint, ...(displayHint.columns ? { _displayColumns: displayHint.columns } : {}) } : {}),
+          disclaimer: MEDICAL_DISCLAIMER,
+        }) }] };
       } catch (error) {
         return { content: [{ type: 'text' as const, text: formatError(error) }], isError: true };
       }
@@ -63,6 +68,7 @@ export function simpleMhrTool(
   description: string,
   method: (client: MHRClient) => Promise<unknown>,
   resultKey: string,
+  displayHint?: { hint: string; columns?: string[] },
 ) {
   return {
     name,
@@ -74,7 +80,11 @@ export function simpleMhrTool(
         return {
           content: [{
             type: 'text' as const,
-            text: JSON.stringify({ ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0), disclaimer: MEDICAL_DISCLAIMER }),
+            text: JSON.stringify({
+              ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
+              ...(displayHint ? { _displayHint: displayHint.hint, ...(displayHint.columns ? { _displayColumns: displayHint.columns } : {}) } : {}),
+              disclaimer: MEDICAL_DISCLAIMER,
+            }),
           }],
         };
       } catch (error) {
@@ -91,6 +101,7 @@ export function mhrDateRangeTool(
   method: (client: MHRClient, params: { dateRange: string }) => Promise<unknown>,
   resultKey: string,
   defaultRange: string = 'All',
+  displayHint?: { hint: string; columns?: string[] },
 ) {
   return {
     name,
@@ -102,7 +113,11 @@ export function mhrDateRangeTool(
         return {
           content: [{
             type: 'text' as const,
-            text: JSON.stringify({ ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0), disclaimer: MEDICAL_DISCLAIMER }),
+            text: JSON.stringify({
+              ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
+              ...(displayHint ? { _displayHint: displayHint.hint, ...(displayHint.columns ? { _displayColumns: displayHint.columns } : {}) } : {}),
+              disclaimer: MEDICAL_DISCLAIMER,
+            }),
           }],
         };
       } catch (error) {

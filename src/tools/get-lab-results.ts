@@ -63,7 +63,12 @@ export const getLabResultsTool = {
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({ ...formatted, disclaimer: MEDICAL_DISCLAIMER }),
+          text: JSON.stringify({
+            ...formatted,
+            _displayHint: 'table',
+            _displayColumns: ['Date', 'Test', 'Value', 'Unit', 'Reference Range', 'Status'],
+            disclaimer: MEDICAL_DISCLAIMER,
+          }),
         }],
       };
     } catch (error) {

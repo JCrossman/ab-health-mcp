@@ -26,7 +26,7 @@ export const mcGetVisitsTool = {
       if (params.visit_id) {
         const data = await client.getVisitDetails(params.visit_id);
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'detail', disclaimer: MEDICAL_DISCLAIMER }) }],
         };
       }
 
@@ -44,7 +44,7 @@ export const mcGetVisitsTool = {
       }
 
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'Type', 'Provider', 'Location', 'Status'], disclaimer: MEDICAL_DISCLAIMER }) }],
       };
     } catch (error) {
       return {

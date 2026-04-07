@@ -40,6 +40,8 @@ export const getHeightWeightTool = {
             height: data.height,
             weight: data.weight,
             bmi: data.bmi,
+            _displayHint: 'trend_table',
+            _displayColumns: ['Date', 'Measurement', 'Value', 'Unit'],
             disclaimer: MEDICAL_DISCLAIMER,
           }),
         }],

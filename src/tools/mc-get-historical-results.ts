@@ -9,7 +9,7 @@ export const mcGetHistoricalResultsTool = {
       const client = await ensureMyChartSession();
       const data = await client.getHistoricalResults(params.order_id, params.component_ids);
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'trend_table', _displayColumns: ['Date', 'Value', 'Unit', 'Reference Range', 'Status'], disclaimer: MEDICAL_DISCLAIMER }) }],
       };
     } catch (error) {
       return {

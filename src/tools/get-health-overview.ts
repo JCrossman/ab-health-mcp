@@ -58,6 +58,7 @@ export const getHealthOverviewTool = {
           mhr: true,
           myChart: mcClient !== null,
         },
+        _displayHint: 'summary_sections',
         hint: 'For more detail on any section, use the specific tool (e.g., get_lab_results, mc_get_allergies). For attachments/PDFs in lab results, use download_attachment.',
         disclaimer: MEDICAL_DISCLAIMER,
       };
