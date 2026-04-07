@@ -3,7 +3,7 @@ import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 
 export const mcGetHistoricalResultsTool = {
   name: 'mc_get_historical_results',
-  description: 'Get historical trend data for specific test result components from AHS Connect (MyChart). Shows how a test value has changed over time. Requires an order_id and one or more component_ids from mc_get_test_results details.',
+  description: 'Get historical trend data for specific test result components from MyChart. Requires order_id and component_ids from mc_get_test_results details.',
   handler: async (params: { order_id: string; component_ids: string[] }) => {
     try {
       const client = await ensureMyChartSession();
