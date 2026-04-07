@@ -9,7 +9,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 import type { ImmunizationRecord } from '../types.js';
 
 export const getImmunizationsTool = {
@@ -49,15 +49,16 @@ export const getImmunizationsTool = {
       const formatted = formatImmunizations(results);
 
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify({
-            ...formatted,
-            _displayHint: 'table',
-            _displayColumns: ['Date', 'Vaccine', 'Administrator', 'Source'],
-            disclaimer: MEDICAL_DISCLAIMER,
-          }),
-        }],
+        content: [
+          formattingDirective('table', ['Date', 'Vaccine', 'Administrator', 'Source']),
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              ...formatted,
+              disclaimer: MEDICAL_DISCLAIMER,
+            }),
+          },
+        ],
       };
     } catch (error) {
       return {

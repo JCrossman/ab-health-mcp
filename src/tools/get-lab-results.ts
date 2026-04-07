@@ -6,7 +6,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 import type { LabResult } from '../types.js';
 
 export const getLabResultsTool = {
@@ -61,15 +61,16 @@ export const getLabResultsTool = {
       const formatted = formatLabResults(results, args.test_name, args.max_results ?? 20, args.offset ?? 0);
 
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify({
-            ...formatted,
-            _displayHint: 'table',
-            _displayColumns: ['Date', 'Test', 'Value', 'Unit', 'Reference Range', 'Status'],
-            disclaimer: MEDICAL_DISCLAIMER,
-          }),
-        }],
+        content: [
+          formattingDirective('table', ['Date', 'Test', 'Value', 'Unit', 'Reference Range', 'Status']),
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              ...formatted,
+              disclaimer: MEDICAL_DISCLAIMER,
+            }),
+          },
+        ],
       };
     } catch (error) {
       return {

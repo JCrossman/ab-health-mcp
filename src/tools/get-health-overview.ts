@@ -9,7 +9,7 @@
  */
 
 import { ensureSession, ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 
 export const getHealthOverviewTool = {
   name: 'get_health_overview',
@@ -64,7 +64,10 @@ export const getHealthOverviewTool = {
       };
 
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify(overview) }],
+        content: [
+          formattingDirective('summary_sections'),
+          { type: 'text' as const, text: JSON.stringify(overview) },
+        ],
       };
     } catch (error) {
       return {

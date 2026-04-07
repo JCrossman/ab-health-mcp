@@ -10,7 +10,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 
 export const getHeightWeightTool = {
   name: 'get_height_weight',
@@ -31,20 +31,21 @@ export const getHeightWeightTool = {
       const data = await client.getHeightWeight({ dateRange: args.date_range ?? 'All' });
 
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify({
-            heightRecords: Array.isArray(data.height) ? data.height.length : 0,
-            weightRecords: Array.isArray(data.weight) ? data.weight.length : 0,
-            bmiRecords: Array.isArray(data.bmi) ? data.bmi.length : 0,
-            height: data.height,
-            weight: data.weight,
-            bmi: data.bmi,
-            _displayHint: 'trend_table',
-            _displayColumns: ['Date', 'Measurement', 'Value', 'Unit'],
-            disclaimer: MEDICAL_DISCLAIMER,
-          }),
-        }],
+        content: [
+          formattingDirective('trend_table', ['Date', 'Measurement', 'Value', 'Unit']),
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              heightRecords: Array.isArray(data.height) ? data.height.length : 0,
+              weightRecords: Array.isArray(data.weight) ? data.weight.length : 0,
+              bmiRecords: Array.isArray(data.bmi) ? data.bmi.length : 0,
+              height: data.height,
+              weight: data.weight,
+              bmi: data.bmi,
+              disclaimer: MEDICAL_DISCLAIMER,
+            }),
+          },
+        ],
       };
     } catch (error) {
       return {

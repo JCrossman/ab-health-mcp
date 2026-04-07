@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 
 interface Scan {
   dcsId: string;
@@ -73,8 +73,11 @@ export const mcGetTestResultsTool = {
 
         contentBlocks.push({
           type: 'text' as const,
-          text: JSON.stringify({ ...result as object, _displayHint: 'table', _displayColumns: ['Test', 'Value', 'Unit', 'Reference Range', 'Status'], disclaimer: MEDICAL_DISCLAIMER }),
+          text: JSON.stringify({ ...result as object, disclaimer: MEDICAL_DISCLAIMER }),
         });
+
+        // Prepend formatting directive
+        contentBlocks.unshift(formattingDirective('table', ['Test', 'Value', 'Unit', 'Reference Range', 'Status']));
 
         // Add scan summary so Claude knows images are available
         if (scans.length > 0) {
@@ -90,7 +93,10 @@ export const mcGetTestResultsTool = {
 
       const data = await client.getTestResultsList(params.search_string);
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'Test', 'Status'], note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [
+          formattingDirective('table', ['Date', 'Test', 'Status']),
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER }) },
+        ],
       };
     } catch (error) {
       return {

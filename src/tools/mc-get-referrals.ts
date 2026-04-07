@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 
 export const mcGetReferralsTool = {
   name: 'mc_get_referrals',
@@ -20,13 +20,19 @@ export const mcGetReferralsTool = {
       if (params.referral_id) {
         const data = await client.getReferralDetails(params.referral_id);
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'detail', disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [
+            formattingDirective('detail'),
+            { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+          ],
         };
       }
 
       const data = await client.getReferralsList();
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'Specialty', 'Provider', 'Status'], disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [
+          formattingDirective('table', ['Date', 'Specialty', 'Provider', 'Status']),
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+        ],
       };
     } catch (error) {
       return {

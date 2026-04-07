@@ -21,6 +21,32 @@ type ToolResult = {
   isError?: boolean;
 };
 
+/** Build a formatting directive content block that precedes the data. */
+export function formattingDirective(hint: string, columns?: string[]): { type: 'text'; text: string } {
+  const colStr = columns ? ` Columns: ${columns.join(' | ')}.` : '';
+  let instruction: string;
+  switch (hint) {
+    case 'table':
+      instruction = `FORMATTING: Present the following data as a markdown table.${colStr} Lead with a 1-2 sentence summary. Use 🟢 Normal / 🟡 Borderline / 🔴 Outside range for status (always include text label with emoji). Never dump as paragraphs.`;
+      break;
+    case 'trend_table':
+      instruction = `FORMATTING: Present the following data as a markdown table showing trends over time.${colStr} After the table, describe the trend direction using ↑ Increasing / ↓ Decreasing / → Stable. Lead with a 1-2 sentence summary.`;
+      break;
+    case 'summary_sections':
+      instruction = `FORMATTING: Present each section of this data under its own ## heading with a brief table or bullet list. Lead with a 1-2 sentence overall summary. Never dump all data as one block of text.`;
+      break;
+    case 'grouped_tables':
+      instruction = `FORMATTING: Present each group of data as its own labeled markdown table under a ## heading. Lead with a brief summary.`;
+      break;
+    case 'detail':
+      instruction = `FORMATTING: Present this record's details as a clean list of key-value pairs under clear headings. Use bold for field names.`;
+      break;
+    default:
+      instruction = `FORMATTING: Present this data in a clean, scannable format using markdown tables where appropriate. Never dump as paragraphs.`;
+  }
+  return { type: 'text' as const, text: instruction };
+}
+
 function truncateResults(data: unknown, resultKey: string, maxResults: number, offset: number = 0) {
   if (!Array.isArray(data)) {
     return { totalRecords: 0, [resultKey]: data };
@@ -50,11 +76,13 @@ export function simpleMyChartTool(
       try {
         const client = await ensureMyChartSession();
         const data = await method(client);
-        return { content: [{ type: 'text' as const, text: JSON.stringify({
+        const content: Array<{ type: 'text'; text: string }> = [];
+        if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        content.push({ type: 'text' as const, text: JSON.stringify({
           ...data as object,
-          ...(displayHint ? { _displayHint: displayHint.hint, ...(displayHint.columns ? { _displayColumns: displayHint.columns } : {}) } : {}),
           disclaimer: MEDICAL_DISCLAIMER,
-        }) }] };
+        }) });
+        return { content };
       } catch (error) {
         return { content: [{ type: 'text' as const, text: formatError(error) }], isError: true };
       }
@@ -77,16 +105,16 @@ export function simpleMhrTool(
       try {
         const client = await ensureSession();
         const data = await method(client);
-        return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
-              ...(displayHint ? { _displayHint: displayHint.hint, ...(displayHint.columns ? { _displayColumns: displayHint.columns } : {}) } : {}),
-              disclaimer: MEDICAL_DISCLAIMER,
-            }),
-          }],
-        };
+        const content: Array<{ type: 'text'; text: string }> = [];
+        if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        content.push({
+          type: 'text' as const,
+          text: JSON.stringify({
+            ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
+            disclaimer: MEDICAL_DISCLAIMER,
+          }),
+        });
+        return { content };
       } catch (error) {
         return { content: [{ type: 'text' as const, text: formatError(error) }], isError: true };
       }
@@ -110,16 +138,16 @@ export function mhrDateRangeTool(
       try {
         const client = await ensureSession();
         const data = await method(client, { dateRange: args.date_range ?? defaultRange });
-        return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
-              ...(displayHint ? { _displayHint: displayHint.hint, ...(displayHint.columns ? { _displayColumns: displayHint.columns } : {}) } : {}),
-              disclaimer: MEDICAL_DISCLAIMER,
-            }),
-          }],
-        };
+        const content: Array<{ type: 'text'; text: string }> = [];
+        if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        content.push({
+          type: 'text' as const,
+          text: JSON.stringify({
+            ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
+            disclaimer: MEDICAL_DISCLAIMER,
+          }),
+        });
+        return { content };
       } catch (error) {
         return { content: [{ type: 'text' as const, text: formatError(error) }], isError: true };
       }

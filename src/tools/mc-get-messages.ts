@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
 
 export const mcGetMessagesTool = {
   name: 'mc_get_messages',
@@ -31,7 +31,10 @@ export const mcGetMessagesTool = {
       if (params.message_id) {
         const data = await client.getConversationDetails(params.message_id);
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'detail', disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [
+            formattingDirective('detail'),
+            { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+          ],
         };
       }
 
@@ -49,7 +52,10 @@ export const mcGetMessagesTool = {
       }
 
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify({ ...data as object, _displayHint: 'table', _displayColumns: ['Date', 'From', 'Subject', 'Status'], disclaimer: MEDICAL_DISCLAIMER }) }],
+        content: [
+          formattingDirective('table', ['Date', 'From', 'Subject', 'Status']),
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+        ],
       };
     } catch (error) {
       return {
