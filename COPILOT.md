@@ -61,7 +61,7 @@ Test auth flow: `npx tsx scripts/test-auth.ts`
 
 ### Deploying a New Version
 
-**Always use `npm run deploy`** — it auto-bumps the version, builds, packs, verifies, uploads to Azure, and deploys the landing page in one command:
+**Always use `npm run deploy`** — it auto-bumps the version, builds, packs, verifies, and uploads the `.mcpb` to Azure:
 
 ```bash
 npm run deploy              # bump patch (1.0.0 → 1.0.1)
@@ -74,8 +74,9 @@ This updates the version in all 5 locations automatically:
 - `manifest.json`
 - `static/version.json` (checked by installed extensions for update notifications)
 - `src/tools/connect-account.ts` (`CURRENT_VERSION`)
-- `src/tools/connect-account.ts` (`CURRENT_VERSION`)
 - `src/server/create-server.ts` (server info)
+
+**Note:** The landing page (`static/`) is deployed via GitHub Actions on push to `main`, not by `npm run deploy`. The deploy script uploads the `.mcpb` bundle to Azure Blob Storage. Push to `main` to trigger the landing page + `version.json` deploy.
 
 **Do NOT** manually run `mcpb pack` or `az storage blob upload` — use `npm run deploy` instead.
 
@@ -275,10 +276,12 @@ All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https
 - Feature announcements: Family & Caregiver (proxy) access banner
 - Azure resources: Static Web App (`myaihealth`), Blob Storage (`myaihealthdownloads`), Communication Services (`myaihealth-comm`), Email Service (`myaihealth-email`)
 
-### Recent Additions (v1.1.23)
+### Recent Additions (v1.1.28)
 - **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)
-- **Demo mode** — `DEMO_MODE=true` env var returns sample Alberta health data for all tools without a real account. Comprehensive sample data across all 44 tools with clinically coherent patient narrative. Use `force=true` to exit demo mode.
-- **Version check** — `connect_account` calls `/api/check-update` and provides a direct download link when a new version is available (30-minute SAS URL)
+- **Demo mode** — Activated via `connect_account(demo=true)` when the user asks for demo/sample data. Returns sample Alberta health data for all 44 tools with clinically coherent patient narrative. Calling `connect_account` without `demo=true` always exits demo mode.
+- **Version check** — `connect_account` checks `/api/check-update` before any other logic. Update notification is a separate content block with a direct download link (30-minute SAS URL from myaihealth.ca).
+- **Formatting directives** — Every tool response prepends a `FORMATTING:` content block telling Claude how to display the data (table with columns, trend table, summary sections, etc.). Server instructions are kept minimal (~600 tokens) — medical disclaimer first, formatting rules, demo/tool usage.
+- **MHR client refactored** — `mhr-client.ts` uses `fetchDateRange()` helper to eliminate duplication across 18 endpoint methods.
 - **Medical disclaimers** — embedded in `connect_account` responses and all factory-generated tool responses. Includes data completeness warning (24-72hr delays, out-of-province gaps).
 - **Security hardened** — SSRF/redirect validation, sanitized error output, SHA-256 session filenames, per-install random token salt, bounded pagination, date validation, rate limiting on OAuth endpoints, TOCTOU race condition fixes
 - **Deploy automation** — `npm run deploy` handles version bump, build, pack, upload, and landing page deploy
@@ -286,7 +289,7 @@ All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https
 - **Family & proxy access** — `mc_list_proxy_access` and `mc_switch_context` tools for viewing family members' health records via MyChart shared access. Proxy context switch includes privacy notice.
 - **Privacy-first messaging** — Landing page and access request email pre-frame the Claude Desktop security warning, explaining the local architecture is an intentional privacy feature
 - **First-run consent** — Privacy notice shown on first `connect_account` call, disclosing that health data is sent to Anthropic's US servers. Requires explicit `accept_privacy=true` to proceed. Includes OIPC link and right-to-withdraw information.
-- **In-app update with download link** — `/api/check-update` endpoint generates a 30-minute SAS download URL when a new version is available, shown directly to the user via `connect_account`
+- **In-app update with download link** — `/api/check-update` endpoint generates a 30-minute SAS download URL when a new version is available, shown as a prominent separate content block via `connect_account`
 
 ## Authentication
 
@@ -317,13 +320,13 @@ Cookie-based auth is managed by `tough-cookie`:
 
 ```
 connect_account
-  -> (if demo mode, return sample data immediately)
-  -> (if force=true without demo, exit demo mode)
-  -> (if valid session exists and force!=true, reuse it — includes update check)
+  -> CHECK FOR UPDATES via /api/check-update (always, before anything else)
+     -> if update available: include download URL as separate content block
+  -> (if demo=true, enter demo mode and return sample data)
+  -> (if demo not set, exit demo mode)
+  -> (if valid session exists and force!=true, reuse it)
   -> (if first-ever connection, show privacy notice and return — user must call again with accept_privacy=true)
-  -> CHECK FOR UPDATES via /api/check-update
-     -> if update available: return download URL and block auth
-     -> user downloads, installs, calls connect_account again
+  -> if update available: block auth and return download URL
   -> launch Puppeteer browser (headless: false, channel: 'chrome')
   -> user logs in through real Alberta SSO at account.alberta.ca
   -> navigate to MyChart SAML login (auto-authenticates via shared SSO)
@@ -379,10 +382,10 @@ Error mapping: `AuthRequiredError` → "Use connect_account", `SessionExpiredErr
 
 ```json
 {
-  "@modelcontextprotocol/sdk": "^1.27.1",
+  "@modelcontextprotocol/sdk": "^1.28.0",
   "express": "^5.x",
-  "express-rate-limit": "^7.x",
-  "mupdf": "^0.5.x",
+  "express-rate-limit": "^8.x",
+  "mupdf": "^1.27.x",
   "puppeteer-core": "^24.x",
   "tough-cookie": "^6.x",
   "undici": "^7.x"
@@ -404,25 +407,33 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 ## Repository
 
 - **Visibility:** Public (open source, MIT license)
-- **Version:** v1.1.23 (use `npm run deploy` to bump)
+- **Version:** v1.1.28 (use `npm run deploy` to bump)
 - **Branch protection:** `main` branch has force push and deletion blocked, enforce_admins enabled
 - **Distribution:** The `.mcpb` bundle is NOT in the repo or GitHub releases. It's gated behind the myaihealth.ca access request form. Users can clone and build from source if they prefer.
 - **Do NOT** create GitHub releases with `.mcpb` attachments — this bypasses the access request flow.
-- **Anthropic Directory:** Submission-ready. Demo mode (`DEMO_MODE=true`) lets reviewers test without an Alberta account.
+- **Anthropic Directory:** Submission on hold. Demo mode (say "connect to demo health data") lets reviewers test without an Alberta account.
 
 ## Adding New Tools
 
 All health data tools follow the same pattern — one file per tool in `src/tools/`:
 
 **MHR tools:**
-1. Add API method to `src/api/mhr-client.ts`
-2. Create tool file in `src/tools/` following existing `get-*.ts` pattern
-3. Register in `src/index.ts` with Zod schema for parameters
-4. To find new endpoints: capture HAR traffic in browser DevTools while navigating the MHR portal
+1. Add API method to `src/api/mhr-client.ts` — most endpoints use `fetchDateRange()` helper (1-2 lines)
+2. Create tool file in `src/tools/` following existing `get-*.ts` pattern, or add to `simple-mhr-tools.ts` using factory
+3. Register in `src/server/create-server.ts` with Zod schema for parameters
+4. Add `formattingDirective()` to the response with appropriate hint and column names
+5. To find new endpoints: capture HAR traffic in browser DevTools while navigating the MHR portal
 
 **MyChart tools:**
 1. Add API method to `src/api/mychart-client.ts`
-2. Create tool file in `src/tools/` following existing `mc-*.ts` pattern (prefixed with `mc_`)
-3. Register in `src/index.ts` with Zod schema for parameters
-4. All MyChart endpoints use `__RequestVerificationToken` CSRF header (no Control-Mapping-Id)
-5. To find new endpoints: capture HAR traffic while navigating AHS MyChart portal
+2. Create tool file in `src/tools/` following existing `mc-*.ts` pattern, or add to `simple-mychart-tools.ts` using factory
+3. Register in `src/server/create-server.ts` with Zod schema for parameters
+4. Add `formattingDirective()` to the response with appropriate hint and column names
+5. All MyChart endpoints use `__RequestVerificationToken` CSRF header (no Control-Mapping-Id)
+6. To find new endpoints: capture HAR traffic while navigating AHS MyChart portal
+
+**Tool factory patterns** (`src/tools/tool-factory.ts`):
+- `simpleMhrTool(name, desc, method, resultKey, displayHint)` — no-param MHR passthrough
+- `mhrDateRangeTool(name, desc, method, resultKey, defaultRange, displayHint)` — date-range MHR tool
+- `simpleMyChartTool(name, desc, method, displayHint)` — no-param MyChart passthrough
+- `formattingDirective(hint, columns)` — prepends FORMATTING content block to responses

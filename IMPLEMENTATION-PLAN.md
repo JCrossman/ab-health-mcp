@@ -1,8 +1,15 @@
 # Implementation Plan
 
-## Status: Phase 1 + 2 Complete, MyChart Integration Complete
+## Status: Phase 1 + 2 Complete, MyChart Integration Complete, v1.1.28
 
 All core infrastructure, MHR health data tools (24), and MyChart tools (20) are implemented and working. Total: 44 tools.
+
+### Recent Changes (v1.1.24–v1.1.28)
+- **Response formatting** — Per-tool `FORMATTING:` directives prepended as separate content blocks (table, trend_table, summary_sections, detail, grouped_tables). Server instructions slimmed to ~600 tokens.
+- **Demo mode fixed** — Removed `DEMO_MODE` env var / `user_config`. Demo mode now only activates via `connect_account(demo=true)` prompt. Calling without `demo=true` always exits demo mode.
+- **Update check fixed** — Single upfront check at start of `connect_account`, before any other logic. Notification is a separate content block (not buried in JSON).
+- **MHR client simplified** — `fetchDateRange()` helper eliminates duplication across 18 endpoint methods (385 → 200 lines).
+- **Codebase simplified** — 242 lines removed, tool descriptions standardized, server instructions reduced by ~550 tokens.
 
 ## What Was Built
 
