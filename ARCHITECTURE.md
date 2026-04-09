@@ -36,7 +36,7 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 
 ## Technology Stack
 
-- **Runtime:** Node.js 20+
+- **Runtime:** Node.js 22+
 - **Language:** TypeScript (strict mode)
 - **MCP SDK:** `@modelcontextprotocol/sdk`
 - **HTTP Client:** `undici`

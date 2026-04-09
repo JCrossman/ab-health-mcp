@@ -382,13 +382,13 @@ Error mapping: `AuthRequiredError` → "Use connect_account", `SessionExpiredErr
 
 ```json
 {
-  "@modelcontextprotocol/sdk": "^1.28.0",
+  "@modelcontextprotocol/sdk": "^1.29.0",
   "express": "^5.x",
   "express-rate-limit": "^8.x",
   "mupdf": "^1.27.x",
   "puppeteer-core": "^24.x",
   "tough-cookie": "^6.x",
-  "undici": "^7.x"
+  "undici": "^8.x"
 }
 ```
 

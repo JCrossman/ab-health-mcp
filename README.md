@@ -58,7 +58,7 @@ Claude will connect instantly (no browser, no login), pull sample health data, a
 
 #### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - [Claude Desktop](https://claude.ai/download)
 - Google Chrome
 - A [MyAlberta](https://account.alberta.ca) account with My Health Records access
