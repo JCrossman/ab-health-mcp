@@ -11,6 +11,18 @@
   <meta property="og:url" content="https://www.myaihealth.ca/terms.html">
   <meta property="og:type" content="website">
   <link rel="icon" href="/favicon.png" type="image/png">
+
+  <!-- Azure Application Insights — anonymous visitor analytics -->
+  <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js" crossorigin="anonymous"></script>
+  <script>
+    var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {
+      connectionString: "InstrumentationKey=d11257e1-4ef5-4944-bd87-5d93627b3c60;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=bcdf162b-32a2-40a6-8775-437da297e092",
+      disableCookiesUsage: true
+    }});
+    appInsights.loadAppInsights();
+    appInsights.trackPageView();
+  </script>
+
   <link rel="stylesheet" href="/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
