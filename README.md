@@ -393,6 +393,7 @@ The project has a landing page at [www.myaihealth.ca](https://www.myaihealth.ca)
 - **API function:** `/api/check-update` — called by the extension to check for updates. Returns a 30-minute SAS download URL when a newer version is available.
 - **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified SPF/DKIM/DMARC)
 - **Download storage:** Azure Blob Storage (`myaihealthdownloads` account, `downloads` container)
+- **Analytics:** Azure Application Insights (`myaihealth-insights`) — anonymous visitor tracking (pageviews, sessions, geography, referrers). No cookies used (`disableCookiesUsage: true`). JS SDK loaded on all pages (index, demo, terms, 404).
 - **Privacy messaging:** Landing page and email explain that the Claude Desktop "grant access" warning applies to all extensions and that the local architecture is an intentional privacy feature (data flows directly between user and Alberta Health, no middleman)
 
 ### Deployment
@@ -439,7 +440,7 @@ This extension accesses personal health information on your behalf. Here is how 
 - **Credentials never leave your machine.** You log in through the real Alberta SSO page in your browser. Credentials are never sent to or processed by this extension.
 - **Canadian data residency (our infrastructure).** All cloud infrastructure runs in Azure Canada Central (HIA/POPA compliant). Note: conversations are processed by Claude (Anthropic) on US-based servers — this extension does not control Anthropic's data handling.
 - **Data completeness.** Health records may not reflect your complete medical history. Results may take 24-72 hours to appear after testing. Records from out-of-province providers may not be included.
-- **No analytics or telemetry.** No usage data, prompts, or identifiers are collected.
+- **Anonymous website analytics only.** The landing page (myaihealth.ca) uses Azure Application Insights to collect anonymous visitor statistics — page views, session counts, country, browser, and referral source. No cookies are used, no personally identifiable information is collected, and no health data is involved. The MCP extension itself collects no analytics or telemetry.
 
 Full privacy policy: **https://www.myaihealth.ca/#privacy**
 

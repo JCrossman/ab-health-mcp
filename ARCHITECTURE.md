@@ -82,6 +82,34 @@ Identical to the DATS project. This MCP server:
 
 All project infrastructure in Azure Canada Central. Note: conversations are processed by Claude (Anthropic) on US-based servers — health data leaves Canada when sent to Claude for interpretation. This extension does not control Anthropic's data handling. Our infrastructure complies with POPA and HIA (Health Information Act).
 
+## Azure Infrastructure
+
+All resources live in the `ab-health-mcp` resource group, Health MCP subscription (`e247b2e9-...`), Canada Central.
+
+| Resource | Type | Purpose |
+|----------|------|---------|
+| `myaihealth` | Static Web App (Free) | Landing page + 3 API functions (`request-access`, `check-update`, `download`) |
+| `myaihealthdownloads` | Storage Account (Standard_LRS) | `.mcpb` bundle + `version.json` + `accessrequests` table |
+| `myaihealth-comm` / `myaihealth-email` | Communication Services | Transactional emails (`noreply@myaihealth.ca`) |
+| `ab-health-mcp` | Container App (0.5 vCPU / 1Gi) | Remote mode HTTP server (Phase 3, not yet productized) |
+| `ab-health-mcp-env` | Managed Environment (Consumption) | Hosts the Container App |
+| `abhealthmcpacr` | Container Registry (Basic) | Docker images for Container App |
+| `myaihealth-insights` | Application Insights | Visitor analytics for myaihealth.ca (cookie-free) |
+| `workspace-abhealthmcpnOID` | Log Analytics Workspace | Backend for App Insights + Container App logs (0.5 GB/day cap) |
+
+### Cost Governance
+
+- **Budget:** `MainBudget` — $100 CAD/month with automated enforcement
+- **Alerts:** Email at 50%, 75%; email + automated shutdown at 90%, 100%; forecasted alert at 100%
+- **Enforcement:** `budget-enforcement-aa` Automation Account with `shutdown-resources` PowerShell runbook — scales Container App to 0 replicas and caps Log Analytics ingestion when triggered
+- **Action Group:** `budget-enforcement-ag` — triggers the runbook via webhook
+- **Anomaly detection:** ML-based cost anomaly alert emails on unusual spending patterns
+
+### Monitoring & Analytics
+
+- **Application Insights** (`myaihealth-insights`) — anonymous visitor tracking on all 4 static HTML pages (index, demo, terms, 404). Uses the JS SDK with `disableCookiesUsage: true`. Tracks pageviews, sessions, geography, referrers, browser/OS. Free tier (5 GB/month ingestion).
+- **Log Analytics** — Container App and environment logs. Daily ingestion cap of 0.5 GB to prevent runaway costs.
+
 ## Directory Structure
 
 ```
@@ -134,7 +162,10 @@ ab-health-mcp/
 │       ├── logger.ts               # Stderr logging (no PII)
 │       └── formatters.ts           # Date/value formatting
 ├── static/                         # Landing page (myaihealth.ca)
-│   ├── index.html                  # Single-page site (Tailwind CSS)
+│   ├── index.html                  # Single-page site (Tailwind CSS + App Insights)
+│   ├── demo.html                   # Demo gallery page
+│   ├── terms.html                  # Terms of use
+│   ├── 404.html                    # Custom 404 page
 │   ├── og-image.png                # Open Graph preview image (1200×630)
 │   └── hero.png / flatIcons.png    # Gemini-generated graphics
 ├── api/                            # Azure Functions (landing page backend)

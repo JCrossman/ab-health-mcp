@@ -274,7 +274,16 @@ All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https
 - SEO: robots.txt, sitemap.xml, Schema.org JSON-LD, FAQ section
 - Privacy-first messaging: pre-frames Claude Desktop security warning on landing page and in access request email
 - Feature announcements: Family & Caregiver (proxy) access banner
-- Azure resources: Static Web App (`myaihealth`), Blob Storage (`myaihealthdownloads`), Communication Services (`myaihealth-comm`), Email Service (`myaihealth-email`)
+- Analytics: Azure Application Insights (`myaihealth-insights`) — anonymous cookie-free visitor tracking on all pages (index, demo, terms, 404)
+- Azure resources: Static Web App (`myaihealth`), Blob Storage (`myaihealthdownloads`), Communication Services (`myaihealth-comm`), Email Service (`myaihealth-email`), Application Insights (`myaihealth-insights`)
+
+### Azure Cost Governance ✅
+- Budget: `MainBudget` — $100 CAD/month with automated enforcement
+- Alerts: 50% email, 75% email, 90% email + shutdown runbook, 100% email + shutdown runbook, forecasted 100% email
+- Automation: `budget-enforcement-aa` Automation Account (free tier) with `shutdown-resources` PowerShell runbook — scales Container App to 0/0 and caps Log Analytics to 0 GB
+- Action Group: `budget-enforcement-ag` triggers runbook via webhook
+- Anomaly detection: ML-based daily cost anomaly alert
+- Log Analytics daily cap: 0.5 GB/day (prevents runaway ingestion costs)
 
 ### Recent Additions (v1.1.28)
 - **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)

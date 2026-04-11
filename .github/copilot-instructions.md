@@ -112,3 +112,16 @@ Phase 2: Additional MHR data tools (immunizations, medications, etc.). ✅ **Com
 MyChart integration: MyChart REST client, 20 `mc_` prefixed tools, shared SSO auth, v2 session format. ✅ **Complete.**
 
 Phase 3: Remote mode — HTTP transport, zero-storage OAuth tokens, Chrome extension auth, Azure Container Apps. ✅ **Implemented** (not yet productized).
+
+### Azure Infrastructure
+
+All resources in `ab-health-mcp` resource group (Canada Central). Key resources:
+- **Static Web App** (`myaihealth`) — Free tier, hosts landing page + API functions
+- **Blob Storage** (`myaihealthdownloads`) — `.mcpb` bundle distribution
+- **Communication Services** (`myaihealth-comm`) — transactional emails
+- **Container App** (`ab-health-mcp`) — Remote mode HTTP server (Phase 3)
+- **Container Registry** (`abhealthmcpacr`) — Docker images
+- **Application Insights** (`myaihealth-insights`) — anonymous cookie-free visitor analytics on all static pages
+- **Log Analytics** (`workspace-abhealthmcpnOID`) — backend for App Insights + Container App logs (0.5 GB/day cap)
+- **Budget enforcement** — $100/month budget with automated shutdown runbook at 90%/100% via Automation Account + Action Group
+- **Cost anomaly alert** — ML-based daily anomaly detection
