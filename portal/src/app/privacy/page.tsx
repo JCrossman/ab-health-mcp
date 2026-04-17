@@ -1,4 +1,4 @@
-import { Activity, Shield, Eye, Lock, Trash2, MapPin, ArrowLeft } from "lucide-react";
+import { Activity, Shield, Eye, Lock, Trash2, MapPin, ArrowLeft, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function PrivacyPage() {
@@ -21,122 +21,204 @@ export default function PrivacyPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+
+        {/* Quick answer */}
         <section className="space-y-3">
-          <h1 className="text-3xl font-bold">How We Protect Your Health Data</h1>
+          <h1 className="text-3xl font-bold">How We Handle Your Health Data</h1>
           <p className="text-lg text-muted-foreground">
-            Alberta Health Portal is designed with privacy as its foundation.
-            Your health information is protected under Alberta&apos;s Health
-            Information Act (HIA) and the Personal Information Protection Act (PIPA).
+            We don&apos;t keep your health data. Everything we process stays in Canada.
+            Your health information is only used to answer your question — then it&apos;s gone.
           </p>
         </section>
 
-        <section className="grid gap-6 sm:grid-cols-2">
-          <div className="border rounded-xl p-5 space-y-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Eye className="h-5 w-5 text-primary" />
+        {/* Two paths callout */}
+        <section className="border rounded-xl p-5 bg-muted/30 space-y-3">
+          <h2 className="font-semibold text-lg">Two ways to use MyAI Health</h2>
+          <div className="space-y-3 text-sm">
+            <div className="rounded-lg border bg-background p-4 space-y-1">
+              <p className="font-semibold">📦 Claude Desktop extension (.mcpb file)</p>
+              <p className="text-muted-foreground">
+                Runs on your own computer. Your health data goes straight from your machine
+                to Alberta Health — our servers never see it. The AI (Claude by Anthropic)
+                runs on US-based servers.
+              </p>
             </div>
-            <h3 className="font-semibold">Passthrough Architecture</h3>
-            <p className="text-sm text-muted-foreground">
-              We never store your health data. When you ask a question, we fetch
-              the answer from My Health Records or AHS MyChart in real time and
-              display it. Nothing is cached or saved.
-            </p>
+            <div className="rounded-lg border bg-background p-4 space-y-1">
+              <p className="font-semibold">🌐 Web portal (beta — this app)</p>
+              <p className="text-muted-foreground">
+                Runs in your browser. Your health data briefly passes through our
+                Canadian server to reach the AI. All processing happens in Canada.
+                Nothing is saved after your session ends.
+              </p>
+            </div>
           </div>
+        </section>
 
-          <div className="border rounded-xl p-5 space-y-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Lock className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-semibold">Encrypted Sessions</h3>
-            <p className="text-sm text-muted-foreground">
-              Your health session token is encrypted with AES-256-GCM and exists
-              only while you&apos;re active. It&apos;s automatically destroyed
-              after ~10 minutes of inactivity.
-            </p>
+        {/* What we do with your data */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Eye className="h-5 w-5 text-primary shrink-0" />
+            <h2 className="text-xl font-semibold">What we do with your data (portal)</h2>
           </div>
-
-          <div className="border rounded-xl p-5 space-y-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Trash2 className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-semibold">No Credential Storage</h3>
-            <p className="text-sm text-muted-foreground">
-              Your MyAlberta Digital ID credentials are used once to establish a
-              session, then immediately discarded. We never store, log, or
-              transmit your username or password.
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              When you ask a question, we fetch the right health records from Alberta&apos;s
+              My Health Records or AHS MyChart on your behalf. We pass those records — along
+              with your question — to the AI to get you an answer. That&apos;s it.
             </p>
-          </div>
-
-          <div className="border rounded-xl p-5 space-y-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <MapPin className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="font-semibold">Canadian Data Residency</h3>
-            <p className="text-sm text-muted-foreground">
-              All infrastructure runs in Azure Canada Central. Your data never
-              leaves Canadian borders. If you bring your own AI API key from a
-              non-Canadian provider, we&apos;ll warn you before sending data.
+            <p>
+              We don&apos;t read your records ourselves. We don&apos;t analyse or score them.
+              The data is used only to answer your question in that moment.
             </p>
           </div>
         </section>
 
+        {/* Where it goes */}
+        <section className="border rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <MapPin className="h-5 w-5 text-primary shrink-0" />
+            <h2 className="text-xl font-semibold">Where your data goes</h2>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex gap-3 items-start">
+              <span className="text-green-600 font-bold shrink-0 mt-0.5">🇨🇦</span>
+              <p>
+                <strong>Our server</strong> — Microsoft Azure, Canada Central region.
+                Fetches your health data from Alberta Health on your behalf.
+              </p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="text-green-600 font-bold shrink-0 mt-0.5">🇨🇦</span>
+              <p>
+                <strong>AI (Azure OpenAI, Canada East)</strong> — Microsoft-hosted AI service
+                located in Canada. Reads your records to answer your question.
+                Microsoft does not use your data to train AI models.
+                Microsoft may keep a copy for up to 30 days for safety checks —
+                see{" "}
+                <a
+                  href="https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Azure OpenAI data &amp; privacy
+                </a>.
+              </p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="text-muted-foreground shrink-0 mt-0.5">💻</span>
+              <p>
+                <strong>Your browser</strong> — Chat history is saved in your browser
+                (localStorage). It never goes to our servers. Clearing your browser
+                data removes it.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* What we don't do */}
         <section className="border rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-3">
             <Shield className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold">What We Access</h2>
+            <h2 className="text-xl font-semibold">What we don&apos;t do</h2>
           </div>
           <div className="space-y-3 text-sm">
             <div className="flex gap-3">
-              <span className="text-green-600 font-bold shrink-0">✓</span>
-              <p><strong>Read-only health data</strong> — Lab results, medications, immunizations, vitals, imaging reports, referrals, visit history</p>
+              <span className="text-red-500 font-bold shrink-0">✗</span>
+              <p><strong>No selling your data</strong> — we never sell or share your health information with anyone</p>
             </div>
             <div className="flex gap-3">
-              <span className="text-green-600 font-bold shrink-0">✓</span>
-              <p><strong>Session tokens</strong> — Temporary, encrypted, auto-expiring credentials for the health portals</p>
+              <span className="text-red-500 font-bold shrink-0">✗</span>
+              <p><strong>No advertising</strong> — we have no ad network and no advertising partners</p>
             </div>
             <div className="flex gap-3">
-              <span className="text-red-600 font-bold shrink-0">✗</span>
-              <p><strong>No write access</strong> — We cannot modify, delete, or create any records in your health account</p>
+              <span className="text-red-500 font-bold shrink-0">✗</span>
+              <p><strong>No AI training on your data</strong> — neither we nor Microsoft Azure OpenAI use your health data to train AI models</p>
             </div>
             <div className="flex gap-3">
-              <span className="text-red-600 font-bold shrink-0">✗</span>
-              <p><strong>No data retention</strong> — Health data is never stored on our servers or in databases</p>
+              <span className="text-red-500 font-bold shrink-0">✗</span>
+              <p><strong>No storing health records</strong> — health data is in memory only during your session; nothing is written to a database</p>
             </div>
             <div className="flex gap-3">
-              <span className="text-red-600 font-bold shrink-0">✗</span>
-              <p><strong>No sharing</strong> — Your health data is never shared with third parties, advertisers, or analytics</p>
+              <span className="text-red-500 font-bold shrink-0">✗</span>
+              <p><strong>No write access</strong> — we can only read your health records; we cannot change or delete anything</p>
             </div>
           </div>
         </section>
 
+        {/* How long we keep things */}
         <section className="border rounded-xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold">BYOK (Bring Your Own Key) Privacy</h2>
+          <div className="flex items-center gap-3">
+            <Trash2 className="h-5 w-5 text-primary shrink-0" />
+            <h2 className="text-xl font-semibold">How long we keep things</h2>
+          </div>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div className="flex gap-3">
+              <span className="text-green-600 font-bold shrink-0">~10 min</span>
+              <p><strong>Sign-in session</strong> — a small encrypted sign-in file, kept in your browser only. Expires automatically after about 10 minutes of no activity.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-green-600 font-bold shrink-0">0</span>
+              <p><strong>Health records</strong> — fetched on demand, used to answer your question, then gone. Never written to disk on our side.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-green-600 font-bold shrink-0">Your choice</span>
+              <p><strong>Chat history</strong> — saved in your browser only. You can delete it any time by clearing your browser data.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Your rights */}
+        <section className="border rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <Lock className="h-5 w-5 text-primary shrink-0" />
+            <h2 className="text-xl font-semibold">Your rights</h2>
+          </div>
           <div className="space-y-3 text-sm text-muted-foreground">
             <p>
-              When you use your own AI provider API key, your health data is sent
-              to that provider for processing. We clearly indicate which provider
-              will receive your data:
+              Your health information is protected by Alberta&apos;s Health Information Act (HIA)
+              and Protection of Privacy Act. Here&apos;s what that means for you in plain language:
             </p>
-            <ul className="list-disc list-inside space-y-1">
-              <li><strong>Canadian providers</strong> (Azure Canada, Cohere Canada) — Data stays in Canada</li>
-              <li><strong>US/Global providers</strong> (OpenAI, Anthropic, Google) — Data may be processed outside Canada; we display a warning</li>
-              <li><strong>Self-hosted</strong> (Ollama, LocalAI) — Data stays on your own infrastructure</li>
+            <ul className="list-disc list-inside space-y-2">
+              <li><strong>You can ask what we hold about you.</strong> Because we store almost nothing, this will be quick.</li>
+              <li><strong>You can ask us to correct mistakes.</strong> If we have any info about you that&apos;s wrong, we&apos;ll fix it.</li>
+              <li><strong>You can make a complaint.</strong> If you think we&apos;ve mishandled your information, you can report it to Alberta&apos;s privacy watchdog: the{" "}
+                <a href="https://www.oipc.ab.ca" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  Office of the Information and Privacy Commissioner (OIPC)
+                </a>.
+              </li>
             </ul>
-            <p>
-              Your API keys are encrypted with AES-256-GCM before storage and
-              are never logged or visible after initial entry.
-            </p>
           </div>
         </section>
 
-        <section className="text-center text-sm text-muted-foreground py-4">
+        {/* How to reach us */}
+        <section className="text-center text-sm text-muted-foreground py-4 space-y-2">
+          <p className="font-semibold text-foreground">Questions about privacy?</p>
           <p>
-            Questions about our privacy practices?{" "}
-            <a href="mailto:privacy@abhealth.example.com" className="text-primary hover:underline">
-              Contact us
+            Email us at{" "}
+            <a href="mailto:support@myaihealth.ca" className="text-primary hover:underline">
+              support@myaihealth.ca
             </a>
           </p>
+          <p>
+            See the full{" "}
+            <a href="https://www.myaihealth.ca/terms.html" className="text-primary hover:underline">
+              Terms of Use
+            </a>{" "}
+            for legal detail.
+          </p>
         </section>
+
+        {/* Beta disclaimer */}
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            <strong>Beta product.</strong> This app is in beta — features and privacy
+            practices may change. For any medical decisions, always talk to your
+            healthcare provider.
+          </p>
+        </section>
+
       </main>
     </div>
   );

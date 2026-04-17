@@ -121,7 +121,7 @@
         "name": "Is my health data stored or shared?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. The extension never stores your health data. It fetches information from Alberta's official health portals for your conversation, then discards it. Only encrypted session cookies are stored locally on your machine. Your credentials are entered directly in Alberta's sign-in page and never touch the extension. Your conversations are processed by Claude (Anthropic), whose servers are US-based — see Anthropic's privacy policy for how they handle conversation data."
+          "text": "No health data is stored by us. The details depend on how you use it. Claude Desktop extension: your health data goes directly between your computer and Alberta Health — our servers never see it. Your data is then sent to Claude (Anthropic, US-based servers) for your conversation. Web portal beta: your data passes through our Canadian server (Azure Canada Central) and AI (Azure OpenAI Canada East) — everything stays in Canada. In both cases, no health records are written to any database. Only an encrypted sign-in session is kept, for about 10 minutes. Your credentials are entered on Alberta's own sign-in page and never touch our extension."
         }
       },
       {
@@ -373,7 +373,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-green-900 text-lg mb-2">Why does it run on your computer?</h3>
-              <p class="text-green-800 leading-relaxed">Your health data goes directly between your computer and Alberta's health portals — it never passes through our servers. Claude Desktop shows a security warning during install because the extension runs locally. <strong>That's the point — it's how we keep your data private.</strong> We chose this approach specifically to protect your health information.</p>
+              <p class="text-green-800 leading-relaxed">With the Claude Desktop extension, your health data goes directly between your computer and Alberta's health portals — it never passes through our servers. Claude Desktop shows a security warning during install because the extension runs locally. <strong>That's the point — it's how we keep your data private.</strong> We chose this approach specifically to protect your health information. (The web portal beta works differently — see the <a href="#privacy" class="underline hover:text-green-900">privacy section</a> below.)</p>
             </div>
           </div>
         </div>
@@ -666,12 +666,27 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12 fade-in">
         <h2 id="privacy-heading" class="text-3xl md:text-4xl font-bold mb-4">Where your data goes</h2>
-        <p class="text-lg text-gray-600 max-w-xl mx-auto">
-          Here's exactly what happens when you use MyAI Health. No fine print.
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Here's exactly what happens when you use MyAI Health. We offer two paths — they work differently.
         </p>
       </div>
 
-      <!-- Data flow diagram -->
+      <!-- Path tabs / labels -->
+      <div class="fade-in mb-6">
+        <div class="max-w-3xl mx-auto grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-green-200 p-4">
+            <p class="font-semibold text-green-800 mb-1">📦 Claude Desktop extension</p>
+            <p class="text-sm text-gray-600">Data goes direct — our servers never see your health records.</p>
+          </div>
+          <div class="bg-white rounded-xl border border-brand-200 p-4">
+            <p class="font-semibold text-brand-700 mb-1">🌐 Web portal (beta)</p>
+            <p class="text-sm text-gray-600">Data passes through our Canadian server. Everything stays in Canada.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data flow diagram (Claude Desktop path) -->
+      <p class="text-center text-sm font-semibold text-gray-500 mb-2 fade-in">Claude Desktop extension path</p>
       <div class="fade-in space-y-0">
 
         <!-- Step 1: You → Alberta -->
@@ -681,7 +696,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-lg text-gray-900">Your computer talks directly to Alberta Health</h3>
-            <p class="text-gray-600 mt-1 leading-relaxed">The extension runs on your computer and fetches your health data straight from Alberta's official portals. Your data does not pass through our servers — there's no middleman.</p>
+            <p class="text-gray-600 mt-1 leading-relaxed">The extension runs on your computer and fetches your health data straight from Alberta's official portals. With the Claude Desktop extension, your data does not pass through our servers — there's no middleman. <em>(The web portal beta routes data through our Canadian server — see the portal path section above.)</em></p>
           </div>
         </div>
 
@@ -1007,7 +1022,7 @@
             Is my health data stored or shared?
             <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
-          <p class="mt-4 text-gray-600 leading-relaxed">No. The extension never stores your health data. It gets your info from Alberta's health websites for your chat, then throws it away. Only locked login files are saved on your computer. Your username and password are entered directly in Alberta's sign-in page and never touch the extension. Your conversations are processed by Claude (Anthropic), whose servers are US-based — see <a href="https://www.anthropic.com/privacy" class="text-brand-500 hover:text-brand-600 underline" target="_blank" rel="noopener noreferrer">Anthropic's privacy policy</a> for how they handle conversation data.</p>
+          <p class="mt-4 text-gray-600 leading-relaxed">No health data is stored by us — but the details depend on which path you use. <strong>Claude Desktop extension:</strong> your health data goes directly between your computer and Alberta Health; it never hits our servers. It's then sent to Claude (Anthropic) on US-based servers for your AI conversation. <strong>Web portal beta:</strong> your data passes through our Canadian server (Azure Canada Central) and the AI (Azure OpenAI Canada East) — everything stays in Canada. In both cases, no health data is saved to any database. Only an encrypted sign-in session is stored, and only for about 10 minutes. Your username and password are entered directly on Alberta's sign-in page and never touch our servers.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">

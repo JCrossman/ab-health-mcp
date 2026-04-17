@@ -432,19 +432,33 @@ swa deploy ./static \
 
 ## Privacy Policy
 
-This extension accesses personal health information on your behalf. Here is how your data is handled:
+This project accesses personal health information on your behalf. There are two delivery paths with different data flows:
 
-- **No health data is stored by the extension.** Data fetched from Alberta Health portals is returned to Claude and immediately discarded by the extension. Nothing is written to disk or any server by this extension. See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for how Claude handles conversation data.
-- **First-run privacy consent.** On first connection, a privacy notice explains that health data will be sent to Anthropic's US servers. You must explicitly acknowledge this before proceeding. You can disconnect at any time; data already sent to Anthropic is subject to their retention policy.
-- **Session cookies only.** The only data persisted is an encrypted session cookie (AES-256-GCM) stored locally at `~/.mhr-records/session.enc`. It contains no health data — only authentication tokens.
-- **Credentials never leave your machine.** You log in through the real Alberta SSO page in your browser. Credentials are never sent to or processed by this extension.
-- **Canadian data residency (our infrastructure).** All cloud infrastructure runs in Azure Canada Central (HIA/POPA compliant). Note: conversations are processed by Claude (Anthropic) on US-based servers — this extension does not control Anthropic's data handling.
-- **Data completeness.** Health records may not reflect your complete medical history. Results may take 24-72 hours to appear after testing. Records from out-of-province providers may not be included.
+### Data flow
+
+| | .mcpb (Claude Desktop extension) | Portal beta (web chat) |
+|---|---|---|
+| **Health data route** | Your machine → Alberta Health (direct, no middleman) | Your browser → Our server (Azure Canada Central) → Alberta Health |
+| **AI provider** | Anthropic Claude (US-based servers) | Azure OpenAI (Microsoft, Canada East) |
+| **Conversation data leaves Canada?** | Yes — sent to Anthropic (US) | No — processed within Canada |
+| **Health data stored by us?** | No | No — in memory only during session |
+| **AI training on your data?** | Opt-in via Anthropic settings | No (Azure OpenAI API data is never used for training) |
+
+### Details
+
+- **No health data is stored by the extension.** Data fetched from Alberta Health portals is returned to the AI and immediately discarded. Nothing is written to disk or any server by this extension.
+- **Session cookies only.** The only data persisted is an encrypted session cookie (AES-256-GCM) stored locally at `~/.mhr-records/session.enc` (local mode) or in the browser (portal mode). It contains authentication state only — no health data.
+- **Credentials never transmitted to us.** You log in through the real Alberta SSO page. Credentials are entered on Alberta's own page and never touch this extension's server.
+- **Canadian data residency (portal path).** The portal uses Azure Canada Central (server) and Azure OpenAI Canada East (AI inference). All portal-path processing stays within Canada (HIA/POPA compliant).
+- **Claude Desktop path exception.** When using the .mcpb extension with Claude Desktop, conversations are processed by Anthropic (US-based servers). See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for details.
+- **First-run privacy consent.** On first connection via Claude Desktop, a notice explains that health data will be sent to Anthropic's US servers. You must acknowledge before proceeding.
+- **Azure OpenAI data handling.** Microsoft Azure OpenAI may retain prompts for up to 30 days for abuse monitoring unless an opt-out is approved. Data is never used for model training. See [Azure OpenAI data, privacy, and security](https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy).
+- **Data completeness.** Health records may not reflect your complete medical history. Results may take 24–72 hours to appear after testing. Records from out-of-province providers may not be included.
 - **Anonymous website analytics only.** The landing page (myaihealth.ca) uses Azure Application Insights to collect anonymous visitor statistics — page views, session counts, country, browser, and referral source. No cookies are used, no personally identifiable information is collected, and no health data is involved. The MCP extension itself collects no analytics or telemetry.
 
-Full privacy policy: **https://www.myaihealth.ca/#privacy**
+Full privacy policy: **https://www.myaihealth.ca/terms.html**
 
-For privacy concerns, open an issue at https://github.com/JCrossman/ab-health-mcp/issues or contact via the website.
+For privacy concerns, email support@myaihealth.ca or open an issue at https://github.com/JCrossman/ab-health-mcp/issues.
 
 ## License
 
