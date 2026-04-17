@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           <h2 className="font-semibold text-lg">Two ways to use MyAI Health</h2>
           <div className="space-y-3 text-sm">
             <div className="rounded-lg border bg-background p-4 space-y-1">
-              <p className="font-semibold">📦 Claude Desktop extension (.mcpb file)</p>
+              <p className="font-semibold">📦 Claude Desktop add-on</p>
               <p className="text-muted-foreground">
                 Runs on your own computer. Your health data goes straight from your machine
                 to Alberta Health — our servers never see it. The AI (Claude by Anthropic)
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
               <p className="text-muted-foreground">
                 Runs in your browser. Your health data briefly passes through our
                 Canadian server to reach the AI. All processing happens in Canada.
-                Nothing is saved after your session ends.
+                Nothing is saved after you close the app.
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
             </div>
             <div className="flex gap-3">
               <span className="text-red-500 font-bold shrink-0">✗</span>
-              <p><strong>No storing health records</strong> — health data is in memory only during your session; nothing is written to a database</p>
+              <p><strong>No storing health records</strong> — health data is only used to answer your question. Nothing is saved to a database.</p>
             </div>
             <div className="flex gap-3">
               <span className="text-red-500 font-bold shrink-0">✗</span>
@@ -155,7 +155,7 @@ export default function PrivacyPage() {
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex gap-3">
               <span className="text-green-600 font-bold shrink-0">~10 min</span>
-              <p><strong>Sign-in session</strong> — a small encrypted sign-in file, kept in your browser only. Expires automatically after about 10 minutes of no activity.</p>
+              <p><strong>Your sign-in</strong> — a small encrypted file, kept in your browser only. Expires automatically after about 10 minutes of no activity.</p>
             </div>
             <div className="flex gap-3">
               <span className="text-green-600 font-bold shrink-0">0</span>

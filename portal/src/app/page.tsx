@@ -123,7 +123,7 @@ export default function HomePage() {
               <CardContent>
                 <CardDescription>
                   Your health data passes through but is never saved. When you
-                  disconnect, it&apos;s gone. Only your session stays active while you chat.
+                  disconnect, it&apos;s gone. Only your sign-in stays active while you chat.
                 </CardDescription>
               </CardContent>
             </Card>

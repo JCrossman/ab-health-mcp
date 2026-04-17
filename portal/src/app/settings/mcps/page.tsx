@@ -129,7 +129,7 @@ export default function McpSettingsPage() {
           </Link>
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            <span className="font-semibold">MCP Servers</span>
+            <span className="font-semibold">Data Sources</span>
           </div>
         </div>
       </header>
@@ -138,11 +138,11 @@ export default function McpSettingsPage() {
         <section className="space-y-2">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Plug className="h-6 w-6" />
-            MCP Server Marketplace
+            Data Sources
           </h1>
           <p className="text-muted-foreground">
-            Enable additional data sources to enrich your health conversations.
-            The AI can query enabled MCPs alongside your health records.
+            Turn on extra data sources for your health conversations.
+            The AI will use them along with your health records.
           </p>
         </section>
 
@@ -217,13 +217,13 @@ export default function McpSettingsPage() {
 
         {/* Add Custom MCP */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Custom MCP Servers</h2>
+          <h2 className="text-lg font-semibold">Custom Data Sources</h2>
 
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex gap-3 text-sm">
             <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-amber-700 dark:text-amber-300">
-              Custom MCPs can access your health data when enabled. Only add
-              servers you trust.
+              Custom data sources can read your health data when turned on. Only add
+              sources you trust.
             </p>
           </div>
 
@@ -242,7 +242,7 @@ export default function McpSettingsPage() {
               />
               <Input
                 type="password"
-                placeholder="API key (optional)"
+                placeholder="Access key (optional)"
                 value={customKey}
                 onChange={(e) => setCustomKey(e.target.value)}
               />
@@ -259,14 +259,14 @@ export default function McpSettingsPage() {
           ) : (
             <Button variant="outline" onClick={() => setShowAddCustom(true)}>
               <Plus className="h-4 w-4 mr-1" />
-              Add Custom MCP Server
+              Add Custom Data Source
             </Button>
           )}
         </section>
 
         <section className="text-center text-sm text-muted-foreground py-4">
           <p>
-            MCPs follow the{" "}
+            Using the{" "}
             <a
               href="https://modelcontextprotocol.io"
               target="_blank"

@@ -30,7 +30,7 @@ export async function POST() {
       myChart: result.myChartConnected,
       message: result.mhrConnected
         ? "Successfully connected to Alberta health records."
-        : "Authentication succeeded but MHR session could not be established.",
+        : "Sign-in worked, but we couldn't connect to My Health Records. Please try again.",
     });
   } catch (err) {
     const message =
@@ -42,7 +42,7 @@ export async function POST() {
           connected: false,
           error: "rate_limited",
           message:
-            "Alberta SSO is temporarily limiting requests. Please wait 5–10 minutes and try again.",
+            "Alberta's sign-in service is temporarily busy. Please wait 5–10 minutes and try again.",
         },
         { status: 429 }
       );
@@ -66,7 +66,7 @@ export async function POST() {
       {
         connected: false,
         error: "auth_failed",
-        message: `Authentication error: ${message}`,
+        message: "Sign-in failed. Please try again.",
       },
       { status: 500 }
     );

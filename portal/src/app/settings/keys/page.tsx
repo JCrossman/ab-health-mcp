@@ -118,7 +118,7 @@ export default function ApiKeysPage() {
           </Link>
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            <span className="font-semibold">API Keys</span>
+            <span className="font-semibold">AI Keys</span>
           </div>
         </div>
       </header>
@@ -127,11 +127,11 @@ export default function ApiKeysPage() {
         <section className="space-y-2">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Key className="h-6 w-6" />
-            AI Provider API Keys
+            AI Service Keys
           </h1>
           <p className="text-muted-foreground">
-            Bring your own API keys to use your preferred AI models. Keys are
-            encrypted and never visible after saving.
+            Add your own AI service keys to choose which AI model you use.
+            Keys are saved securely and hidden after saving.
           </p>
         </section>
 
@@ -142,8 +142,8 @@ export default function ApiKeysPage() {
               Data residency notice
             </p>
             <p className="text-amber-700 dark:text-amber-300">
-              When you use a non-Canadian AI provider, your health data will be
-              processed on servers outside Canada. Look for the 🇨🇦 badge for
+              When you use an AI service hosted outside Canada, your health data
+              will be processed outside Canada. Look for the 🇨🇦 badge for
               Canadian-hosted options.
             </p>
           </div>
@@ -254,7 +254,7 @@ export default function ApiKeysPage() {
                     onClick={() => setEditingProvider(provider.id)}
                   >
                     <Key className="h-4 w-4 mr-1" />
-                    Add API Key
+                    Add Key
                   </Button>
                 )
               )}

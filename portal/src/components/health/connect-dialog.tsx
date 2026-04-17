@@ -84,9 +84,9 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
             <ul className="space-y-1 list-disc list-inside">
               <li>A Chrome window opens to Alberta&apos;s official login page</li>
               <li>You sign in directly — credentials never pass through our server</li>
-              <li>After login, the session token is captured automatically</li>
+              <li>After you sign in, you&apos;re connected automatically</li>
               <li>The browser window closes and you&apos;re connected</li>
-              <li>Session expires after ~10 minutes of inactivity</li>
+              <li>Your sign-in expires after about 10 minutes of no activity</li>
             </ul>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { DefaultChatTransport } from "ai";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown } from "lucide-react";
+import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConnectDialog } from "@/components/health/connect-dialog";
@@ -60,9 +60,21 @@ export default function ChatPage() {
   });
   const [showConnect, setShowConnect] = useState(false);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
+  const [betaMode, setBetaMode] = useState(true); // default true until /api/models responds
   const [showModelPicker, setShowModelPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Re-auth state for graceful session-expiry recovery
+  type ReauthState = "idle" | "needed" | "loading" | "error";
+  const [reauthState, setReauthState] = useState<ReauthState>("idle");
+  const [reauthMsgId, setReauthMsgId] = useState<string | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState("");
+  // Tracks the highest message index already handled for session-expiry detection,
+  // preventing re-detection of old messages after a successful re-auth.
+  const lastHandledReauthIndex = useRef(-1);
+  // Caps auto-retry at 1 per reauth cycle to prevent infinite loops.
+  const reauthAutoRetryDone = useRef(false);
 
   const isLoading = status === "submitted" || status === "streaming";
 
@@ -82,6 +94,55 @@ export default function ChatPage() {
     } catch { /* ignore */ }
   };
 
+  // Detect session_expired marker in tool results and trigger inline re-auth prompt.
+  // Only fires for messages beyond lastHandledReauthIndex to avoid re-triggering
+  // after a successful re-auth when old expired messages are still in the array.
+  useEffect(() => {
+    if (reauthState === "loading") return;
+
+    for (let i = 0; i < messages.length; i++) {
+      if (i <= lastHandledReauthIndex.current) continue;
+      const msg = messages[i];
+      if (msg.role !== "assistant") continue;
+      for (const part of msg.parts) {
+        if (!part.type.startsWith("tool-")) continue;
+        const tp = part as { type: string; state: string; result?: unknown };
+        if (tp.state !== "output-available") continue;
+        try {
+          const r = typeof tp.result === "string" ? JSON.parse(tp.result) : tp.result;
+          if (r?.session_expired === true) {
+            lastHandledReauthIndex.current = i;
+            setReauthMsgId(msg.id);
+            setReauthState("needed");
+            return;
+          }
+        } catch { /* ignore malformed tool results */ }
+      }
+    }
+  }, [messages, reauthState]);
+
+  const handleReauth = async () => {
+    setReauthState("loading");
+    try {
+      const res = await fetch("/api/health/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!data.connected) throw new Error(data.message || "Connection failed");
+      await checkHealthStatus();
+      const shouldAutoRetry = !reauthAutoRetryDone.current && lastUserMessage;
+      reauthAutoRetryDone.current = true;
+      setReauthState("idle");
+      setReauthMsgId(null);
+      if (shouldAutoRetry) {
+        sendMessage({ text: lastUserMessage });
+      }
+    } catch {
+      setReauthState("error");
+    }
+  };
+
   // Poll health status every 30s
   useEffect(() => {
     checkHealthStatus();
@@ -96,6 +157,11 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         setAvailableModels(data.models);
+        setBetaMode(!!data.betaMode);
+        // In beta mode, set model to the single deployment name
+        if (data.betaMode && data.models.length > 0) {
+          setSelectedModel(data.models[0].modelId);
+        }
       }
     } catch { /* ignore */ }
   }, []);
@@ -151,12 +217,20 @@ export default function ChatPage() {
   const handleNewChat = useCallback(() => {
     setConversationId(null);
     setMessages([]);
+    setReauthState("idle");
+    setReauthMsgId(null);
+    lastHandledReauthIndex.current = -1;
+    reauthAutoRetryDone.current = false;
   }, [setMessages]);
 
   const handleSelectConversation = useCallback((id: string) => {
     setConversationId(id);
     const saved = loadMessages(id);
     setMessages(saved as typeof messages);
+    setReauthState("idle");
+    setReauthMsgId(null);
+    lastHandledReauthIndex.current = -1;
+    reauthAutoRetryDone.current = false;
   }, [setMessages]);
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -164,6 +238,7 @@ export default function ChatPage() {
     if (!input.trim() || isLoading) return;
     const text = input.trim();
     setInput("");
+    setLastUserMessage(text);
     // Auto-create conversation on first message
     if (!conversationId) {
       const convo = createConversation(text.slice(0, 60));
@@ -232,7 +307,8 @@ export default function ChatPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {/* Model Selector */}
+            {/* Model Selector — hidden in beta-azure-ca mode; single Azure OpenAI CA East deployment */}
+            {!betaMode && (
             <div className="relative">
               <button
                 onClick={() => setShowModelPicker(!showModelPicker)}
@@ -276,13 +352,14 @@ export default function ChatPage() {
                 </div>
               )}
             </div>
+            )}
             <Link href="/settings/keys">
-              <Button variant="ghost" size="icon" title="API Keys">
+              <Button variant="ghost" size="icon" title="AI Keys">
                 <Settings className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/settings/mcps">
-              <Button variant="ghost" size="icon" title="MCP Servers">
+              <Button variant="ghost" size="icon" title="Data Sources">
                 <Plug className="h-4 w-4" />
               </Button>
             </Link>
@@ -320,6 +397,38 @@ export default function ChatPage() {
                 >
                   Connect Health Account
                 </Button>
+              )}
+              
+              {healthStatus.connected && (
+                <div className="space-y-3 pt-4">
+                  <p className="text-sm font-medium text-muted-foreground">Try one of these to get started:</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setInput("Show my latest lab results")}
+                    >
+                      <FlaskConical className="h-4 w-4 mr-2" />
+                      Show my latest lab results
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setInput("When was my last tetanus shot?")}
+                    >
+                      <Syringe className="h-4 w-4 mr-2" />
+                      When was my last tetanus shot?
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setInput("List my current medications")}
+                    >
+                      <Pill className="h-4 w-4 mr-2" />
+                      List my current medications
+                    </Button>
+                  </div>
+                </div>
               )}
               <div className="flex flex-wrap gap-2 justify-center pt-4">
                 {[
@@ -396,6 +505,58 @@ export default function ChatPage() {
                 }
                 return null;
               })}
+
+              {/* Inline re-auth prompt — shown after the assistant message that triggered a session expiry */}
+              {reauthMsgId === message.id && message.role === "assistant" && (
+                <div aria-live="polite" className="flex justify-start">
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-sm max-w-[85%] space-y-2">
+                    {reauthState === "needed" && (
+                      <>
+                        <p className="text-amber-800 dark:text-amber-200 font-medium">
+                          Your sign-in has timed out.
+                        </p>
+                        <Button
+                          size="sm"
+                          onClick={handleReauth}
+                          className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <Shield className="h-3 w-3 mr-1.5" />
+                          Sign in again
+                        </Button>
+                      </>
+                    )}
+                    {reauthState === "loading" && (
+                      <p className="text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+                        Signing you in…
+                      </p>
+                    )}
+                    {reauthState === "error" && (
+                      <>
+                        <p className="text-amber-800 dark:text-amber-200 font-medium">
+                          Couldn&apos;t sign you in.
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleReauth}
+                            className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            Try again
+                          </Button>
+                          <a
+                            href="."
+                            className="text-xs text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:no-underline"
+                          >
+                            Refresh the page
+                          </a>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 
@@ -412,12 +573,12 @@ export default function ChatPage() {
               <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 text-sm max-w-md space-y-2">
                 <p className="font-medium text-amber-800 dark:text-amber-200">
                   {error.message?.includes("API Key") || error.message?.includes("provider configured")
-                    ? "No AI provider configured"
+                    ? "No AI service set up"
                     : "Something went wrong"}
                 </p>
                 <p className="text-amber-700 dark:text-amber-300">
                   {error.message?.includes("API Key") || error.message?.includes("provider configured")
-                    ? "Add an API key in Settings to start chatting."
+                    ? "Add an AI key in Settings to start chatting."
                     : error.message || "Please try again."}
                 </p>
                 {(error.message?.includes("API Key") || error.message?.includes("provider configured")) && (
