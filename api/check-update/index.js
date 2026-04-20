@@ -18,7 +18,7 @@
  *   MCPB_BLOB_NAME
  */
 
-const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } = require('@azure/storage-blob');
+const { BlobServiceClient } = require('@azure/storage-blob');
 
 // Cache the latest version for 5 minutes to avoid reading blob on every call
 let cachedVersion = null;
@@ -78,23 +78,11 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // Generate a 24-hour SAS download URL
-    const accountName = connectionString.match(/AccountName=([^;]+)/)?.[1];
-    const accountKey = connectionString.match(/AccountKey=([^;]+)/)?.[1];
-    const blobClient = containerClient.getBlobClient(blobName);
-
-    const expiresOn = new Date();
-    expiresOn.setMinutes(expiresOn.getMinutes() + 30);
-
-    const credential = new StorageSharedKeyCredential(accountName, accountKey);
-    const sasToken = generateBlobSASQueryParameters({
-      containerName,
-      blobName,
-      permissions: BlobSASPermissions.parse('r'),
-      expiresOn,
-    }, credential).toString();
-
-    const downloadUrl = `${blobClient.url}?${sasToken}`;
+    // Return a short, copy-paste-safe redirector URL instead of the raw SAS.
+    // Long SAS URLs get truncated by chat UIs (Claude Desktop) at % or & chars,
+    // producing PublicAccessNotPermitted errors. /api/download-latest 302-redirects
+    // to a fresh 30-minute SAS on each click.
+    const downloadUrl = 'https://www.myaihealth.ca/api/download-latest';
 
     context.res = {
       status: 200,
