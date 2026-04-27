@@ -14,7 +14,7 @@ All core infrastructure, MHR health data tools (24), and MyChart tools (20) are 
 
 ## 🟡 Active Workstream — Portal Chat Beta (paused, resume here)
 
-Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`. **15 of 22 tasks done.** Portal code + Canadian infra are complete and building cleanly. Remaining work is user-gated on a DNS cutover decision.
+Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`. **16 of 22 tasks done.** Portal code + Canadian infra are complete and building cleanly. Remaining work is deployment (DNS cutover, Container App wiring).
 
 ### 👉 To resume: answer these 5 questions, then tell the assistant to dispatch `migrate-swa`
 
@@ -40,6 +40,7 @@ Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`.
 - [x] App Insights funnel in `portal/src/lib/telemetry/events.ts` with PII-scrubbing `trackEvent`
 - [x] Graceful re-auth (inline "Sign in again" button, one auto-retry of last question)
 - [x] Beta invite flow: admin-gated `channel=portal-beta` on `/api/request-access`; HMAC-signed 30-day tokens; `/api/beta-invite/validate`; `scripts/send-beta-invite.ts` CLI
+- [x] Streamed cloud browser auth (`/api/auth-stream`): headless Puppeteer streams CDP screencast via SSE; user sees Alberta's real login page in a canvas; credentials never touch our code. Works in Container Apps.
 
 **Copy & accessibility**
 - [x] Plain-language pass — ~32 strings rewritten to grade-6; `copy-glossary.md` at repo root
@@ -53,7 +54,7 @@ Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`.
 
 - [ ] **`migrate-swa`** — execute the Option C migration (blocked on the 5 questions above)
 - [ ] **`verify-residency`** — re-audit post-migration
-- [ ] **`portal-container-deploy`** — wire `APPLICATIONINSIGHTS_CONNECTION_STRING` + Key Vault secret refs (`AZURE_OPENAI_API_KEY=keyvaultref:azure-openai-key-cae`, `AZURE_OPENAI_ENDPOINT=keyvaultref:azure-openai-endpoint-cae`) into the Container App
+- [ ] **`portal-container-deploy`** — wire `APPLICATIONINSIGHTS_CONNECTION_STRING` + Key Vault secret refs (`AZURE_OPENAI_API_KEY=keyvaultref:azure-openai-key-cae`) + `AZURE_OPENAI_RESOURCE_NAME=abhealthmcp-openai-cae` + `AUTH_SECRET` + `BETA_INVITE_SECRET` + `PORTAL_MODEL_MODE=beta-azure-ca` into the Container App. Pin to 1 replica (in-memory guardrails).
 - [ ] **`usability-sessions`** — recruit 5 non-technical Albertans, run moderated sessions
 - [ ] **`beta-launch`** — `scripts/send-beta-invite.ts` for first wave
 - [ ] **`beta-readout`** — completion rate, time-to-first-answer, drop-off map, $/user
