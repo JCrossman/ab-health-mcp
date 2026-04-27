@@ -44,7 +44,7 @@ az containerapp create \
   --env-vars \
     "NODE_ENV=production" \
     "PORTAL_MODEL_MODE=beta-azure-ca" \
-    "AZURE_OPENAI_RESOURCE_NAME=abhealthmcp-openai-cae" \
+    "AZURE_AI_FOUNDRY_ENDPOINT=https://abhealthmcp-openai-cae.services.ai.azure.com" \
     "AZURE_OPENAI_DEPLOYMENT=gpt-4o" \
     "AZURE_OPENAI_API_VERSION=2024-12-01-preview" \
     "AZURE_OPENAI_API_KEY=secretref:azure-openai-key-cae" \

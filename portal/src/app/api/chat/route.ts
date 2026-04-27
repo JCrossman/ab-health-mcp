@@ -319,7 +319,7 @@ export async function POST(req: Request) {
   if (!resolved || missingMultiModel) {
     const errorText =
       !resolved && modelMode === "beta-azure-ca"
-        ? "Azure OpenAI is not configured. Set AZURE_OPENAI_RESOURCE_NAME and AZURE_OPENAI_API_KEY in the server environment."
+        ? "Azure AI Foundry is not configured. Set AZURE_AI_FOUNDRY_ENDPOINT or AZURE_OPENAI_RESOURCE_NAME and AZURE_OPENAI_API_KEY in the server environment."
         : "No AI provider configured. Go to Settings → API Keys and add an API key (e.g. OpenAI, Anthropic, or Google), or set OPENAI_API_KEY in the server environment.";
     return new Response(
       `data: {"type":"error","errorText":"${errorText}"}\n\ndata: [DONE]\n`,

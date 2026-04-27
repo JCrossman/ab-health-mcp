@@ -5,8 +5,12 @@
  * appropriate AI SDK LanguageModel instance using the user's stored API key.
  *
  * In PORTAL_MODEL_MODE=beta-azure-ca (default), all requests are routed to
- * the server-configured Azure OpenAI Canada East deployment regardless of
- * the user's model preference, enforcing Canadian data residency.
+ * Azure AI Foundry (Canada East) regardless of the user's model preference,
+ * enforcing Canadian data residency.
+ *
+ * Supports two Azure config styles:
+ *   1. Foundry endpoint: AZURE_AI_FOUNDRY_ENDPOINT (preferred)
+ *   2. Legacy resource name: AZURE_OPENAI_RESOURCE_NAME (backward compatible)
  */
 
 import { openai, createOpenAI } from "@ai-sdk/openai";
@@ -25,22 +29,47 @@ interface ModelSelection {
 
 const DEFAULT_MODEL = "gpt-4o";
 
-/** Feature flag: "beta-azure-ca" (default) routes all requests to Azure OpenAI Canada East. */
+/** Feature flag: "beta-azure-ca" (default) routes all requests to Azure AI Foundry Canada East. */
 const MODEL_MODE = process.env.PORTAL_MODEL_MODE ?? "beta-azure-ca";
 
 /**
- * Returns the beta Azure OpenAI Canada East model using server env vars.
- * Throws if required env vars are missing.
+ * Returns the Azure AI Foundry (Canada East) model using server env vars.
+ *
+ * Supports two config styles:
+ *   - AZURE_AI_FOUNDRY_ENDPOINT: Full Foundry project endpoint URL (preferred)
+ *   - AZURE_OPENAI_RESOURCE_NAME + AZURE_OPENAI_API_KEY: Legacy Azure OpenAI (backward compatible)
+ *
+ * Throws if neither is configured.
  */
 function resolveAzureModel(): ModelSelection {
-  const apiKey = process.env.AZURE_OPENAI_API_KEY;
-  const resourceName = process.env.AZURE_OPENAI_RESOURCE_NAME;
   const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-4o";
   const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? "2024-12-01-preview";
 
+  // Preferred: Foundry project endpoint
+  const foundryEndpoint = process.env.AZURE_AI_FOUNDRY_ENDPOINT;
+  if (foundryEndpoint) {
+    const apiKey = process.env.AZURE_OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "Azure AI Foundry endpoint set but AZURE_OPENAI_API_KEY is missing."
+      );
+    }
+    const azure = createAzure({ baseURL: foundryEndpoint, apiKey, apiVersion });
+    return {
+      model: azure(deployment) as LanguageModel,
+      providerId: "azure-foundry",
+      modelId: deployment,
+      canadianHosted: true,
+    };
+  }
+
+  // Fallback: legacy Azure OpenAI resource name
+  const apiKey = process.env.AZURE_OPENAI_API_KEY;
+  const resourceName = process.env.AZURE_OPENAI_RESOURCE_NAME;
+
   if (!apiKey || !resourceName) {
     throw new Error(
-      "Azure OpenAI not configured. Set AZURE_OPENAI_RESOURCE_NAME and AZURE_OPENAI_API_KEY."
+      "Azure AI not configured. Set AZURE_AI_FOUNDRY_ENDPOINT (preferred) or AZURE_OPENAI_RESOURCE_NAME + AZURE_OPENAI_API_KEY."
     );
   }
 
@@ -217,10 +246,11 @@ export function getAvailableModels(userId: string): Array<{
 }> {
   if (MODEL_MODE === "beta-azure-ca") {
     const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-4o";
+    const isFoundry = !!process.env.AZURE_AI_FOUNDRY_ENDPOINT;
     return [
       {
-        providerId: "azure-openai",
-        providerName: "Azure OpenAI (Canada East)",
+        providerId: isFoundry ? "azure-foundry" : "azure-openai",
+        providerName: isFoundry ? "Azure AI Foundry (Canada East)" : "Azure OpenAI (Canada East)",
         modelId: deployment,
         canadianHosted: true,
       },
