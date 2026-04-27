@@ -1,15 +1,32 @@
 /**
- * NextAuth.js v5 configuration for the Alberta Health Portal.
+ * NextAuth.js v5 configuration for MyAI Health portal.
  *
- * MVP auth: Credentials provider with JWT sessions (no external DB required).
- * Phase 2: Add Cosmos DB adapter for persistent user storage.
+ * Auth providers:
+ *   - Google OAuth (primary) — users sign in with their Google account
+ *   - Credentials (development only) — accepts any email/password for local testing
+ *
+ * Sessions are JWT-based (no database required for beta).
  */
 
 import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
+const providers = [];
+
+// Google OAuth — primary auth for production and beta
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
+// Credentials — development fallback (accepts any email/password)
+if (process.env.NODE_ENV === "development" || process.env.ALLOW_CREDENTIALS_LOGIN === "true") {
+  providers.push(
     Credentials({
       name: "Email",
       credentials: {
@@ -17,22 +34,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // MVP: Simple validation. In production, validate against Cosmos DB.
-        // For now, accept any non-empty credentials for development.
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        // TODO: Phase 1.2 production — validate against Cosmos DB user store
-        // For MVP development, create a user from the credentials
+        if (!credentials?.email || !credentials?.password) return null;
         return {
           id: String(credentials.email),
           email: String(credentials.email),
           name: String(credentials.email).split("@")[0],
         };
       },
-    }),
-  ],
+    })
+  );
+}
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers,
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
