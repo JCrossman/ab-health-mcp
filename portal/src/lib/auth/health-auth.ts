@@ -85,7 +85,7 @@ async function extractCookiesIntoJar(
   return jar;
 }
 
-function findChrome(): string | undefined {
+export function findChrome(): string | undefined {
   const paths = [
     process.env.CHROME_PATH,
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -104,6 +104,100 @@ function findChrome(): string | undefined {
     } catch { /* try next */ }
   }
   return undefined;
+}
+
+/**
+ * Complete the auth flow after SSO login is detected.
+ *
+ * Navigates to MyChart (SAML auto-auth) and MHR to establish both sessions,
+ * then extracts cookies. Shared by both the visible-browser and streamed-browser
+ * auth paths.
+ */
+export async function completeAuthFlow(page: Page): Promise<HealthAuthResult> {
+  await sleep(2000);
+
+  // Step 1: Establish MyChart session via SAML
+  let myChartConnected = false;
+  let myChartCsrfToken: string | undefined;
+  let myChartJar: CookieJar | undefined;
+
+  try {
+    await page.goto(MYCHART_SAML_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () =>
+        window.location.href.includes("/MyChartPRD/Home") ||
+        window.location.href.includes("/MyChartPRD/default.asp"),
+      { timeout: 20_000 }
+    );
+    myChartConnected = true;
+  } catch {
+    // MyChart may not be available — continue with MHR only
+  }
+
+  if (myChartConnected) {
+    myChartJar = await extractCookiesIntoJar(page, [
+      `${MYCHART_BASE}/MyChartPRD/`,
+    ]);
+
+    // Fetch CSRF token
+    try {
+      const csrfCookies =
+        await myChartJar.getCookieString(MYCHART_CSRF_URL);
+      const csrfResponse = await fetch(MYCHART_CSRF_URL, {
+        headers: {
+          Cookie: csrfCookies,
+          Accept: "text/html",
+          Referer: `${MYCHART_BASE}/MyChartPRD/Home`,
+        },
+      });
+      if (csrfResponse.ok) {
+        const csrfHtml = (await csrfResponse.text()).trim();
+        const match = csrfHtml.match(/value="([^"]+)"/);
+        if (match) {
+          myChartCsrfToken = match[1];
+        } else if (!csrfHtml.includes("<")) {
+          myChartCsrfToken = csrfHtml;
+        }
+      }
+    } catch {
+      // CSRF fetch failed — MyChart tools may not work
+    }
+  }
+
+  await sleep(1000);
+
+  // Step 2: Establish MHR session
+  let mhrConnected = false;
+  try {
+    await page.goto(MHR_BASE, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    await page.waitForFunction(
+      () => window.location.href.includes("/ng/"),
+      { timeout: 20_000 }
+    );
+    mhrConnected = true;
+  } catch {
+    // MHR may not be available
+  }
+
+  const mhrJar = await extractCookiesIntoJar(page, [
+    "https://myhealthrecords.alberta.ca",
+    "https://console.myhealthrecords.alberta.ca",
+    "https://account.alberta.ca",
+  ]);
+
+  return {
+    mhrCookieJar: mhrJar,
+    myChartCookieJar: myChartJar,
+    myChartCsrfToken,
+    mhrConnected,
+    myChartConnected,
+  };
 }
 
 /**
@@ -175,8 +269,6 @@ export async function authenticateWithBrowser(): Promise<HealthAuthResult> {
     const alreadyLoggedIn = !currentUrl.includes("account.alberta.ca");
 
     if (!alreadyLoggedIn) {
-      // Wait for user to manually complete login
-      // The is-login-token-valid endpoint returns 200 when SSO login succeeds
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(
@@ -205,90 +297,7 @@ export async function authenticateWithBrowser(): Promise<HealthAuthResult> {
       );
     }
 
-    await sleep(2000);
-
-    // Step 3: Establish MyChart session via SAML
-    let myChartConnected = false;
-    let myChartCsrfToken: string | undefined;
-    let myChartJar: CookieJar | undefined;
-
-    try {
-      await page.goto(MYCHART_SAML_URL, {
-        waitUntil: "domcontentloaded",
-        timeout: 30_000,
-      });
-      await page.waitForFunction(
-        () =>
-          window.location.href.includes("/MyChartPRD/Home") ||
-          window.location.href.includes("/MyChartPRD/default.asp"),
-        { timeout: 20_000 }
-      );
-      myChartConnected = true;
-    } catch {
-      // MyChart may not be available — continue with MHR only
-    }
-
-    if (myChartConnected) {
-      myChartJar = await extractCookiesIntoJar(page, [
-        `${MYCHART_BASE}/MyChartPRD/`,
-      ]);
-
-      // Fetch CSRF token
-      try {
-        const csrfCookies =
-          await myChartJar.getCookieString(MYCHART_CSRF_URL);
-        const csrfResponse = await fetch(MYCHART_CSRF_URL, {
-          headers: {
-            Cookie: csrfCookies,
-            Accept: "text/html",
-            Referer: `${MYCHART_BASE}/MyChartPRD/Home`,
-          },
-        });
-        if (csrfResponse.ok) {
-          const csrfHtml = (await csrfResponse.text()).trim();
-          const match = csrfHtml.match(/value="([^"]+)"/);
-          if (match) {
-            myChartCsrfToken = match[1];
-          } else if (!csrfHtml.includes("<")) {
-            myChartCsrfToken = csrfHtml;
-          }
-        }
-      } catch {
-        // CSRF fetch failed — MyChart tools may not work
-      }
-    }
-
-    await sleep(1000);
-
-    // Step 4: Establish MHR session
-    let mhrConnected = false;
-    try {
-      await page.goto(MHR_BASE, {
-        waitUntil: "domcontentloaded",
-        timeout: 30_000,
-      });
-      await page.waitForFunction(
-        () => window.location.href.includes("/ng/"),
-        { timeout: 20_000 }
-      );
-      mhrConnected = true;
-    } catch {
-      // MHR may not be available
-    }
-
-    const mhrJar = await extractCookiesIntoJar(page, [
-      "https://myhealthrecords.alberta.ca",
-      "https://console.myhealthrecords.alberta.ca",
-      "https://account.alberta.ca",
-    ]);
-
-    return {
-      mhrCookieJar: mhrJar,
-      myChartCookieJar: myChartJar,
-      myChartCsrfToken,
-      mhrConnected,
-      myChartConnected,
-    };
+    return await completeAuthFlow(page);
   } finally {
     await browser.close();
   }

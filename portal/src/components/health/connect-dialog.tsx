@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle2, Monitor } from "lucide-react";
+import { AuthStreamCanvas } from "./auth-stream-canvas";
 
 interface ConnectDialogProps {
   open: boolean;
@@ -13,22 +14,21 @@ interface ConnectDialogProps {
 /**
  * Health account connection dialog.
  *
- * Launches a real Chrome window where the user logs in on Alberta's
- * actual SSO page. No credentials pass through our server.
+ * Opens a streamed cloud browser showing Alberta's real SSO login page.
+ * The user types credentials directly into the streamed view — our code
+ * never sees passwords.
  */
 export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps) {
-  const [connecting, setConnecting] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  // Store the element that triggered the dialog so focus returns on close.
   const triggerRef = useRef<Element | null>(null);
 
   // Capture trigger element and manage focus on open/close.
   useEffect(() => {
     if (open) {
       triggerRef.current = document.activeElement;
-      // Focus the first focusable element inside the dialog on next tick.
       const timer = setTimeout(() => {
         const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
           'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -37,7 +37,6 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
       }, 0);
       return () => clearTimeout(timer);
     } else {
-      // Return focus to the triggering element when dialog closes.
       (triggerRef.current as HTMLElement | null)?.focus();
     }
   }, [open]);
@@ -46,16 +45,17 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      // Only handle Escape when NOT streaming (streaming canvas needs keyboard events)
+      if (e.key === "Escape" && !streaming) {
         handleClose();
         return;
       }
-      if (e.key !== "Tab") return;
+      if (e.key !== "Tab" || streaming) return;
       const dialog = dialogRef.current;
       if (!dialog) return;
       const focusable = Array.from(
         dialog.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), canvas[tabindex]'
         )
       );
       if (focusable.length === 0) return;
@@ -72,47 +72,40 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, streaming]);
 
   if (!open) return null;
 
-  const handleConnect = async () => {
-    setConnecting(true);
+  const handleStartStream = () => {
+    setStreaming(true);
     setError(null);
+  };
 
-    try {
-      const res = await fetch("/api/health/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
+  const handleConnected = (result: { mhr: boolean; myChart: boolean }) => {
+    setSuccess(true);
+    setStreaming(false);
+    onConnected();
+    setTimeout(() => {
+      setSuccess(false);
+      onClose();
+    }, 1500);
+  };
 
-      if (data.connected) {
-        setSuccess(true);
-        onConnected();
-        setTimeout(() => {
-          setSuccess(false);
-          onClose();
-        }, 1500);
-      } else {
-        setError(data.message || "Connection failed. Please try again.");
-      }
-    } catch {
-      setError("Could not reach the health records service. Please try again.");
-    } finally {
-      setConnecting(false);
-    }
+  const handleStreamError = (message: string) => {
+    setError(message);
+    setStreaming(false);
   };
 
   const handleClose = () => {
     setError(null);
     setSuccess(false);
+    setStreaming(false);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/50" onClick={streaming ? undefined : handleClose} aria-hidden="true" />
 
       <div
         ref={dialogRef}
@@ -120,7 +113,9 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
         aria-modal="true"
         aria-labelledby="connect-dialog-title"
         aria-describedby="connect-dialog-desc"
-        className="relative bg-background rounded-xl shadow-xl max-w-md w-full mx-4 p-6 space-y-4"
+        className={`relative bg-background rounded-xl shadow-xl mx-4 p-6 space-y-4 ${
+          streaming ? "max-w-4xl w-full" : "max-w-md w-full"
+        }`}
       >
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center" aria-hidden="true">
@@ -134,24 +129,35 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
           </div>
         </div>
 
-        <div id="connect-dialog-desc" className="space-y-3 text-sm text-muted-foreground">
-          <p>
-            A browser window will open to Alberta&apos;s login page where you
-            sign in directly with your MyAlberta Digital ID.
-          </p>
-          <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-            <p className="font-medium text-foreground">How it works:</p>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>A Chrome window opens to Alberta&apos;s official login page</li>
-              <li>You sign in directly — credentials never pass through our server</li>
-              <li>After you sign in, you&apos;re connected automatically</li>
-              <li>The browser window closes and you&apos;re connected</li>
-              <li>Your sign-in expires after about 10 minutes of no activity</li>
-            </ul>
+        {!streaming && !success && (
+          <div id="connect-dialog-desc" className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              A secure browser window will appear below showing Alberta&apos;s
+              official login page. Sign in directly with your MyAlberta Digital ID.
+            </p>
+            <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+              <p className="font-medium text-foreground">How it works:</p>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Alberta&apos;s login page appears in a secure browser below</li>
+                <li>You type your credentials directly — they go straight to Alberta</li>
+                <li>We never see your password</li>
+                <li>After you sign in, you&apos;re connected automatically</li>
+                <li>Your sign-in expires after about 10 minutes of no activity</li>
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Status messages announced to screen readers */}
+        {/* Auth stream canvas */}
+        {streaming && (
+          <AuthStreamCanvas
+            active={streaming}
+            onConnected={handleConnected}
+            onError={handleStreamError}
+          />
+        )}
+
+        {/* Status messages */}
         <div aria-live="polite" aria-atomic="true">
           {error && (
             <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
@@ -168,16 +174,6 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
               </p>
             </div>
           )}
-
-          {connecting && (
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
-              <Loader2 className="h-4 w-4 text-blue-500 mt-0.5 animate-spin shrink-0" aria-hidden="true" />
-              <p className="text-blue-700 dark:text-blue-300">
-                A Chrome window has opened — please sign in on Alberta&apos;s login page.
-                This window will close automatically after you log in.
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-1">
@@ -185,31 +181,16 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={connecting}
+            disabled={success}
           >
-            Cancel
+            {streaming ? "Cancel" : "Close"}
           </Button>
-          <Button
-            onClick={handleConnect}
-            disabled={connecting || success}
-          >
-            {connecting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                Waiting for login...
-              </>
-            ) : success ? (
-              <>
-                <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                Connected!
-              </>
-            ) : (
-              <>
-                <Shield className="mr-2 h-4 w-4" aria-hidden="true" />
-                Open Alberta Login
-              </>
-            )}
-          </Button>
+          {!streaming && !success && (
+            <Button onClick={handleStartStream}>
+              <Monitor className="mr-2 h-4 w-4" aria-hidden="true" />
+              Open Alberta Login
+            </Button>
+          )}
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
