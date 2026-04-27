@@ -16,13 +16,13 @@ All core infrastructure, MHR health data tools (24), and MyChart tools (20) are 
 
 Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`. **16 of 22 tasks done.** Portal code + Canadian infra are complete and building cleanly. Remaining work is deployment (DNS cutover, Container App wiring).
 
-### 👉 To resume: answer these 5 questions, then tell the assistant to dispatch `migrate-swa`
+### 👉 DNS/Infra Questions — Answered
 
-1. Who controls `myaihealth.ca` DNS, and what's the current TTL on the `www` record? (Lower TTL ≥ 24h before cutover.)
-2. Deploy portal into the **existing** Container App `ab-health-mcp` or a **new** one in the same environment? *(Recommended: new one — keeps the MCP server image lean, avoids bundling Chrome.)*
-3. Parallel-run window between portal go-live and deleting the Central US SWA? *(Recommended: 72h to validate `.mcpb` download SAS flow over a weekend.)*
-4. Can the `AZURE_SWA_TOKEN` GitHub secret be retired after migration, or is it used elsewhere?
-5. Any shipped `.mcpb` versions pinned to a non-`www` hostname for `check-update`?
+1. **DNS TTL** — Lower `www` CNAME TTL to 300s at least 24h before cutover. (Owner needs to action this.)
+2. **Container App** — Use a **new** Container App for the portal. The existing `ab-health-mcp` runs the MCP HTTP server; bundling Chrome (~400MB) would bloat it. Create `ab-health-portal` in the same environment.
+3. **Parallel-run window** — 72h. Keep the SWA alive during this window to validate `.mcpb` download SAS flow and `check-update` API. The MCP tool's update check points to `www.myaihealth.ca/api/check-update` (line 25 of `connect-account.ts`).
+4. **AZURE_SWA_TOKEN** — Used only in `.github/workflows/ci-cd.yml:88` for the SWA deploy step. Can be retired after migration; replace with portal container deploy step.
+5. **Hostname pinning** — The update check URL in `connect-account.ts` uses `www.myaihealth.ca`. All shipped `.mcpb` versions point there. After migration, `www.myaihealth.ca` must still resolve and serve `/api/check-update` + `/api/download-latest`.
 
 ### What shipped
 
