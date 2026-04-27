@@ -92,3 +92,42 @@ jobs:
           api_location: api
           skip_app_build: true
           skip_api_build: false
+
+  deploy-portal:
+    name: Deploy Portal
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push portal image
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az acr build \
+              --registry abhealthmcpacr \
+              --image ab-health-portal:${{ github.sha }} \
+              --image ab-health-portal:latest \
+              --file portal/Dockerfile \
+              .
+
+      - name: Deploy to Container App
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az containerapp update \
+              --name ab-health-portal \
+              --resource-group ab-health-mcp \
+              --image abhealthmcpacr.azurecr.io/ab-health-portal:${{ github.sha }}
