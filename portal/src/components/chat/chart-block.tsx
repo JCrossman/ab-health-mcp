@@ -156,7 +156,7 @@ export function ChartBlock({ spec }: { spec: ChartSpec }) {
   };
 
   return (
-    <div className="my-3 p-3 bg-background rounded-lg border">
+    <div className="my-3 p-3 bg-background rounded-lg border" role="img" aria-label={generateChartAltText(spec)}>
       {title && (
         <h4 className="text-sm font-medium mb-2 text-center">{title}</h4>
       )}
@@ -165,4 +165,35 @@ export function ChartBlock({ spec }: { spec: ChartSpec }) {
       </ResponsiveContainer>
     </div>
   );
+}
+
+/** Generate a text description of the chart for screen readers. */
+function generateChartAltText(spec: ChartSpec): string {
+  const { type, title, series, data, referenceLines } = spec;
+  const chartType = type === "area" ? "area chart" : type === "bar" ? "bar chart" : "line chart";
+  const dataPoints = data?.length ?? 0;
+  const seriesNames = series?.map((s) => s.label || s.key).join(", ") ?? "";
+  const refLines = referenceLines
+    ?.filter((r) => r.label)
+    .map((r) => `${r.label}${r.y !== undefined ? ` at ${r.y}` : ""}`)
+    .join(", ");
+
+  let alt = title ? `${title}. ` : "";
+  alt += `${chartType} with ${dataPoints} data point${dataPoints !== 1 ? "s" : ""}`;
+  if (seriesNames) alt += ` showing ${seriesNames}`;
+  alt += ".";
+  if (refLines) alt += ` Reference lines: ${refLines}.`;
+
+  // Include first and last data points for trend context
+  if (data?.length >= 2 && series?.length > 0) {
+    const firstKey = series[0].key;
+    const first = data[0];
+    const last = data[data.length - 1];
+    const xKey = spec.xKey;
+    if (first[xKey] && last[xKey] && first[firstKey] !== undefined && last[firstKey] !== undefined) {
+      alt += ` Range: ${first[xKey]} (${first[firstKey]}) to ${last[xKey]} (${last[firstKey]}).`;
+    }
+  }
+
+  return alt;
 }

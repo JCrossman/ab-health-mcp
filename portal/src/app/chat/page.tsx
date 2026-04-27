@@ -5,7 +5,7 @@ import { DefaultChatTransport } from "ai";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Shield } from "lucide-react";
+import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { ConnectDialog } from "@/components/health/connect-dialog";
@@ -64,6 +64,7 @@ export default function ChatPage() {
   const [showModelPicker, setShowModelPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Re-auth state for graceful session-expiry recovery
   type ReauthState = "idle" | "needed" | "loading" | "error";
@@ -264,7 +265,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen">
-      {/* Conversation Sidebar — hidden on mobile */}
+      {/* Conversation Sidebar — desktop: always visible; mobile: slide-over */}
       <div className="hidden md:flex">
         <ConversationSidebar
           currentId={conversationId}
@@ -274,12 +275,60 @@ export default function ChatPage() {
         />
       </div>
 
+      {/* Mobile sidebar overlay */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-hidden="true"
+          />
+          <nav
+            className="absolute inset-y-0 left-0 w-72 bg-background shadow-xl"
+            aria-label="Conversations"
+          >
+            <div className="flex items-center justify-between p-3 border-b">
+              <span className="font-semibold text-sm">Conversations</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileSidebarOpen(false)}
+                aria-label="Close sidebar"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+            <ConversationSidebar
+              currentId={conversationId}
+              onSelect={(id) => {
+                handleSelectConversation(id);
+                setMobileSidebarOpen(false);
+              }}
+              onNew={() => {
+                handleNewChat();
+                setMobileSidebarOpen(false);
+              }}
+              onUpdateTitle={() => {}}
+            />
+          </nav>
+        </div>
+      )}
+
       {/* Main Chat Area */}
       <div className="flex flex-col flex-1 min-w-0">
       {/* Chat Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shrink-0">
         <div className="max-w-4xl mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open conversations"
+            >
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </Button>
             <Link href="/" className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" aria-hidden="true" />
               <span className="font-semibold">Alberta Health Portal</span>
@@ -569,6 +618,13 @@ export default function ChatPage() {
               </div>
             </div>
           )}
+
+          {/* Screen reader announcements for streaming state changes */}
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            {status === "submitted" && "Assistant is thinking…"}
+            {status === "streaming" && "Assistant is responding…"}
+            {status === "ready" && messages.length > 0 && "Response complete."}
+          </div>
 
           {error && (
             <div className="flex justify-center">
