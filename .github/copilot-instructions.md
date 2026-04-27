@@ -78,6 +78,38 @@ This project handles protected health information under Alberta's HIA and POPA.
 
 ## Key Conventions
 
+### Design & Brand
+
+Both the static landing site (`static/`) and the portal (`portal/`) must share the same visual identity. When creating or modifying UI:
+
+**Brand colors** (defined in `portal/src/app/globals.css` and `static/input.css`):
+- Primary: `#0277b5` (blue) — buttons, links, focus rings, accents
+- Primary dark mode: `#38bdf8` (sky-400)
+- Background light: `#ffffff` / dark: `#0f172a` (slate-900)
+- Card/surface dark: `#1e293b` (slate-800)
+- Muted text: `#546279` light / `#94a3b8` dark
+- Destructive: `#dc2626` (red-600)
+- Gradient text (landing page): `linear-gradient(135deg, #0277b5, #035f8a)`
+
+**Typography:**
+- Font family: **Inter** (loaded via `next/font/google` in portal, Google Fonts CDN on static site)
+- Monospace: Geist Mono (code blocks only)
+- Body text: `text-sm` (14px) in chat, `text-base` (16px) on content pages
+- Headings: `font-semibold` or `font-bold`, not thin/light
+
+**Tone & copy:**
+- Grade-6 reading level — short sentences, common words, no jargon
+- "Your health records" not "patient health information"
+- "Sign in" not "authenticate" — see `copy-glossary.md` for the full word list
+- Friendly but not casual; clear but not clinical
+
+**Component conventions (portal):**
+- Use shadcn/ui components (`@/components/ui/`) — they inherit the CSS variables above
+- Icons from `lucide-react`, always with `aria-hidden="true"` + a text label or `aria-label`
+- All interactive elements need `focus-visible:ring-2 focus-visible:ring-ring`
+- Use `aria-live="polite"` for dynamic status changes
+- Mobile-first: test at 320px width minimum
+
 ### Tool pattern
 
 One file per MCP tool in `src/tools/`. MHR tools follow `get-*.ts` naming, MyChart tools follow `mc-*.ts` naming (tool names prefixed with `mc_`). Every data tool follows the same structure: validate session → call API (passthrough) → format response → return. See `MCP-TOOLS-SPEC.md` for the factory pattern (`simpleMhrTool`, `mhrDateRangeTool`, `simpleMyChartTool`).
