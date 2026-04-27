@@ -8,6 +8,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge, badgeVariants } from "@/components/ui/badge";
+import { BrandLogo, BrandName } from "@/components/ui/brand";
 import { ConnectDialog } from "@/components/health/connect-dialog";
 import { MessageContent } from "@/components/chat/message-content";
 import {
@@ -330,8 +331,8 @@ export default function ChatPage() {
               <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
             <Link href="/" className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" aria-hidden="true" />
-              <span className="font-semibold">Alberta Health Portal</span>
+              <BrandLogo size="sm" />
+              <BrandName className="text-base hidden sm:inline" />
             </Link>
             {healthStatus.connected ? (
               <button
@@ -431,9 +432,9 @@ export default function ChatPage() {
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
           {messages.length === 0 && (
             <div className="text-center py-20 space-y-4">
-              <Activity className="h-12 w-12 text-primary mx-auto" aria-hidden="true" />
+              <Activity className="h-12 w-12 text-[#0277b5] mx-auto" aria-hidden="true" />
               <h1 className="text-2xl font-semibold">
-                Welcome to Alberta Health Portal
+                Welcome to MyAI Health
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
                 {healthStatus.connected

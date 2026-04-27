@@ -2,242 +2,186 @@ import Link from "next/link";
 import {
   Shield,
   MessageSquare,
-  FlaskConical,
-  Pill,
-  Syringe,
-  Activity,
+  CheckCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-function ExampleConversation({
-  question,
-  answer,
-}: {
-  question: string;
-  answer: string;
-}) {
-  return (
-    <div className="space-y-3">
-      <div className="flex justify-end">
-        <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-sm px-4 py-2 max-w-[80%] text-sm">
-          {question}
-        </div>
-      </div>
-      <div className="flex justify-start">
-        <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-2 max-w-[80%] text-sm">
-          {answer}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { BrandLogo, BrandName, GradientText } from "@/components/ui/brand";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-6xl mx-auto flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Activity className="h-6 w-6 text-primary" />
-            <span className="font-semibold text-lg">Alberta Health Portal</span>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Navigation — matches www.myaihealth.ca */}
+      <nav className="sticky top-0 w-full bg-background/90 backdrop-blur-sm border-b border-border z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/chat">
-              <Button>Get Started</Button>
+            <BrandLogo />
+            <BrandName className="text-lg" />
+          </div>
+          <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+            <a href="#how-it-works" className="hover:text-primary transition-colors">How It Works</a>
+            <a href="#features" className="hover:text-primary transition-colors">Features</a>
+            <a href="#privacy" className="hover:text-primary transition-colors">Privacy</a>
+            <Link
+              href="/chat"
+              className="px-4 py-2 bg-[#0277b5] text-white rounded-lg hover:bg-[#026a9e] transition-colors font-medium"
+            >
+              Open Chat
             </Link>
           </div>
+          <Link
+            href="/chat"
+            className="md:hidden px-4 py-2 bg-[#0277b5] text-white rounded-lg hover:bg-[#026a9e] transition-colors font-medium text-sm"
+          >
+            Open Chat
+          </Link>
         </div>
-      </header>
+      </nav>
 
-      {/* Hero */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-            Understand your health records
-            <br />
-            <span className="text-primary">with AI</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Connect your Alberta My Health Records account and ask questions about
-            your lab results, medications, immunizations, and more — in plain language.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Link href="/chat">
-              <Button size="lg">Start Chatting</Button>
+      <main>
+        {/* Hero — matches www.myaihealth.ca style */}
+        <section className="pt-20 pb-16 px-6">
+          <div className="max-w-6xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#f0f9ff] text-[#035f8a] rounded-full text-sm font-medium mb-8">
+              <CheckCircle className="w-4 h-4" aria-hidden="true" />
+              Built for Alberta · Your data, your control
+            </div>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+              Your health records,<br />
+              <GradientText>powered by AI</GradientText>
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+              Ask about your lab results, vaccines, medicines, appointments, and
+              more — in plain language. Connected to Alberta&apos;s official health
+              portals.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/chat"
+                className="px-8 py-4 bg-[#0277b5] text-white rounded-xl hover:bg-[#026a9e] transition-all text-lg font-semibold shadow-lg"
+              >
+                Get Started
+              </Link>
+              <Link
+                href="/welcome"
+                className="px-8 py-4 text-muted-foreground hover:text-primary transition-colors text-lg font-medium"
+              >
+                Learn more →
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how-it-works" className="py-20 px-6 bg-[#f8fafc]">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-4">How it works</h2>
+            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+              Three steps. No technical knowledge required.
+            </p>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  step: "1",
+                  icon: Shield,
+                  title: "Sign in securely",
+                  desc: "Sign in with your MyAlberta Digital ID — on Alberta's real login page. We never see or store your password.",
+                },
+                {
+                  step: "2",
+                  icon: MessageSquare,
+                  title: "Ask questions",
+                  desc: "Ask about your health records in plain language. AI fetches your real data from government portals and explains it clearly.",
+                },
+                {
+                  step: "3",
+                  icon: Shield,
+                  title: "Nothing stored",
+                  desc: "Your health data passes through but is never saved. When you disconnect, it's gone from our side completely.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-[#0277b5] text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">
+                    {item.step}
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section id="features" className="py-20 px-6">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-4">
+              See what you can ask
+            </h2>
+            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+              44 tools across My Health Records and AHS MyChart.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                "Show me my lab results from the last year",
+                "Am I up to date on my vaccinations?",
+                "What medicines am I currently on?",
+                "Explain my blood work in plain language",
+                "Show my upcoming appointments",
+                "Download my latest scan report",
+                "Do I have any active referrals?",
+                "Give me a complete health summary",
+              ].map((q) => (
+                <div
+                  key={q}
+                  className="px-4 py-3 border rounded-xl text-sm text-muted-foreground hover:border-primary hover:text-foreground transition-colors"
+                >
+                  &ldquo;{q}&rdquo;
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Privacy */}
+        <section id="privacy" className="py-20 px-6 bg-[#f8fafc]">
+          <div className="max-w-3xl mx-auto text-center space-y-8">
+            <div className="w-14 h-14 rounded-xl bg-[#0277b5] flex items-center justify-center mx-auto">
+              <Shield className="h-7 w-7 text-white" aria-hidden="true" />
+            </div>
+            <h2 className="text-3xl font-bold">Privacy by design</h2>
+            <div className="grid sm:grid-cols-2 gap-4 text-left">
+              {[
+                { icon: "🔒", title: "No health data stored", desc: "We fetch your data live from government portals. Nothing is saved on our servers." },
+                { icon: "🇨🇦", title: "Canadian data residency", desc: "AI processing runs on Azure Canada East. Your data stays in Canada." },
+                { icon: "🔑", title: "You control access", desc: "Disconnect anytime. Your session is cleared instantly. We never store your credentials." },
+                { icon: "⚕️", title: "Not medical advice", desc: "AI helps you understand your records. Always talk to your doctor about health decisions." },
+              ].map((item) => (
+                <div key={item.title} className="p-5 rounded-xl bg-background border">
+                  <p className="font-medium text-sm">{item.icon} {item.title}</p>
+                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/privacy"
+              className="inline-block text-sm text-primary hover:underline"
+            >
+              Read full privacy policy →
             </Link>
-            <Link href="/privacy">
-              <Button variant="outline" size="lg">How It Works</Button>
-            </Link>
           </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-16 px-4 bg-muted/50">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10">How it works</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Shield className="h-5 w-5 text-primary" />
-                  1. Connect securely
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Sign in with your MyAlberta Digital ID — the same login you use for
-                  the official health portal. We never see or store your password.
-                </CardDescription>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  2. Ask questions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Ask about your health records in plain language. The AI fetches your
-                  real data from government portals and explains it clearly.
-                </CardDescription>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Shield className="h-5 w-5 text-primary" />
-                  3. Nothing stored
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Your health data passes through but is never saved. When you
-                  disconnect, it&apos;s gone. Only your sign-in stays active while you chat.
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Example conversations */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10">See what you can ask</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <FlaskConical className="h-5 w-5 text-primary" />
-                  Lab Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExampleConversation
-                  question="Show me my recent lab results"
-                  answer="Here are your lab results from the last 6 months. Your CBC from Feb 15 shows hemoglobin at 142 g/L (normal range: 130-170). All values are within reference ranges. Would you like me to compare these to your previous results?"
-                />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Pill className="h-5 w-5 text-primary" />
-                  Medications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExampleConversation
-                  question="What medications am I currently on?"
-                  answer="You have 3 active medications: Metformin 500mg (twice daily), Lisinopril 10mg (once daily), and Atorvastatin 20mg (once daily at bedtime). Want me to explain what each one is for?"
-                />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Syringe className="h-5 w-5 text-primary" />
-                  Immunizations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExampleConversation
-                  question="Am I up to date on my vaccines?"
-                  answer="Based on your immunization records, you received your last COVID-19 booster in Oct 2024 and flu shot in Nov 2024. Your Tdap was last administered in 2019 — it's typically recommended every 10 years."
-                />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Health Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExampleConversation
-                  question="Give me an overview of my health"
-                  answer="Here's your health snapshot: 3 active medications, last lab work on Feb 15 (all normal), blood pressure trending down over the last 3 months (great progress!), and 2 upcoming referral appointments."
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Privacy section */}
-      <section className="py-16 px-4 bg-muted/50">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <Shield className="h-12 w-12 text-primary mx-auto" />
-          <h2 className="text-2xl font-bold">Privacy by design</h2>
-          <div className="grid sm:grid-cols-2 gap-4 text-left">
-            <div className="p-4 rounded-lg bg-background border">
-              <p className="font-medium text-sm">🔒 No health data stored</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                We fetch your data live from government portals. Nothing is saved on our servers.
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-background border">
-              <p className="font-medium text-sm">🇨🇦 Canadian data residency</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                All infrastructure hosted in Azure Canada Central, compliant with Alberta&apos;s privacy laws.
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-background border">
-              <p className="font-medium text-sm">🔑 You control access</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Disconnect anytime. Your session is cleared instantly. We never store your login credentials.
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-background border">
-              <p className="font-medium text-sm">🏥 Not medical advice</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                AI helps you understand your records, but always consult your healthcare provider for medical decisions.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t py-8 px-4">
+      <footer className="border-t py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>Alberta Health Portal — AI-powered access to your health records</p>
+          <div className="flex items-center gap-2">
+            <BrandLogo size="sm" />
+            <span>MyAI Health — your Alberta health records, in plain language</span>
+          </div>
           <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
-              Privacy
-            </Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/welcome" className="hover:text-foreground transition-colors">How It Works</Link>
+            <a href="mailto:support@myaihealth.ca" className="hover:text-foreground transition-colors">Support</a>
           </div>
         </div>
       </footer>

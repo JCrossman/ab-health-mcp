@@ -3,17 +3,15 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Activity, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
+import { BrandLogo } from "@/components/ui/brand";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -44,70 +42,70 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-2">
-            <Activity className="h-8 w-8 text-primary" aria-hidden="true" />
+    <main className="min-h-screen flex items-center justify-center px-4 bg-[#f8fafc]">
+      <div className="w-full max-w-sm space-y-8">
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <BrandLogo size="lg" />
           </div>
-          <CardTitle className="text-xl">Sign in</CardTitle>
-          <CardDescription>
-            Sign in to access the Alberta Health Portal
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit} noValidate aria-describedby={error ? "login-error" : undefined}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-                aria-invalid={!!error || undefined}
-                aria-describedby={error ? "login-error" : undefined}
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                aria-invalid={!!error || undefined}
-                aria-describedby={error ? "login-error" : undefined}
-              />
-            </div>
-            <div aria-live="polite" aria-atomic="true">
-              {error && (
-                <p id="login-error" className="text-sm text-destructive" role="alert">{error}</p>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
-              ) : null}
-              Sign In
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              <Link href="/" className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+          <h1 className="text-2xl font-bold">Sign in to MyAI Health</h1>
+          <p className="text-sm text-muted-foreground">
+            Access your Alberta health records with AI
+          </p>
+        </div>
+        <Card>
+          <form onSubmit={handleSubmit} noValidate aria-describedby={error ? "login-error" : undefined}>
+            <CardContent className="space-y-4 pt-6">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                  aria-invalid={!!error || undefined}
+                  aria-describedby={error ? "login-error" : undefined}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  aria-invalid={!!error || undefined}
+                  aria-describedby={error ? "login-error" : undefined}
+                />
+              </div>
+              <div aria-live="polite" aria-atomic="true">
+                {error && (
+                  <p id="login-error" className="text-sm text-destructive" role="alert">{error}</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full bg-[#0277b5] hover:bg-[#026a9e]" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
+                ) : null}
+                Sign In
+              </Button>
+            </CardContent>
+            <CardFooter className="justify-center">
+              <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                 ← Back to home
               </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </main>
   );
 }

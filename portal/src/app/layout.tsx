@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Alberta Health Portal",
+  title: "MyAI Health",
   description:
-    "AI-powered access to your Alberta health records. Ask questions about your lab results, medications, immunizations, and more.",
+    "AI-powered access to your Alberta health records. Ask questions about your lab results, medications, immunizations, and more in plain language.",
 };
 
 export default function RootLayout({
