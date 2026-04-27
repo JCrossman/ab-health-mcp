@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
 
@@ -20,6 +20,59 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // Store the element that triggered the dialog so focus returns on close.
+  const triggerRef = useRef<Element | null>(null);
+
+  // Capture trigger element and manage focus on open/close.
+  useEffect(() => {
+    if (open) {
+      triggerRef.current = document.activeElement;
+      // Focus the first focusable element inside the dialog on next tick.
+      const timer = setTimeout(() => {
+        const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.[0]?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    } else {
+      // Return focus to the triggering element when dialog closes.
+      (triggerRef.current as HTMLElement | null)?.focus();
+    }
+  }, [open]);
+
+  // Focus trap + Escape handler.
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
@@ -59,22 +112,29 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} aria-hidden="true" />
 
-      <div className="relative bg-background rounded-xl shadow-xl max-w-md w-full mx-4 p-6 space-y-4">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="connect-dialog-title"
+        aria-describedby="connect-dialog-desc"
+        className="relative bg-background rounded-xl shadow-xl max-w-md w-full mx-4 p-6 space-y-4"
+      >
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center" aria-hidden="true">
             <Shield className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">Connect Health Account</h2>
+            <h2 id="connect-dialog-title" className="text-lg font-semibold">Connect Health Account</h2>
             <p className="text-sm text-muted-foreground">
               My Health Records &amp; AHS MyChart
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 text-sm text-muted-foreground">
+        <div id="connect-dialog-desc" className="space-y-3 text-sm text-muted-foreground">
           <p>
             A browser window will open to Alberta&apos;s login page where you
             sign in directly with your MyAlberta Digital ID.
@@ -91,31 +151,34 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
-            <p className="text-red-700 dark:text-red-300">{error}</p>
-          </div>
-        )}
+        {/* Status messages announced to screen readers */}
+        <div aria-live="polite" aria-atomic="true">
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" aria-hidden="true" />
+              <p className="text-red-700 dark:text-red-300" role="alert">{error}</p>
+            </div>
+          )}
 
-        {success && (
-          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-            <p className="text-green-700 dark:text-green-300">
-              Connected to Alberta health records!
-            </p>
-          </div>
-        )}
+          {success && (
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
+              <p className="text-green-700 dark:text-green-300">
+                Connected to Alberta health records!
+              </p>
+            </div>
+          )}
 
-        {connecting && (
-          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
-            <Loader2 className="h-4 w-4 text-blue-500 mt-0.5 animate-spin shrink-0" />
-            <p className="text-blue-700 dark:text-blue-300">
-              A Chrome window has opened — please sign in on Alberta&apos;s login page.
-              This window will close automatically after you log in.
-            </p>
-          </div>
-        )}
+          {connecting && (
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+              <Loader2 className="h-4 w-4 text-blue-500 mt-0.5 animate-spin shrink-0" aria-hidden="true" />
+              <p className="text-blue-700 dark:text-blue-300">
+                A Chrome window has opened — please sign in on Alberta&apos;s login page.
+                This window will close automatically after you log in.
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="flex justify-end gap-2 pt-1">
           <Button
@@ -132,17 +195,17 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
           >
             {connecting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                 Waiting for login...
               </>
             ) : success ? (
               <>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
+                <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
                 Connected!
               </>
             ) : (
               <>
-                <Shield className="mr-2 h-4 w-4" />
+                <Shield className="mr-2 h-4 w-4" aria-hidden="true" />
                 Open Alberta Login
               </>
             )}

@@ -80,7 +80,9 @@ Identical to the DATS project. This MCP server:
 
 ## Data Residency
 
-All project infrastructure in Azure Canada Central. Note: conversations are processed by Claude (Anthropic) on US-based servers — health data leaves Canada when sent to Claude for interpretation. This extension does not control Anthropic's data handling. Our infrastructure complies with POPA and HIA (Health Information Act).
+**Beta (portal):** The portal uses Azure OpenAI Canada East (`abhealthmcp-openai-cae`) as the sole AI provider, controlled by `PORTAL_MODEL_MODE=beta-azure-ca` (default). All AI inference stays within Canada. The MCP server infrastructure is in Azure Canada Central. Both comply with POPA and HIA.
+
+**MCP extension:** Conversations are processed by Claude (Anthropic) on US-based servers — health data leaves Canada when sent to Claude for interpretation. This extension does not control Anthropic's data handling.
 
 ## Azure Infrastructure
 
@@ -94,6 +96,7 @@ All resources live in the `ab-health-mcp` resource group, Health MCP subscriptio
 | `ab-health-mcp` | Container App (0.5 vCPU / 1Gi) | Remote mode HTTP server (Phase 3, not yet productized) |
 | `ab-health-mcp-env` | Managed Environment (Consumption) | Hosts the Container App |
 | `abhealthmcpacr` | Container Registry (Basic) | Docker images for Container App |
+| `abhealthmcp-openai-cae` | Azure OpenAI (Canada East) | Portal LLM — GPT-4o deployment `gpt-4o`, 10K TPM (beta) |
 | `myaihealth-insights` | Application Insights | Visitor analytics for myaihealth.ca (cookie-free) |
 | `workspace-abhealthmcpnOID` | Log Analytics Workspace | Backend for App Insights + Container App logs (0.5 GB/day cap) |
 

@@ -6,6 +6,10 @@ MCP server providing passthrough access to Alberta's My Health Records portal (`
 
 **Architecture:** Browser-based authentication via Puppeteer using shared Alberta SSO, then REST API calls to both MHR and MyChart backends using captured session cookies. See `README.md` for full details.
 
+**Two delivery paths:**
+1. **`.mcpb` + Claude Desktop** (production) — data flows directly between the user's machine and Alberta Health.
+2. **Portal chat beta** (pre-launch experiment in `portal/`) — web-first onboarding for non-technical users at `myaihealth.ca/chat`. Uses Azure OpenAI Canada East only during beta. See the session plan at `~/.copilot/session-state/…/plan.md` for active experiment state and ADR-001 (`files/adr-001-swa-migration.md`) for the SWA migration decision.
+
 ## Key Specs
 
 | File | Contents |
@@ -43,7 +47,7 @@ This project handles protected health information under Alberta's Health Informa
 
 1. **Never log PII.** No names, health data, cookie values, or identifiers in logs.
 2. **Never store health data.** Only session cookies are persisted, encrypted.
-3. **Canadian data residency (our infrastructure).** All project infrastructure in Canada Central. Note: Claude (Anthropic) processes conversations on US-based servers.
+3. **Canadian data residency (our infrastructure).** All user-data-handling infrastructure in Canada Central or Canada East. The `myaihealth` Static Web App in Central US is migrating to the Container App (no user data on the current SWA beyond email addresses in the request-access flow). Azure OpenAI (`abhealthmcp-openai-cae`) in Canada East is the only LLM for the portal beta. Claude (Anthropic) for the `.mcpb` path still processes on US servers — disclosed in terms/privacy.
 4. **Encrypt at rest.** AES-256-GCM for stored session cookies.
 5. **Credentials never touch the server.** Users enter credentials directly in the Puppeteer browser window. Only session cookies are captured.
 6. **Never suggest clinical actions.** The MCP server is a data passthrough — it must never flag lab values as abnormal/critical, suggest calling healthcare providers (including 911 or Health Link 811), recommend medication changes, alert about drug interactions, cross-reference clinical data to surface potential issues, or suggest screenings/follow-ups. All clinical interpretation and action recommendations are Claude's responsibility, not the MCP server's. This boundary keeps the tool clearly outside Health Canada's medical device regulations.

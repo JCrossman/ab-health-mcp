@@ -3,6 +3,10 @@
  *
  * Given a user ID and optional model preference, resolves to the
  * appropriate AI SDK LanguageModel instance using the user's stored API key.
+ *
+ * In PORTAL_MODEL_MODE=beta-azure-ca (default), all requests are routed to
+ * the server-configured Azure OpenAI Canada East deployment regardless of
+ * the user's model preference, enforcing Canadian data residency.
  */
 
 import { openai, createOpenAI } from "@ai-sdk/openai";
@@ -21,10 +25,41 @@ interface ModelSelection {
 
 const DEFAULT_MODEL = "gpt-4o";
 
+/** Feature flag: "beta-azure-ca" (default) routes all requests to Azure OpenAI Canada East. */
+const MODEL_MODE = process.env.PORTAL_MODEL_MODE ?? "beta-azure-ca";
+
+/**
+ * Returns the beta Azure OpenAI Canada East model using server env vars.
+ * Throws if required env vars are missing.
+ */
+function resolveAzureModel(): ModelSelection {
+  const apiKey = process.env.AZURE_OPENAI_API_KEY;
+  const resourceName = process.env.AZURE_OPENAI_RESOURCE_NAME;
+  const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-4o";
+  const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? "2024-12-01-preview";
+
+  if (!apiKey || !resourceName) {
+    throw new Error(
+      "Azure OpenAI not configured. Set AZURE_OPENAI_RESOURCE_NAME and AZURE_OPENAI_API_KEY."
+    );
+  }
+
+  const azure = createAzure({ apiKey, resourceName, apiVersion });
+  return {
+    model: azure(deployment) as LanguageModel,
+    providerId: "azure-openai",
+    modelId: deployment,
+    canadianHosted: true,
+  };
+}
+
 /**
  * Resolve a LanguageModel for the given user and model preference.
  *
- * Priority:
+ * In beta-azure-ca mode: always returns the server-configured Azure OpenAI
+ * Canada East deployment, ignoring preferredModel entirely.
+ *
+ * In multi mode, priority:
  * 1. User's explicit model selection (if they have the key)
  * 2. First configured provider's default model
  * 3. Fall back to server's OpenAI key (OPENAI_API_KEY env var)
@@ -33,6 +68,12 @@ export function resolveModel(
   userId: string,
   preferredModel?: string,
 ): ModelSelection {
+  // Beta mode: always use the server-configured Azure OpenAI Canada East deployment.
+  // The preferredModel from the client is intentionally ignored for data residency.
+  if (MODEL_MODE === "beta-azure-ca") {
+    return resolveAzureModel();
+  }
+
   // Try user's preferred model
   if (preferredModel) {
     const resolved = tryResolveModel(userId, preferredModel);
@@ -165,6 +206,8 @@ function getDefaultModel(providerId: string): string | null {
 
 /**
  * Get available models for a user based on their configured API keys.
+ *
+ * In beta-azure-ca mode, returns only the Azure OpenAI Canada East model.
  */
 export function getAvailableModels(userId: string): Array<{
   providerId: string;
@@ -172,6 +215,17 @@ export function getAvailableModels(userId: string): Array<{
   modelId: string;
   canadianHosted: boolean;
 }> {
+  if (MODEL_MODE === "beta-azure-ca") {
+    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-4o";
+    return [
+      {
+        providerId: "azure-openai",
+        providerName: "Azure OpenAI (Canada East)",
+        modelId: deployment,
+        canadianHosted: true,
+      },
+    ];
+  }
   const configured = listUserProviders(userId);
   const models: Array<{
     providerId: string;

@@ -113,15 +113,28 @@ MyChart integration: MyChart REST client, 20 `mc_` prefixed tools, shared SSO au
 
 Phase 3: Remote mode — HTTP transport, zero-storage OAuth tokens, Chrome extension auth, Azure Container Apps. ✅ **Implemented** (not yet productized).
 
+**Portal chat beta (active experiment, pre-launch):** A web-first onboarding path for non-technical users at `myaihealth.ca/chat` (the `portal/` Next.js app). Gated beta, 20–50 invited users. Uses **Azure OpenAI Canada East only** (`PORTAL_MODEL_MODE=beta-azure-ca`). **Full resume state and remaining checklist live in `IMPLEMENTATION-PLAN.md` under "Active Workstream — Portal Chat Beta".** Kept in parallel with the `.mcpb` Claude Desktop path; not a replacement.
+
 ### Azure Infrastructure
 
-All resources in `ab-health-mcp` resource group (Canada Central). Key resources:
-- **Static Web App** (`myaihealth`) — Free tier, hosts landing page + API functions
-- **Blob Storage** (`myaihealthdownloads`) — `.mcpb` bundle distribution
-- **Communication Services** (`myaihealth-comm`) — transactional emails
-- **Container App** (`ab-health-mcp`) — Remote mode HTTP server (Phase 3)
-- **Container Registry** (`abhealthmcpacr`) — Docker images
-- **Application Insights** (`myaihealth-insights`) — anonymous cookie-free visitor analytics on all static pages
-- **Log Analytics** (`workspace-abhealthmcpnOID`) — backend for App Insights + Container App logs (0.5 GB/day cap)
-- **Budget enforcement** — $100/month budget with automated shutdown runbook at 90%/100% via Automation Account + Action Group
+All user-data-handling resources in `ab-health-mcp` resource group, Canada Central or Canada East. Key resources:
+- **Static Web App** (`myaihealth`) — Free tier, Central US ⚠️ **migration in progress** (see ADR-001; being collapsed into the Container App as Next.js SSR for Canadian residency). Hosts landing page + `/api/request-access` today.
+- **Blob Storage** (`myaihealthdownloads`) — `.mcpb` bundle distribution, Canada Central
+- **Communication Services** (`myaihealth-comm`) — transactional emails, global
+- **Container App** (`ab-health-mcp`) — Canada Central. Hosts remote MCP (Phase 3). System-assigned managed identity granted `Key Vault Secrets User` on `abhealthmcp-kv`. Target host for portal (ADR-001 Option C).
+- **Container Registry** (`abhealthmcpacr`) — Docker images, Canada Central
+- **Azure OpenAI** (`abhealthmcp-openai-cae`) — Canada East. `gpt-4o` deployment (model 2024-11-20), 10K TPM. Only LLM for portal beta. Apply for abuse-monitoring opt-out before scaling beyond beta.
+- **Key Vault** (`abhealthmcp-kv`) — Canada Central, RBAC-enabled. Secrets: `azure-openai-key-cae`, `azure-openai-endpoint-cae`.
+- **Application Insights** (`myaihealth-insights`) — anonymous analytics on static pages + portal funnel events (server-side via Node SDK when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set on the Container App)
+- **Log Analytics** (`workspace-abhealthmcpnOID`) — App Insights + Container App logs, 0.5 GB/day cap
+- **Budget enforcement** — $100/month with automated shutdown runbook at 90%/100% (Automation Account + Action Group)
 - **Cost anomaly alert** — ML-based daily anomaly detection
+
+### Portal guardrails (when touching `portal/src/app/api/chat/route.ts`)
+
+The portal chat API enforces three layered guardrails. Preserve all of them when editing:
+- **Scope filter** (`portal/src/lib/chat/scope-filter.ts`) — pre-LLM off-topic short-circuit returning canned redirects without calling the model.
+- **Usage limits** (`portal/src/lib/chat/usage-limits.ts`) — per-user message/conversation/token/abuse quotas. In-memory for beta; thresholds in `portal/src/lib/chat/limits.ts`.
+- **Cost caps** (`portal/src/lib/chat/cost.ts`) — per-user $/day + global $/day + $/month kill-switch with pre-request estimation.
+- **Telemetry** (`portal/src/lib/telemetry/events.ts`) — `trackEvent` wraps App Insights and strips likely-PII (values > 64 chars or containing `@`). Never log prompt content, health data, or identifiers.
+- **Feature flag** — `PORTAL_MODEL_MODE` defaults to `beta-azure-ca` (Azure OpenAI Canada East only). Set to `multi` to re-enable BYOK multi-provider. The chat route ignores client-supplied model in beta mode; enforcement is server-side.

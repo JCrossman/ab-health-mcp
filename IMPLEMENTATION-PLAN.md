@@ -4,6 +4,75 @@
 
 All core infrastructure, MHR health data tools (24), and MyChart tools (20) are implemented and working. Total: 44 tools.
 
+# Implementation Plan
+
+## Status: Phase 1 + 2 Complete, MyChart Integration Complete, v1.1.28
+
+All core infrastructure, MHR health data tools (24), and MyChart tools (20) are implemented and working. Total: 44 tools.
+
+---
+
+## 🟡 Active Workstream — Portal Chat Beta (paused, resume here)
+
+Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`. **15 of 22 tasks done.** Portal code + Canadian infra are complete and building cleanly. Remaining work is user-gated on a DNS cutover decision.
+
+### 👉 To resume: answer these 5 questions, then tell the assistant to dispatch `migrate-swa`
+
+1. Who controls `myaihealth.ca` DNS, and what's the current TTL on the `www` record? (Lower TTL ≥ 24h before cutover.)
+2. Deploy portal into the **existing** Container App `ab-health-mcp` or a **new** one in the same environment? *(Recommended: new one — keeps the MCP server image lean, avoids bundling Chrome.)*
+3. Parallel-run window between portal go-live and deleting the Central US SWA? *(Recommended: 72h to validate `.mcpb` download SAS flow over a weekend.)*
+4. Can the `AZURE_SWA_TOKEN` GitHub secret be retired after migration, or is it used elsewhere?
+5. Any shipped `.mcpb` versions pinned to a non-`www` hostname for `check-update`?
+
+### What shipped
+
+**Infrastructure (Canada Central / Canada East)**
+- [x] Azure resource region audit (only `myaihealth` SWA non-Canadian)
+- [x] ADR-001 selected **Option C**: collapse SWA into Container App as Next.js SSR (`docs/adr-001-swa-migration.md` — see session artifacts)
+- [x] Azure OpenAI `abhealthmcp-openai-cae` (Canada East), `gpt-4o` @ 10K TPM
+- [x] Key Vault `abhealthmcp-kv` (Canada Central) holds `azure-openai-key-cae` + `azure-openai-endpoint-cae`; Container App managed identity granted `Key Vault Secrets User`
+
+**Portal code** (all builds in `portal/`)
+- [x] Locked to Azure OpenAI Canada East via `PORTAL_MODEL_MODE=beta-azure-ca` (multi-provider code preserved)
+- [x] `/welcome` pre-framing page (grade-6, ~450 words)
+- [x] Starter-prompt chips on empty chat
+- [x] 3-layer chat guardrails in `portal/src/lib/chat/`: scope filter (off-topic short-circuit, no LLM call), usage limits (50 msg/day, 20 conv/day, 30K tokens/conv, abuse throttle), cost caps (per-user $2/day, global $10/day, $100/month kill-switch)
+- [x] App Insights funnel in `portal/src/lib/telemetry/events.ts` with PII-scrubbing `trackEvent`
+- [x] Graceful re-auth (inline "Sign in again" button, one auto-retry of last question)
+- [x] Beta invite flow: admin-gated `channel=portal-beta` on `/api/request-access`; HMAC-signed 30-day tokens; `/api/beta-invite/validate`; `scripts/send-beta-invite.ts` CLI
+
+**Copy & accessibility**
+- [x] Plain-language pass — ~32 strings rewritten to grade-6; `copy-glossary.md` at repo root
+- [x] WCAG 2.2 AA audit — 28/32 findings fixed (all 12 blockers)
+
+**Privacy/legal**
+- [x] Two-path privacy story in `static/terms.html`, `portal/src/app/privacy/page.tsx`, `README.md`, `static/index.html`
+- [ ] Canadian privacy lawyer review (required before public launch — not beta)
+
+### What remains (all user-gated)
+
+- [ ] **`migrate-swa`** — execute the Option C migration (blocked on the 5 questions above)
+- [ ] **`verify-residency`** — re-audit post-migration
+- [ ] **`portal-container-deploy`** — wire `APPLICATIONINSIGHTS_CONNECTION_STRING` + Key Vault secret refs (`AZURE_OPENAI_API_KEY=keyvaultref:azure-openai-key-cae`, `AZURE_OPENAI_ENDPOINT=keyvaultref:azure-openai-endpoint-cae`) into the Container App
+- [ ] **`usability-sessions`** — recruit 5 non-technical Albertans, run moderated sessions
+- [ ] **`beta-launch`** — `scripts/send-beta-invite.ts` for first wave
+- [ ] **`beta-readout`** — completion rate, time-to-first-answer, drop-off map, $/user
+- [ ] **`next-step-decision`** — public launch / iterate / pivot back to `.mcpb` installer polish
+
+### Pre-deploy follow-ups
+
+1. **Azure OpenAI abuse-monitoring opt-out** — MS retains prompts up to 30 days by default; apply for modified content filtering opt-out for regulated health workloads.
+2. **Guardrail counters are in-memory** — reset on Container App restart (fine for beta; Redis/Cosmos for public).
+3. **3 deferred a11y items** before beta: streaming-response SR announcements, chart alt-text (`chart-block.tsx`), mobile sidebar nav.
+4. **10K TPM** on Azure OpenAI sized for 20–50 users; monitor + bump if throttled.
+5. **9–12 pre-existing portal lint errors** (unrelated to this work) — separate pass.
+
+### Session artifacts (session-local, may not survive across CLI restarts)
+
+If the working session is still alive, extra context lives in `~/.copilot/session-state/<session-id>/files/`: `region-audit.md`, `adr-001-swa-migration.md`, `azure-openai-provisioning.md`, `keyvault-setup.md`, `a11y-audit.md`. If lost, the info above is sufficient to resume.
+
+---
+
 ### Recent Changes (v1.1.24–v1.1.28)
 - **Response formatting** — Per-tool `FORMATTING:` directives prepended as separate content blocks (table, trend_table, summary_sections, detail, grouped_tables). Server instructions slimmed to ~600 tokens.
 - **Demo mode fixed** — Removed `DEMO_MODE` env var / `user_config`. Demo mode now only activates via `connect_account(demo=true)` prompt. Calling without `demo=true` always exits demo mode.

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { ConnectDialog } from "@/components/health/connect-dialog";
 import { MessageContent } from "@/components/chat/message-content";
 import {
@@ -256,8 +256,8 @@ export default function ChatPage() {
 
   if (authStatus === "loading") {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center h-screen" aria-busy="true" aria-label="Loading">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
       </div>
     );
   }
@@ -281,29 +281,27 @@ export default function ChatPage() {
         <div className="max-w-4xl mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+              <Activity className="h-5 w-5 text-primary" aria-hidden="true" />
               <span className="font-semibold">Alberta Health Portal</span>
             </Link>
             {healthStatus.connected ? (
-              <Badge
-                variant="default"
-                className="gap-1 cursor-pointer"
+              <button
                 onClick={handleDisconnect}
-                title="Click to disconnect"
+                aria-label="Health account connected. Click to disconnect."
+                className={badgeVariants({ variant: "default" }) + " gap-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"}
               >
-                <Plug className="h-3 w-3" />
+                <Plug className="h-3 w-3" aria-hidden="true" />
                 Connected
-              </Badge>
+              </button>
             ) : (
-              <Badge
-                variant="outline"
-                className="gap-1 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+              <button
                 onClick={() => setShowConnect(true)}
-                title="Click to connect your health account"
+                aria-label="Health account not connected. Click to connect."
+                className={badgeVariants({ variant: "outline" }) + " gap-1 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"}
               >
-                <Unplug className="h-3 w-3" />
+                <Unplug className="h-3 w-3" aria-hidden="true" />
                 Connect
-              </Badge>
+              </button>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -312,22 +310,26 @@ export default function ChatPage() {
             <div className="relative">
               <button
                 onClick={() => setShowModelPicker(!showModelPicker)}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs border rounded-lg hover:bg-muted transition-colors"
-                title="Select AI model"
+                aria-haspopup="listbox"
+                aria-expanded={showModelPicker}
+                aria-label={`Selected model: ${selectedModel}. Click to change.`}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs border rounded-lg hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <span className="max-w-[120px] truncate">{selectedModel}</span>
-                <ChevronDown className="h-3 w-3" />
+                <span className="max-w-[120px] truncate" aria-hidden="true">{selectedModel}</span>
+                <ChevronDown className="h-3 w-3" aria-hidden="true" />
               </button>
               {showModelPicker && (
-                <div className="absolute right-0 top-full mt-1 w-72 bg-background border rounded-lg shadow-lg z-50 py-1 max-h-80 overflow-y-auto">
+                <div role="listbox" aria-label="AI model" className="absolute right-0 top-full mt-1 w-72 bg-background border rounded-lg shadow-lg z-50 py-1 max-h-80 overflow-y-auto">
                   {availableModels.map((m) => (
                     <button
                       key={`${m.providerId}:${m.modelId}`}
+                      role="option"
+                      aria-selected={selectedModel === m.modelId}
                       onClick={() => {
                         setSelectedModel(m.modelId);
                         setShowModelPicker(false);
                       }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         selectedModel === m.modelId ? "bg-muted" : ""
                       }`}
                     >
@@ -336,14 +338,14 @@ export default function ChatPage() {
                         <div className="text-xs text-muted-foreground">{m.providerName}</div>
                       </div>
                       <div className="flex items-center gap-1">
-                        {m.canadianHosted && <span className="text-xs">🇨🇦</span>}
+                        {m.canadianHosted && <span className="text-xs" aria-label="Canadian hosted">🇨🇦</span>}
                         {m.isDefault && <Badge variant="outline" className="text-[10px] px-1 py-0">Default</Badge>}
                       </div>
                     </button>
                   ))}
                   {availableModels.length <= 1 && (
                     <div className="px-3 py-2 text-xs text-muted-foreground">
-                      <Link href="/settings/keys" className="text-primary hover:underline">
+                      <Link href="/settings/keys" className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
                         Add API keys
                       </Link>{" "}
                       to unlock more models
@@ -354,36 +356,36 @@ export default function ChatPage() {
             </div>
             )}
             <Link href="/settings/keys">
-              <Button variant="ghost" size="icon" title="AI Keys">
-                <Settings className="h-4 w-4" />
+              <Button variant="ghost" size="icon" aria-label="AI Keys settings">
+                <Settings className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
             <Link href="/settings/mcps">
-              <Button variant="ghost" size="icon" title="Data Sources">
-                <Plug className="h-4 w-4" />
+              <Button variant="ghost" size="icon" aria-label="Data Sources settings">
+                <Plug className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
             <Button
               variant="ghost"
               size="icon"
-              title="Sign out"
+              aria-label="Sign out"
               onClick={() => signOut({ callbackUrl: "/" })}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <main id="main-content" className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
           {messages.length === 0 && (
             <div className="text-center py-20 space-y-4">
-              <Activity className="h-12 w-12 text-primary mx-auto" />
-              <h2 className="text-2xl font-semibold">
+              <Activity className="h-12 w-12 text-primary mx-auto" aria-hidden="true" />
+              <h1 className="text-2xl font-semibold">
                 Welcome to Alberta Health Portal
-              </h2>
+              </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
                 {healthStatus.connected
                   ? "Your health account is connected. Ask me anything about your records."
@@ -401,14 +403,14 @@ export default function ChatPage() {
               
               {healthStatus.connected && (
                 <div className="space-y-3 pt-4">
-                  <p className="text-sm font-medium text-muted-foreground">Try one of these to get started:</p>
-                  <div className="flex flex-wrap gap-2 justify-center">
+                  <p className="text-sm font-medium text-muted-foreground" id="starter-prompts-label">Try one of these to get started:</p>
+                  <div className="flex flex-wrap gap-2 justify-center" role="group" aria-labelledby="starter-prompts-label">
                     <Button
                       variant="outline"
                       className="rounded-full"
                       onClick={() => setInput("Show my latest lab results")}
                     >
-                      <FlaskConical className="h-4 w-4 mr-2" />
+                      <FlaskConical className="h-4 w-4 mr-2" aria-hidden="true" />
                       Show my latest lab results
                     </Button>
                     <Button
@@ -416,7 +418,7 @@ export default function ChatPage() {
                       className="rounded-full"
                       onClick={() => setInput("When was my last tetanus shot?")}
                     >
-                      <Syringe className="h-4 w-4 mr-2" />
+                      <Syringe className="h-4 w-4 mr-2" aria-hidden="true" />
                       When was my last tetanus shot?
                     </Button>
                     <Button
@@ -424,13 +426,13 @@ export default function ChatPage() {
                       className="rounded-full"
                       onClick={() => setInput("List my current medications")}
                     >
-                      <Pill className="h-4 w-4 mr-2" />
+                      <Pill className="h-4 w-4 mr-2" aria-hidden="true" />
                       List my current medications
                     </Button>
                   </div>
                 </div>
               )}
-              <div className="flex flex-wrap gap-2 justify-center pt-4">
+              <div className="flex flex-wrap gap-2 justify-center pt-4" role="group" aria-label="Suggested questions">
                 {[
                   "Show me my recent lab results",
                   "What medications am I on?",
@@ -440,7 +442,7 @@ export default function ChatPage() {
                   <button
                     key={suggestion}
                     onClick={() => setInput(suggestion)}
-                    className="px-3 py-2 text-sm border rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                    className="px-3 py-2 text-sm border rounded-lg hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {suggestion}
                   </button>
@@ -488,12 +490,12 @@ export default function ChatPage() {
                     .replace(/_/g, " ");
 
                   return (
-                    <div key={i} className="flex justify-start">
+                    <div key={i} className="flex justify-start" aria-live="polite" aria-atomic="true">
                       <div className="bg-muted/50 border rounded-lg px-3 py-2 text-xs text-muted-foreground max-w-[85%]">
                         {(toolPart.state === "call" || toolPart.state === "input-available" || toolPart.state === "input-streaming") && (
                           <>
-                            <Loader2 className="inline h-3 w-3 mr-1 animate-spin" />
-                            <span>Fetching {displayName} from {source}...</span>
+                            <Loader2 className="inline h-3 w-3 mr-1 animate-spin" aria-hidden="true" />
+                            <span>Fetching {displayName} from {source}…</span>
                           </>
                         )}
                         {toolPart.state === "output-available" && (
@@ -561,9 +563,9 @@ export default function ChatPage() {
           ))}
 
           {status === "submitted" && (
-            <div className="flex justify-start">
+            <div className="flex justify-start" aria-live="polite" aria-label="Assistant is thinking">
               <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -595,20 +597,22 @@ export default function ChatPage() {
 
           <div ref={messagesEndRef} />
         </div>
-      </div>
+      </main>
 
       {/* Input Area */}
       <div className="border-t bg-background shrink-0">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+            <label htmlFor="chat-input" className="sr-only">Message</label>
             <textarea
+              id="chat-input"
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about your health records..."
+              placeholder="Ask about your health records…"
               rows={1}
-              className="flex-1 resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[40px] max-h-[120px]"
+              className="flex-1 resize-none rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[40px] max-h-[120px]"
               style={{ height: "auto", minHeight: "40px" }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
@@ -619,12 +623,13 @@ export default function ChatPage() {
             <Button
               type="submit"
               size="icon"
+              aria-label={isLoading ? "Sending…" : "Send message"}
               disabled={!input.trim() || isLoading}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4" aria-hidden="true" />
               )}
             </Button>
           </form>

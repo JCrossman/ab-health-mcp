@@ -704,7 +704,7 @@ export async function executeHealthTool(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     if (message === "SESSION_EXPIRED") {
-      return JSON.stringify({ error: true, message: "Health session expired. Please reconnect using the Connect button." });
+      return JSON.stringify({ session_expired: true, error: true, message: "Health session expired. Please reconnect using the Connect button." });
     }
     return JSON.stringify({ error: true, message: `Health API error: ${message}` });
   }

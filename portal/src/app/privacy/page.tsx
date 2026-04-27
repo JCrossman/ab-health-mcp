@@ -4,23 +4,31 @@ import Link from "next/link";
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium"
+      >
+        Skip to main content
+      </a>
+
       <header className="border-b">
         <div className="max-w-4xl mx-auto flex h-14 items-center px-4 gap-4">
           <Link
             href="/"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-1"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back
           </Link>
           <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
+            <Activity className="h-5 w-5 text-primary" aria-hidden="true" />
             <span className="font-semibold">Privacy &amp; Security</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+      <main id="main-content" className="max-w-3xl mx-auto px-4 py-8 space-y-8">
 
         {/* Quick answer */}
         <section className="space-y-3">

@@ -44,18 +44,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
+    <main className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
-            <Activity className="h-8 w-8 text-primary" />
+            <Activity className="h-8 w-8 text-primary" aria-hidden="true" />
           </div>
           <CardTitle className="text-xl">Sign in</CardTitle>
           <CardDescription>
             Sign in to access the Alberta Health Portal
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate aria-describedby={error ? "login-error" : undefined}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
@@ -69,6 +69,8 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
+                aria-invalid={!!error || undefined}
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
             <div className="space-y-2">
@@ -81,27 +83,31 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                aria-invalid={!!error || undefined}
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            <div aria-live="polite" aria-atomic="true">
+              {error && (
+                <p id="login-error" className="text-sm text-destructive" role="alert">{error}</p>
+              )}
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
               ) : null}
               Sign In
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              <Link href="/" className="hover:text-foreground transition-colors">
+              <Link href="/" className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
                 ← Back to home
               </Link>
             </p>
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </main>
   );
 }
