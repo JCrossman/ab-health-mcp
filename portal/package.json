@@ -16,6 +16,7 @@
     "@ai-sdk/react": "^3.0.136",
     "@types/tough-cookie": "^4.0.5",
     "ai": "^6.0.134",
+    "applicationinsights": "^3.14.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
