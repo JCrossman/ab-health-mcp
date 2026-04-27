@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyAI Health — Your Alberta Health Records, Powered by AI</title>
+  <meta name="description" content="Access your Alberta health records with AI. Connect Claude Desktop to My Health Records and AHS MyChart — ask about lab results, vaccines, medicines, vitals, and appointments in plain language.">
+  <link rel="canonical" href="https://www.myaihealth.ca/">
+  <meta name="keywords" content="Alberta health records, My Health Records, AHS MyChart, Connect Care, Claude Desktop, AI health assistant, lab results, vaccines, medicines, MyAlberta Digital ID">
+
+  <!-- Open Graph (Facebook, iMessage, Slack, Discord, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.myaihealth.ca/">
+  <meta property="og:title" content="MyAI Health — Your Alberta Health Records, Powered by AI">
+  <meta property="og:description" content="Connect Claude to your Alberta health data. Ask about lab results, vaccines, medicines, and more — just by asking.">
+  <meta property="og:image" content="https://www.myaihealth.ca/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_CA">
+  <meta property="og:site_name" content="MyAI Health">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MyAI Health — Your Alberta Health Records, Powered by AI">
+  <meta name="twitter:description" content="Connect Claude to your Alberta health data. Ask about lab results, vaccines, medicines, and more — just by asking.">
+  <meta name="twitter:image" content="https://www.myaihealth.ca/og-image.png">
+
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <!-- Azure Application Insights — anonymous visitor analytics -->
+  <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js" crossorigin="anonymous"></script>
+  <script>
+    var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {
+      connectionString: "InstrumentationKey=d11257e1-4ef5-4944-bd87-5d93627b3c60;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=bcdf162b-32a2-40a6-8775-437da297e092",
+      disableCookiesUsage: true
+    }});
+    appInsights.loadAppInsights();
+    appInsights.trackPageView();
+  </script>
+
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .gradient-text {
+      background: linear-gradient(135deg, #0277b5, #035f8a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: #0277b5; /* fallback */
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      html {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "MyAI Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "macOS, Windows",
+    "description": "Claude Desktop extension that connects to Alberta's My Health Records and AHS MyChart. Access lab results, immunizations, medications, vitals, and appointments using natural language.",
+    "url": "https://www.myaihealth.ca",
+    "image": "https://www.myaihealth.ca/og-image.png",
+    "author": {
+      "@type": "Person",
+      "name": "Jeremy Crossman"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "CAD"
+    },
+    "softwareVersion": "1.2",
+    "downloadUrl": "https://www.myaihealth.ca/#request-access",
+    "featureList": "Lab results, immunizations, medications, vitals, blood pressure, blood glucose, diagnostic imaging, procedures, referrals, appointments, allergies, care team, messages, clinical documents",
+    "screenshot": "https://www.myaihealth.ca/demo-screenshot.png"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is MyAI Health?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MyAI Health is a Claude Desktop extension that connects to Alberta's My Health Records portal and AHS MyChart (Connect Care). It lets you ask about your lab results, immunizations, medications, vitals, and appointments in plain language."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my health data stored or shared?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No health data is stored by us. The details depend on how you use it. Claude Desktop extension: your health data goes directly between your computer and Alberta Health — our servers never see it. Your data is then sent to Claude (Anthropic, US-based servers) for your conversation. Web portal beta: your data passes through our Canadian server (Azure Canada Central) and AI (Azure OpenAI Canada East) — everything stays in Canada. In both cases, no health records are written to any database. Only an encrypted sign-in session is kept, for about 10 minutes. Your credentials are entered on Alberta's own sign-in page and never touch our extension."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What do I need to use it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer. No API keys, no terminal, no configuration files."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does this provide medical advice?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. MyAI Health is an information retrieval tool, not a medical device. It helps you access and understand your health records, but it does not provide medical advice, diagnose conditions, or recommend treatments. Always consult your doctor or healthcare provider for medical decisions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which health portals are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "MyAI Health connects to two Alberta health portals: My Health Records (myhealthrecords.alberta.ca) for lab results, immunizations, medications, vitals, imaging, and procedures; and AHS MyChart / Connect Care (myahsconnect.albertahealthservices.ca) for appointments, messages, care team, allergies, clinical documents, and test results."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is it free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does Claude Desktop say 'Installing will grant access to everything on your computer'?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Claude Desktop shows this warning for all extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The source code is open source on GitHub so you can verify this yourself."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I view health records for family members?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes — if a family member has granted you proxy access through AHS MyChart (Connect Care), you can view their health records too. Just ask Claude to list your shared records, then switch to viewing their data. This works for parents checking their children's records, adult children helping elderly parents, or anyone who has been granted shared access."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="bg-white text-navy-900">
+
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-brand-500 focus:text-white focus:rounded-lg focus:outline-none">
+    Skip to main content
+  </a>
+
+  <!-- Navigation -->
+  <nav aria-label="Main navigation" class="fixed top-0 w-full bg-white/90 backdrop-blur-sm border-b border-gray-100 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
+          <svg aria-hidden="true" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        <span class="text-lg font-semibold text-navy-900">MyAI Health</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm text-gray-600">
+        <a href="#features" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Features</a>
+        <a href="#how-it-works" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">How It Works</a>
+        <a href="/demo" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">See It In Action</a>
+        <a href="#accessibility" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Accessibility</a>
+        <a href="#research" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Research</a>
+        <a href="#privacy" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Privacy</a>
+        <a href="#request-access" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Request Access</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content">
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-20 px-6">
+    <div class="max-w-6xl mx-auto text-center">
+      <div class="fade-in">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 text-brand-700 rounded-full text-sm font-medium mb-8">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          Built for Alberta · Your data, your control
+        </div>
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+          Your health records,<br>
+          <span class="gradient-text">powered by AI</span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+          Connect Claude to your Alberta health data. Ask about lab results, vaccines,
+          medicines, appointments, and more — just by asking.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="#request-access" class="px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40">
+            Request Early Access
+          </a>
+          <a href="#demo" class="px-8 py-4 text-gray-600 hover:text-brand-500 transition-colors text-lg font-medium flex items-center gap-2">
+            Try demo mode
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Hero illustration -->
+      <div class="mt-16 max-w-3xl mx-auto fade-in">
+        <picture>
+          <source srcset="/hero.webp" type="image/webp">
+          <img src="/hero.png" alt="AI chat interface connected to health data — lab results, heart rate, medicines, and appointments" width="2752" height="1536" class="w-full rounded-2xl shadow-2xl shadow-brand-500/10 border border-gray-100">
+        </picture>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW Feature Announcement: Family & Caregiver Access -->
+  <section class="py-12 px-6">
+    <div class="max-w-4xl mx-auto fade-in">
+      <div class="relative bg-gradient-to-r from-brand-50 to-blue-50 rounded-2xl p-8 md:p-10 border border-brand-100 overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-brand-100/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div class="relative flex flex-col md:flex-row items-start gap-6">
+          <div class="w-14 h-14 rounded-xl bg-brand-500 flex items-center justify-center shrink-0">
+            <svg aria-hidden="true" class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <span class="inline-flex items-center px-3 py-1 bg-brand-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">New</span>
+              <h2 class="text-2xl md:text-3xl font-bold text-navy-900">Family &amp; Caregiver Access</h2>
+            </div>
+            <p class="text-gray-600 leading-relaxed text-lg mb-4">
+              Now you can view health records for family members who have shared access with you through AHS MyChart. Help elderly parents track their medications, check your child's immunizations, or review test results for anyone who has granted you access.
+            </p>
+            <p class="text-gray-500 leading-relaxed">
+              Just ask Claude: <span class="font-medium text-brand-600">"Do I have access to any shared health records?"</span> — then switch to viewing their data with a simple request.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" aria-labelledby="features-heading" class="py-24 px-6 bg-gray-50">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <h2 id="features-heading" class="text-3xl md:text-4xl font-bold mb-4">What it does</h2>
+        <p class="text-lg text-gray-600 max-w-xl mx-auto">
+          A Claude Desktop extension that connects to Alberta's official health portals.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8 fade-in">
+        <!-- Feature 1 -->
+        <div class="bg-white rounded-2xl p-8 border border-gray-100 hover:border-brand-200 transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-6">
+            <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Ask in Plain Language</h3>
+          <p class="text-gray-600 leading-relaxed">
+            No medical jargon required. Ask Claude anything about your health records the way you'd ask a friend.
+          </p>
+        </div>
+        <!-- Feature 2 -->
+        <div class="bg-white rounded-2xl p-8 border border-gray-100 hover:border-brand-200 transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-6">
+            <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">44 Health Tools</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Lab results, vaccines, medicines, vitals, imaging, procedures, appointments, doctor's notes, and more.
+          </p>
+        </div>
+        <!-- Feature 3 -->
+        <div class="bg-white rounded-2xl p-8 border border-gray-100 hover:border-brand-200 transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-6">
+            <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">One-Click Install</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Download, double-click, done. No Node.js, no terminal, no setup files, no special codes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section id="how-it-works" aria-labelledby="how-it-works-heading" class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <h2 id="how-it-works-heading" class="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
+        <p class="text-lg text-gray-600 max-w-xl mx-auto">
+          Three steps. No technical knowledge required.
+        </p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-12 fade-in">
+        <!-- Step 1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
+          <h3 class="text-xl font-semibold mb-3">Install</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Download the extension file and double-click it. Claude Desktop installs it automatically. You'll see a security warning — that's normal and means your data stays on your computer.
+          </p>
+        </div>
+        <!-- Step 2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+          <h3 class="text-xl font-semibold mb-3">Sign In</h3>
+          <p class="text-gray-600 leading-relaxed">
+            Tell Claude to connect your account. Chrome opens Alberta's real sign-in page — you log in with your MyAlberta Digital ID.
+          </p>
+        </div>
+        <!-- Step 3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+          <h3 class="text-xl font-semibold mb-3">Ask Claude</h3>
+          <p class="text-gray-600 leading-relaxed">
+            "Show me my recent labs." "Am I up to date on my vaccines?" "Explain my blood work." Claude does the rest.
+          </p>
+        </div>
+      </div>
+      <!-- Privacy-by-design note -->
+      <div class="mt-12 fade-in">
+        <div class="max-w-3xl mx-auto bg-green-50 rounded-2xl p-6 md:p-8 border border-green-100">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg aria-hidden="true" class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-green-900 text-lg mb-2">Why does it run on your computer?</h3>
+              <p class="text-green-800 leading-relaxed">With the Claude Desktop extension, your health data goes directly between your computer and Alberta's health portals — it never passes through our servers. Claude Desktop shows a security warning during install because the extension runs locally. <strong>That's the point — it's how we keep your data private.</strong> We chose this approach specifically to protect your health information. (The web portal beta works differently — see the <a href="#privacy" class="underline hover:text-green-900">privacy section</a> below.)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- See It In Action Banner -->
+  <section class="py-16 px-6 bg-gradient-to-r from-brand-50 via-white to-emerald-50">
+    <div class="max-w-4xl mx-auto fade-in">
+      <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+        <div class="flex-1 text-center md:text-left">
+          <h2 class="text-2xl md:text-3xl font-bold mb-3">See what AI finds in your health data</h2>
+          <p class="text-gray-600 mb-6">Real screenshots of Claude analyzing sample Alberta health records — lab trends, medication reviews, blood pressure monitoring, and doctor appointment prep.</p>
+          <a href="/demo" class="inline-flex items-center gap-2 px-6 py-3 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all font-semibold shadow-lg shadow-brand-500/25">
+            View Demo Gallery
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </a>
+        </div>
+        <a href="/demo" class="block w-48 md:w-56 flex-shrink-0 group">
+          <img src="/demo/demo-3.png" alt="Lab trend analysis chart generated by Claude" width="519" height="642" loading="lazy" class="w-full rounded-xl shadow-lg border border-gray-200 transition-transform group-hover:scale-105">
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Try Demo Mode Section -->
+  <section id="demo" aria-labelledby="demo-heading" class="py-24 px-6 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium mb-6">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          No account needed
+        </div>
+        <h2 id="demo-heading" class="text-3xl md:text-4xl font-bold mb-4">Try it right now — Demo Mode</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          See what it looks like when AI reads your health data. Demo mode uses realistic sample data so you can explore all 44 tools — no Alberta account required.
+        </p>
+      </div>
+
+      <!-- Conversation walkthrough -->
+      <div class="max-w-3xl mx-auto fade-in">
+        <div class="space-y-6">
+          <!-- Step 1 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center text-lg font-bold flex-shrink-0 mt-1">1</div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-2xl rounded-tl-md px-5 py-4">
+                <p class="text-gray-800 font-medium">"Connect to health data in demo mode"</p>
+              </div>
+              <p class="text-sm text-gray-500 mt-2 ml-1">Connects instantly — no browser, no login</p>
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center text-lg font-bold flex-shrink-0 mt-1">2</div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-2xl rounded-tl-md px-5 py-4">
+                <p class="text-gray-800 font-medium">"Get a full health report"</p>
+              </div>
+              <p class="text-sm text-gray-500 mt-2 ml-1">Claude gathers labs, medicines, vitals, vaccines, and more across both portals</p>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center text-lg font-bold flex-shrink-0 mt-1">3</div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-2xl rounded-tl-md px-5 py-4">
+                <p class="text-gray-800 font-medium">"What health concerns can you identify? What patterns do you see?"</p>
+              </div>
+              <p class="text-sm text-gray-500 mt-2 ml-1">AI connects the dots — It spots unusual trends and drug interactions you might miss when looking at each page on its own</p>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center text-lg font-bold flex-shrink-0 mt-1">4</div>
+            <div class="flex-1">
+              <div class="bg-gray-100 rounded-2xl rounded-tl-md px-5 py-4">
+                <p class="text-gray-800 font-medium">"Put this in a PDF I can take to my doctor"</p>
+              </div>
+              <p class="text-sm text-gray-500 mt-2 ml-1">Get a doctor-ready summary of findings and questions to discuss</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- What Claude finds -->
+        <div class="mt-14 bg-gradient-to-br from-brand-50 to-emerald-50 rounded-2xl p-8 border border-brand-100">
+          <h3 class="text-xl font-semibold mb-5 text-gray-900">What AI finds in the sample data</h3>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="flex items-start gap-3">
+              <span class="text-amber-500 text-lg mt-0.5"><span role="img" aria-label="Warning">⚠️</span></span>
+              <div>
+                <p class="font-medium text-gray-800">Worsening diabetes control</p>
+                <p class="text-sm text-gray-500">HbA1c trending up: 6.2% → 6.5% → 6.8%</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-red-500 text-lg mt-0.5"><span role="img" aria-label="Critical">🔴</span></span>
+              <div>
+                <p class="font-medium text-gray-800">High heart disease risk</p>
+                <p class="text-sm text-gray-500">High LDL + diabetes + high blood pressure combined</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-amber-500 text-lg mt-0.5"><span role="img" aria-label="Warning">⚠️</span></span>
+              <div>
+                <p class="font-medium text-gray-800">Severe Vitamin D deficiency</p>
+                <p class="text-sm text-gray-500">32 nmol/L (normal: 75–250) — common in Alberta</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-amber-500 text-lg mt-0.5"><span role="img" aria-label="Warning">⚠️</span></span>
+              <div>
+                <p class="font-medium text-gray-800">Kidney function declining</p>
+                <p class="text-sm text-gray-500">eGFR 72 — worth monitoring on Metformin</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-blue-500 text-lg mt-0.5"><span role="img" aria-label="Medication">💊</span></span>
+              <div>
+                <p class="font-medium text-gray-800">Drug and lab result concerns</p>
+                <p class="text-sm text-gray-500">Statin + borderline liver enzymes need watching</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <span class="text-blue-500 text-lg mt-0.5"><span role="img" aria-label="Clipboard">📋</span></span>
+              <div>
+                <p class="font-medium text-gray-800">Uneven blood pressure</p>
+                <p class="text-sm text-gray-500">Mostly controlled but spikes to 145/92</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 mt-6 text-center italic">
+            These are the kinds of patterns that are easy to miss when browsing individual portal pages — but AI sees the full picture.
+          </p>
+        </div>
+
+        <!-- Screenshot and sample report -->
+        <div class="mt-14 fade-in">
+          <p class="text-center text-lg font-semibold text-gray-800 mb-6">See it in action</p>
+          <div class="flex flex-col items-center gap-6">
+            <!-- Clickable screenshot thumbnail -->
+            <a id="demo-screenshot-link" href="/demo-screenshot.png" class="lightbox-link block max-w-2xl w-full cursor-zoom-in group">
+              <picture>
+                <source srcset="/demo-screenshot.webp" type="image/webp">
+                <img src="/demo-screenshot.png" alt="Claude Desktop showing demo health report with abnormal lab values highlighted, alongside a generated PDF summary" width="3186" height="1990" loading="lazy" class="w-full rounded-2xl shadow-xl border border-gray-200 transition-transform group-hover:scale-[1.02]">
+              </picture>
+            </a>
+            <p class="text-sm text-gray-500">Claude analyzes demo health data and generates a PDF report — <span class="font-medium">click to enlarge</span></p>
+            <!-- Lipid trend chart -->
+            <a class="lightbox-link block max-w-2xl w-full cursor-zoom-in group" href="/demo-chart.png">
+              <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 transition-transform group-hover:scale-[1.02]">
+                <picture>
+                  <source srcset="/demo-chart.webp" type="image/webp">
+                  <img src="/demo-chart.png" alt="Lipid panel trend chart showing Total Cholesterol, LDL, HDL, Triglycerides, and Non-HDL tracked over 6 years with target reference lines" width="1468" height="1038" loading="lazy" class="w-full rounded-xl">
+                </picture>
+              </div>
+            </a>
+            <p class="text-sm text-gray-500">Claude charts lab trends over time — spotting patterns like rising LDL and cholesterol — <span class="font-medium">click to enlarge</span></p>
+            <!-- Sample PDF download -->
+            <a href="/Health_Report_Demo_User.pdf" download class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-brand-200 text-brand-600 rounded-xl hover:bg-brand-50 hover:border-brand-300 transition-all font-medium">
+              <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Download Sample Health Report (PDF)
+            </a>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="text-center mt-10">
+          <a href="#request-access" class="inline-flex items-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25">
+            Get the Extension
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </a>
+          <p class="text-sm text-gray-500 mt-3">Demo mode is built-in — try it immediately after installing</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility Benefits Section -->
+  <section id="accessibility" aria-labelledby="accessibility-heading" class="pt-24 pb-12 px-6 bg-gray-50">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-full text-sm font-medium mb-6">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Health data for everyone
+        </div>
+        <h2 id="accessibility-heading" class="text-3xl md:text-4xl font-bold mb-4">Accessibility benefits</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Health portals are complex — multiple logins, dense tables, medical jargon. Talking to AI takes away those problems and makes your health data easy to get to.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto fade-in">
+        <!-- Voice -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div class="text-3xl mb-4"><span role="img" aria-label="Microphone">🎤</span></div>
+          <h3 class="text-lg font-semibold mb-2">Voice interaction</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            Speak naturally to access your health data — no typing required. Claude Desktop supports voice input, helping people who have trouble moving, typing, or seeing.
+          </p>
+        </div>
+        <!-- Plain language -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div class="text-3xl mb-4"><span role="img" aria-label="Book">📖</span></div>
+          <h3 class="text-lg font-semibold mb-2">Plain language explanations</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            AI translates medical jargon into language you understand. Ask follow-up questions, learn about health problems, and go to your next visit ready with questions.
+          </p>
+        </div>
+        <!-- No navigation -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div class="text-3xl mb-4"><span role="img" aria-label="Compass">🧭</span></div>
+          <h3 class="text-lg font-semibold mb-2">No complex navigation</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            One conversation replaces dozens of clicks across two separate portals. No menus, tabs, or page loads — just ask and get answers. Especially helpful for elderly users or anyone overwhelmed by complex interfaces.
+          </p>
+        </div>
+        <!-- Screen reader -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div class="text-3xl mb-4"><span role="img" aria-label="Speaker">🔊</span></div>
+          <h3 class="text-lg font-semibold mb-2">Screen reader friendly</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            Claude's text-based responses work naturally with screen readers — unlike the busy portal pages full of charts and tables that screen readers have trouble with.
+          </p>
+        </div>
+        <!-- Doctor prep -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div class="text-3xl mb-4"><span role="img" aria-label="Clipboard">📋</span></div>
+          <h3 class="text-lg font-semibold mb-2">Doctor visit preparation</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            Generate PDF summaries, organize health concerns, and prepare questions before appointments. Helpful for anyone who finds it hard to explain problems when rushed, feels nervous about health, or is dealing with a tricky health problem.
+          </p>
+        </div>
+        <!-- Multilingual -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+          <div class="text-3xl mb-4"><span role="img" aria-label="Globe">🌍</span></div>
+          <h3 class="text-lg font-semibold mb-2">Multilingual support</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">
+            Claude can explain your health data in languages other than English — important for Alberta's diverse communities where English may not be a first language.
+          </p>
+        </div>
+        <!-- Caregiver -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm md:col-span-2 lg:col-span-3">
+          <div class="flex items-start gap-4 max-w-2xl mx-auto">
+            <div class="text-3xl"><span role="img" aria-label="Family">👨‍👩‍👧</span></div>
+            <div>
+              <h3 class="text-lg font-semibold mb-2">Help for caregivers</h3>
+              <p class="text-gray-600 text-sm leading-relaxed">
+                Family members managing health for elderly parents or dependents can quickly pull a full picture across all their records — labs, medicines, appointments, referrals — without having to learn two different websites.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical Disclaimer -->
+      <div class="mt-12 max-w-3xl mx-auto fade-in">
+        <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="text-2xl flex-shrink-0 mt-0.5"><span role="img" aria-label="Medical">⚕️</span></div>
+            <div>
+              <p class="text-sm font-semibold text-amber-900 mb-3">This tool is not a doctor. Always talk to your doctor about your health.</p>
+              <h3 class="text-lg font-bold text-amber-900 mb-2">Important: Not medical advice</h3>
+              <div class="space-y-3 text-sm text-amber-800 leading-relaxed">
+                <p>• This tool helps you find your health info. It does not give medical advice. It is not a medical device or health service.</p>
+                <p>• <b>Always talk to your doctor about what you find and any health choices</b>. AI can spot patterns but cannot tell you what is wrong or how to treat it.</p>
+                <p>• If you need medical help, do not wait because of what this tool says. If you have a medical emergency, <b>call 911 right away</b>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy & Security Section -->
+  <section id="privacy" aria-labelledby="privacy-heading" class="pt-12 pb-24 px-6 bg-gray-50">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 fade-in">
+        <h2 id="privacy-heading" class="text-3xl md:text-4xl font-bold mb-4">Where your data goes</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Here's exactly what happens when you use MyAI Health. We offer two paths — they work differently.
+        </p>
+      </div>
+
+      <!-- Path tabs / labels -->
+      <div class="fade-in mb-6">
+        <div class="max-w-3xl mx-auto grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-green-200 p-4">
+            <p class="font-semibold text-green-800 mb-1">📦 Claude Desktop extension</p>
+            <p class="text-sm text-gray-600">Data goes direct — our servers never see your health records.</p>
+          </div>
+          <div class="bg-white rounded-xl border border-brand-200 p-4">
+            <p class="font-semibold text-brand-700 mb-1">🌐 Web portal (beta)</p>
+            <p class="text-sm text-gray-600">Data passes through our Canadian server. Everything stays in Canada.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data flow diagram (Claude Desktop path) -->
+      <p class="text-center text-sm font-semibold text-gray-500 mb-2 fade-in">Claude Desktop extension path</p>
+      <div class="fade-in space-y-0">
+
+        <!-- Step 1: You → Alberta -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white rounded-t-2xl border border-gray-100 border-b-0">
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Hospital">🏥</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Your computer talks directly to Alberta Health</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">The extension runs on your computer and fetches your health data straight from Alberta's official portals. With the Claude Desktop extension, your data does not pass through our servers — there's no middleman. <em>(The web portal beta routes data through our Canadian server — see the portal path section above.)</em></p>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex justify-center py-1 bg-gray-50">
+          <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+
+        <!-- Step 2: You → Claude -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white border border-gray-100 border-b-0">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Robot">🤖</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Your health data is sent to Claude for your conversation</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">Claude is an AI made by Anthropic. Their servers are in the <strong>United States</strong>. When Claude reads your health data to answer your questions, that data is sent to Anthropic's servers. Anthropic may keep your conversations for up to 30 days. See <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">Anthropic's privacy policy</a> for details.</p>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex justify-center py-1 bg-gray-50">
+          <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+
+        <!-- Step 3: Nothing stored by us -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white border border-gray-100 border-b-0">
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Wastebasket">🗑️</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Nothing stored by us</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">The extension throws away your health data after each conversation. The only thing saved on your computer is an encrypted login session — no health records, no personal information. Your password is entered directly on Alberta's website and never touches the extension.</p>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex justify-center py-1 bg-gray-50">
+          <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+
+        <!-- Step 4: Protect yourself -->
+        <div class="flex items-start gap-4 md:gap-6 p-6 bg-white rounded-b-2xl border border-gray-100">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+            <span class="text-2xl" role="img" aria-label="Shield">🛡️</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-900">Protect yourself: turn off AI training</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">By default, Anthropic may use your conversations to improve Claude. To prevent this, open Claude Desktop and go to <strong>Settings → Privacy → turn off "Improve Claude"</strong>. This tells Anthropic not to use your health conversations for AI training.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Supporting details -->
+      <div class="mt-8 grid md:grid-cols-2 gap-4 fade-in max-w-lg mx-auto">
+        <div class="bg-white rounded-xl p-5 border border-gray-100 text-center">
+          <div class="text-2xl mb-2">👁️</div>
+          <h4 class="font-semibold text-sm">Read-Only</h4>
+          <p class="text-xs text-gray-500 mt-1">Cannot change or delete anything in your health portals</p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-gray-100 text-center">
+          <div class="text-2xl mb-2">🔓</div>
+          <h4 class="font-semibold text-sm">Open Source</h4>
+          <p class="text-xs text-gray-500 mt-1">See every line of code — <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">View on GitHub</a></p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Use Cases Section -->
+  <section class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Things you can ask</h2>
+        <p class="text-lg text-gray-600 max-w-xl mx-auto">
+          44 tools across My Health Records and AHS MyChart (Connect Care).
+        </p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto fade-in">
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Show me my lab results from the last year and flag anything unusual"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Am I up to date on all my vaccinations?"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"What medicines am I currently on according to AHS Connect Care?"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Explain my most recent blood work in plain language"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Download my latest scans and X-rays report"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Show me my upcoming appointments and any messages from my doctors"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Give me a complete health summary — profile, vaccines, medicines, and recent labs"</p>
+        </div>
+        <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+          <p class="text-brand-700 font-medium">"Do I have any active referrals or pending orders?"</p>
+        </div>
+      </div>
+      <div class="text-center mt-10 fade-in">
+        <p class="text-gray-500 text-sm">
+          Covers lab results · vaccines · medicines · vitals · blood pressure · blood glucose · imaging ·
+          procedures · referrals · appointments · allergies · care team · messages · documents · and more
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Portals Section -->
+  <section class="py-16 px-6 bg-gray-50">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-8 fade-in">
+        <div class="bg-white rounded-2xl p-8 border border-gray-100">
+          <h3 class="text-xl font-semibold mb-4">My Health Records</h3>
+          <p class="text-sm text-gray-500 mb-4">myhealthrecords.alberta.ca</p>
+          <ul class="space-y-2 text-gray-600 text-sm">
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Lab results, scans, and X-rays</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Vaccine records</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Medicines and prescriptions</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Vitals, blood pressure, blood glucose</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Treatments and referrals</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Download files (PDFs and images)</li>
+          </ul>
+        </div>
+        <div class="bg-white rounded-2xl p-8 border border-gray-100">
+          <h3 class="text-xl font-semibold mb-4">AHS MyChart (Connect Care)</h3>
+          <p class="text-sm text-gray-500 mb-4">myahsconnect.albertahealthservices.ca</p>
+          <ul class="space-y-2 text-gray-600 text-sm">
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Appointments & visit history</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Test results & doctor's notes and reports</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Allergies & health issues</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Care team & messages</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Medicines & vaccines</li>
+            <li class="flex items-center gap-2"><span class="text-brand-500">✓</span> Family medical history & goals</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PubMed Research Section -->
+  <section id="research" aria-labelledby="research-heading" class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <h2 id="research-heading" class="text-3xl md:text-4xl font-bold mb-4">Research what your results mean</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          Add the free PubMed connector to Claude and search millions of medical research articles —
+          guided by your own health records.
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-8 fade-in">
+        <!-- What is PubMed -->
+        <div class="bg-white rounded-2xl p-8 border border-gray-100">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+              <svg aria-hidden="true" class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold mb-2">What is PubMed?</h3>
+              <p class="text-gray-600 leading-relaxed">
+                PubMed is a free database of over 36 million medical research articles. It's run by the U.S. National Library of Medicine. Doctors and researchers use it every day to find the latest studies and evidence. When you add it to Claude, you can search it too — just by asking.
+              </p>
+              <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-brand-500 hover:text-brand-600 text-sm font-medium mt-3 transition-colors">
+                Visit PubMed
+                <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy callout -->
+        <div class="bg-green-50 rounded-2xl p-8 border border-green-100">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+              <svg aria-hidden="true" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-green-800 mb-2">Your health information stays private</h3>
+              <p class="text-green-700 leading-relaxed">
+                When Claude searches PubMed, it only sends search words — like "high cholesterol treatment studies." Your name, health data, and personal details are never shared with PubMed. Claude uses your records to pick the right search words, but your private information never leaves your conversation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- How to set it up -->
+        <div class="bg-white rounded-2xl p-8 border border-gray-100">
+          <h3 class="text-xl font-semibold mb-6">How to set it up</h3>
+          <div class="grid sm:grid-cols-3 gap-6">
+            <div class="text-center">
+              <div class="w-12 h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+              <p class="text-gray-600 leading-relaxed">Open Claude Desktop and click <span class="font-semibold text-navy-900">Settings</span></p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+              <p class="text-gray-600 leading-relaxed">Click <span class="font-semibold text-navy-900">Connectors</span>, then find <span class="font-semibold text-navy-900">PubMed</span></p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+              <p class="text-gray-600 leading-relaxed">Click <span class="font-semibold text-navy-900">Connect</span> — that's it!</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 text-center mt-6">PubMed is free. No account or API key needed.</p>
+        </div>
+
+        <!-- Example prompts -->
+        <div>
+          <h3 class="text-xl font-semibold mb-4 text-center">Try asking Claude</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+              <p class="text-brand-700 font-medium">"My last blood work showed high LDL cholesterol — find me recent research on how to lower it naturally"</p>
+            </div>
+            <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+              <p class="text-brand-700 font-medium">"I'm on metformin — what does the latest research say about side effects?"</p>
+            </div>
+            <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+              <p class="text-brand-700 font-medium">"My ferritin levels are low — what do studies say about iron supplements?"</p>
+            </div>
+            <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+              <p class="text-brand-700 font-medium">"Find research about the vaccine I just got and how long immunity lasts"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Request Access Section -->
+  <section id="request-access" aria-labelledby="request-access-heading" class="py-24 px-6">
+    <div class="max-w-xl mx-auto">
+      <div class="text-center mb-10 fade-in">
+        <h2 id="request-access-heading" class="text-3xl md:text-4xl font-bold mb-4">Request early access</h2>
+        <p class="text-lg text-gray-600">
+          We're rolling this out carefully. Submit your info and we'll send you a download link.
+        </p>
+      </div>
+      <form id="access-form" class="space-y-5 fade-in" onsubmit="handleSubmit(event)">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input type="text" id="name" name="name" required maxlength="200"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all"
+            placeholder="Your name">
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="email" id="email" name="email" required maxlength="254"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all"
+            placeholder="you@example.com">
+        </div>
+        <div>
+          <label for="reason" class="block text-sm font-medium text-gray-700 mb-1">Why are you interested? <span class="text-gray-500">(optional)</span></label>
+          <textarea id="reason" name="reason" rows="3" maxlength="2000"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all resize-none"
+            placeholder="Tell us a bit about yourself..."></textarea>
+        </div>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACvoY7v_eP-XzIR1" data-theme="light"></div>
+        <button type="submit" id="submit-btn"
+          class="w-full px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40">
+          Request Access
+        </button>
+        <p class="text-xs text-gray-500 text-center mt-3">This tool is not medical advice. By requesting access, you agree to our <a href="/terms" class="underline hover:text-brand-500">Terms of Use</a>.</p>
+      </form>
+      <div id="success-message" role="status" aria-live="polite" class="hidden text-center py-12 fade-in visible">
+        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+          <svg aria-hidden="true" class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">Request received!</h3>
+        <p class="text-gray-600">We'll review your request and send you a download link by email. This usually takes less than 24 hours.</p>
+      </div>
+      <div id="form-status" role="status" aria-live="polite" class="sr-only"></div>
+    </div>
+  </section>
+
+  <!-- Requirements Section -->
+  <section class="py-16 px-6 bg-gray-50">
+    <div class="max-w-3xl mx-auto text-center fade-in">
+      <h3 class="text-xl font-semibold mb-6">Requirements</h3>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="https://claude.ai/download" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors inline-flex items-center gap-2">
+          Claude Desktop app (required)
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+        <div class="px-4 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-600">
+          <span class="font-medium text-navy-900">MyAlberta Digital ID</span> — with MHR access
+        </div>
+        <div class="px-4 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-600">
+          <span class="font-medium text-navy-900">macOS or Windows</span>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 mt-4">This extension currently only works with the Claude Desktop app — not the web version at claude.ai.</p>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" aria-labelledby="faq-heading" class="py-24 px-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-16 fade-in">
+        <h2 id="faq-heading" class="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
+      </div>
+      <div class="space-y-6 fade-in">
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group" open>
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            What is MyAI Health?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">MyAI Health is a Claude Desktop extension that connects to Alberta's My Health Records portal and AHS MyChart (Connect Care). It lets you ask about your lab results, vaccines, medicines, vitals, and appointments in plain language — no medical jargon required.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Is my health data stored or shared?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">No health data is stored by us — but the details depend on which path you use. <strong>Claude Desktop extension:</strong> your health data goes directly between your computer and Alberta Health; it never hits our servers. It's then sent to Claude (Anthropic) on US-based servers for your AI conversation. <strong>Web portal beta:</strong> your data passes through our Canadian server (Azure Canada Central) and the AI (Azure OpenAI Canada East) — everything stays in Canada. In both cases, no health data is saved to any database. Only an encrypted sign-in session is stored, and only for about 10 minutes. Your username and password are entered directly on Alberta's sign-in page and never touch our servers.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            What do I need to use it?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">You need the Claude Desktop app (macOS or Windows), a MyAlberta Digital ID with My Health Records access, and Google Chrome installed on your computer. No special codes, no command line, no setup files.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Does this provide medical advice?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">No. MyAI Health is a tool that finds your health info. It is not a medical device. It helps you access and understand your health records, but it does not provide medical advice, diagnose conditions, or recommend treatments. Always consult your doctor or healthcare provider for medical decisions.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Which health portals are supported?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">MyAI Health connects to two Alberta health portals: <strong>My Health Records</strong> (myhealthrecords.alberta.ca) for lab results, vaccines, medicines, vitals, imaging, and procedures; and <strong>AHS MyChart / Connect Care</strong> (myahsconnect.albertahealthservices.ca) for appointments, messages, care team, allergies, doctor's notes, and test results.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Is it free?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">The MyAI Health extension is free. You do need a Claude Desktop subscription (from Anthropic) to use it. The extension itself is open source.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Why does Claude Desktop say "Installing will grant access to everything on your computer"?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">Claude Desktop shows this warning for <strong>all</strong> extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The <a href="https://github.com/JCrossman/ab-health-mcp" class="text-brand-500 hover:text-brand-600 underline" target="_blank" rel="noopener noreferrer">source code is open source</a> on GitHub so you can verify this yourself.</p>
+        </details>
+        <details class="bg-white rounded-xl border border-gray-100 p-6 group">
+          <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
+            Can I view health records for family members?
+            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600 leading-relaxed">Yes — if a family member has granted you proxy access through AHS MyChart (Connect Care), you can view their health records too. Just ask Claude to list your shared records, then switch to viewing their data. This works for parents checking their children's records, adult children helping elderly parents, or anyone who has been granted shared access.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Built with -->
+  <section class="py-12 px-6">
+    <div class="max-w-6xl mx-auto text-center fade-in">
+      <p class="text-sm text-gray-500 uppercase tracking-wider font-medium mb-4">Built with</p>
+      <a href="https://github.com/features/copilot" target="_blank" rel="noopener noreferrer">
+        <img src="/github-copilot.png" alt="GitHub Copilot" loading="lazy" class="h-8 w-auto mx-auto opacity-60 hover:opacity-100 transition-opacity">
+      </a>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 border-t border-gray-100">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded bg-brand-500 flex items-center justify-center">
+          <svg aria-hidden="true" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        <span class="text-sm text-gray-500">© 2026 MyAI Health</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm text-gray-500">
+        <a href="https://github.com/JCrossman/ab-health-mcp" target="_blank" rel="noopener noreferrer" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">GitHub</a>
+        <a href="#privacy" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Privacy</a>
+        <a href="/terms" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Terms of Use</a>
+        <a href="mailto:hello@myaihealth.ca" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightbox modal -->
+  <div id="demo-lightbox" role="dialog" aria-modal="true" aria-label="Enlarged image view"
+       class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center cursor-zoom-out p-4">
+    <button id="lightbox-close" class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors p-2" aria-label="Close enlarged image">
+      <svg aria-hidden="true" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+    <img id="demo-lightbox-img" src="" alt="" class="max-w-full max-h-full rounded-lg shadow-2xl">
+  </div>
+
+  <script>
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Form submission
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const form = document.getElementById('access-form');
+      const success = document.getElementById('success-message');
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        reason: document.getElementById('reason').value,
+        turnstileToken: document.querySelector('[name="cf-turnstile-response"]')?.value || '',
+      };
+
+      if (!data.turnstileToken) {
+        btn.textContent = 'Please complete the verification';
+        document.getElementById('form-status').textContent = 'Error: Please complete the verification checkbox.';
+        btn.disabled = false;
+        setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
+        return;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 25000);
+        const response = await fetch('/api/request-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          form.classList.add('hidden');
+          success.classList.remove('hidden');
+          document.getElementById('form-status').textContent = 'Request submitted successfully.';
+        } else {
+          btn.textContent = 'Something went wrong — try again';
+          document.getElementById('form-status').textContent = 'Error: Something went wrong. Please try again.';
+          btn.disabled = false;
+          if (window.turnstile) turnstile.reset();
+          setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
+        }
+      } catch (err) {
+        // First attempt may fail due to Azure cold start — auto-retry once
+        if (!e.target.dataset.retried) {
+          e.target.dataset.retried = 'true';
+          btn.textContent = 'Still working, please wait...';
+          if (window.turnstile) turnstile.reset();
+          // Wait for Turnstile to regenerate token, then retry
+          await new Promise(r => setTimeout(r, 2000));
+          const newToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+          if (newToken) {
+            data.turnstileToken = newToken;
+          }
+          try {
+            const retryRes = await fetch('/api/request-access', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            if (retryRes.ok) {
+              form.classList.add('hidden');
+              success.classList.remove('hidden');
+              document.getElementById('form-status').textContent = 'Request submitted successfully.';
+              return;
+            }
+          } catch {}
+        }
+        btn.textContent = 'Network error — try again';
+        document.getElementById('form-status').textContent = 'Error: Network error. Please try again.';
+        btn.disabled = false;
+        if (window.turnstile) turnstile.reset();
+        setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
+      }
+    }
+
+    // Lightbox for demo images
+    const lightbox = document.getElementById('demo-lightbox');
+    const lightboxImg = document.getElementById('demo-lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
+    let lastFocusedEl = null;
+
+    function openLightbox(triggerEl) {
+      lastFocusedEl = triggerEl;
+      lightboxImg.src = triggerEl.href;
+      lightboxImg.alt = triggerEl.querySelector('img')?.alt || 'Enlarged image';
+      lightbox.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      lightboxClose.focus();
+    }
+
+    function closeLightbox() {
+      lightbox.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (lastFocusedEl) lastFocusedEl.focus();
+    }
+
+    document.querySelectorAll('#demo-screenshot-link, .lightbox-link').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        openLightbox(this);
+      });
+    });
+
+    lightboxClose?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      closeLightbox();
+    });
+
+    lightbox?.addEventListener('click', function(e) {
+      if (e.target === this) closeLightbox();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+        closeLightbox();
+      }
+    });
+  </script>
+
+</body>
+</html>
