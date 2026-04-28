@@ -96,7 +96,7 @@ export default function ChatPage() {
     } catch { /* ignore */ }
   };
 
-  // Detect session_expired marker in tool results and trigger inline re-auth prompt.
+  // Detect session_expired marker in tool results OR in assistant text mentioning sign-in timeout.
   // Only fires for messages beyond lastHandledReauthIndex to avoid re-triggering
   // after a successful re-auth when old expired messages are still in the array.
   useEffect(() => {
@@ -106,6 +106,8 @@ export default function ChatPage() {
       if (i <= lastHandledReauthIndex.current) continue;
       const msg = messages[i];
       if (msg.role !== "assistant") continue;
+
+      // Check tool results for session_expired flag
       for (const part of msg.parts) {
         if (!part.type.startsWith("tool-")) continue;
         const tp = part as { type: string; state: string; result?: unknown };
@@ -116,33 +118,31 @@ export default function ChatPage() {
             lastHandledReauthIndex.current = i;
             setReauthMsgId(msg.id);
             setReauthState("needed");
+            checkHealthStatus();
             return;
           }
         } catch { /* ignore malformed tool results */ }
       }
-    }
-  }, [messages, reauthState]);
 
-  const handleReauth = async () => {
-    setReauthState("loading");
-    try {
-      const res = await fetch("/api/health/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (!data.connected) throw new Error(data.message || "Connection failed");
-      await checkHealthStatus();
-      const shouldAutoRetry = !reauthAutoRetryDone.current && lastUserMessage;
-      reauthAutoRetryDone.current = true;
-      setReauthState("idle");
-      setReauthMsgId(null);
-      if (shouldAutoRetry) {
-        sendMessage({ text: lastUserMessage });
+      // Also detect from LLM text mentioning sign-in timeout
+      for (const part of msg.parts) {
+        if (part.type === "text" && part.text) {
+          if (part.text.includes("sign-in has timed out") || part.text.includes("session expired") || part.text.includes("Sign in again")) {
+            lastHandledReauthIndex.current = i;
+            setReauthMsgId(msg.id);
+            setReauthState("needed");
+            checkHealthStatus();
+            return;
+          }
+        }
       }
-    } catch {
-      setReauthState("error");
     }
+  }, [messages, reauthState, checkHealthStatus]);
+
+  const handleReauth = () => {
+    setReauthState("idle");
+    setReauthMsgId(null);
+    setShowConnect(true);
   };
 
   // Poll health status every 30s
@@ -559,53 +559,20 @@ export default function ChatPage() {
               })}
 
               {/* Inline re-auth prompt — shown after the assistant message that triggered a session expiry */}
-              {reauthMsgId === message.id && message.role === "assistant" && (
+              {reauthMsgId === message.id && message.role === "assistant" && reauthState === "needed" && (
                 <div aria-live="polite" className="flex justify-start">
                   <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm max-w-[85%] space-y-2">
-                    {reauthState === "needed" && (
-                      <>
-                        <p className="text-amber-800 font-medium">
-                          Your sign-in has timed out.
-                        </p>
-                        <Button
-                          size="sm"
-                          onClick={handleReauth}
-                          className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                          <Shield className="h-3 w-3 mr-1.5" />
-                          Sign in again
-                        </Button>
-                      </>
-                    )}
-                    {reauthState === "loading" && (
-                      <p className="text-amber-800 flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin shrink-0" />
-                        Signing you in…
-                      </p>
-                    )}
-                    {reauthState === "error" && (
-                      <>
-                        <p className="text-amber-800 font-medium">
-                          Couldn&apos;t sign you in.
-                        </p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleReauth}
-                            className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          >
-                            Try again
-                          </Button>
-                          <a
-                            href="."
-                            className="text-xs text-amber-700 underline underline-offset-2 hover:no-underline"
-                          >
-                            Refresh the page
-                          </a>
-                        </div>
-                      </>
-                    )}
+                    <p className="text-amber-800 font-medium">
+                      Your Alberta Health sign-in has timed out.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={handleReauth}
+                      className="bg-[#0277b5] hover:bg-[#026a9e]"
+                    >
+                      <Shield className="h-3 w-3 mr-1.5" />
+                      Sign in again
+                    </Button>
                   </div>
                 </div>
               )}
