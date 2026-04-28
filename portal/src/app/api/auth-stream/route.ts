@@ -95,11 +95,20 @@ export async function GET(req: Request) {
       abortSignal.addEventListener("abort", () => cleanup(), { once: true });
 
       try {
-        // Launch headless Puppeteer
+        // Launch headless Puppeteer with persistent profile for SSO cookie reuse
         const executablePath = findChrome();
+        const fs = require("fs");
+        const profileDir = require("path").join(require("os").homedir(), ".mhr-records", "browser-profile");
+        fs.mkdirSync(profileDir, { recursive: true });
+        // Clean stale lock files
+        for (const f of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
+          try { fs.unlinkSync(require("path").join(profileDir, f)); } catch { /* ok */ }
+        }
+
         const browser = await puppeteer.launch({
           headless: true,
           executablePath,
+          userDataDir: profileDir,
           defaultViewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
           args: [
             "--disable-blink-features=AutomationControlled",
@@ -166,6 +175,31 @@ export async function GET(req: Request) {
             message:
               "Alberta's sign-in service is temporarily busy. Please wait 5–10 minutes and try again.",
           });
+          await cleanup();
+          return;
+        }
+
+        // Check if already authenticated (persistent profile may have valid SSO cookies)
+        const currentUrl = page.url();
+        const alreadyLoggedIn = !currentUrl.includes("account.alberta.ca");
+
+        if (alreadyLoggedIn || loginDetected) {
+          // SSO cookies are still valid — skip login, go straight to session establishment
+          send({ type: "status", message: "Already signed in — connecting to your health records..." });
+
+          const streamSession = getAuthStream(streamId, userId);
+          if (streamSession) streamSession.completing = true;
+
+          const authResult = await completeAuthFlow(page);
+          const sessionData = serializeSession(authResult);
+          setHealthSession(userId, sessionData);
+
+          send({
+            type: "done",
+            mhr: authResult.mhrConnected,
+            myChart: authResult.myChartConnected,
+          });
+
           await cleanup();
           return;
         }
