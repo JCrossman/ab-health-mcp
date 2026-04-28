@@ -456,6 +456,117 @@ const toolHandlers: Record<
     return JSON.stringify(data);
   },
 
+  get_height_weight: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const [height, weight, bmi] = await Promise.allSettled([
+      mhrGet(client.mhrJar, "/api/phr/v1/myhealth/height-data-manager", "", params),
+      mhrGet(client.mhrJar, "/api/phr/v1/myhealth/weight-data-manager", "", params),
+      mhrGet(client.mhrJar, "/api/phr/v1/bmi", "", params),
+    ]);
+    return JSON.stringify({
+      height: height.status === "fulfilled" ? height.value : null,
+      weight: weight.status === "fulfilled" ? weight.value : null,
+      bmi: bmi.status === "fulfilled" ? bmi.value : null,
+    });
+  },
+
+  get_exercise: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/exercise", "", params);
+    return JSON.stringify(data);
+  },
+
+  get_sleep: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/sleep-session-data-manager-v2", "", params);
+    return JSON.stringify(data);
+  },
+
+  get_dietary_intake: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/dietary-intake-data-manager", "", params);
+    return JSON.stringify(data);
+  },
+
+  get_insulin: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const [injections, usage] = await Promise.allSettled([
+      mhrGet(client.mhrJar, "/api/phr/v1/myhealth/insulin-injection-data-manager", "", params),
+      mhrGet(client.mhrJar, "/api/phr/v1/myhealth/insulin-injection-use-data-manager", "", params),
+    ]);
+    return JSON.stringify({
+      injections: injections.status === "fulfilled" ? injections.value : null,
+      usage: usage.status === "fulfilled" ? usage.value : null,
+    });
+  },
+
+  get_peak_flow: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/peak-flow-data-manager", "", params);
+    return JSON.stringify(data);
+  },
+
+  get_waist_circumference: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/extendable-data-manager/waist-circumference", "", params);
+    return JSON.stringify(data);
+  },
+
+  get_symptom_journal: async (client, args) => {
+    const params = dateRangeParams(args.date_range as string);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/extendable-data-manager/concern", "", params);
+    return JSON.stringify(data);
+  },
+
+  mc_switch_context: async (client, args) => {
+    if (!client.myChartJar) throw new Error("MyChart not connected");
+    const targetId = args.patient_id as string | undefined;
+
+    if (!targetId) {
+      // List available proxy access
+      const proxyList = await myChartGet(client.myChartJar, `ProxySwitch?noCache=${Math.random()}`);
+      return JSON.stringify({
+        message: "Use patient_id from the list below to switch context.",
+        available: proxyList,
+      });
+    }
+
+    // Navigate to switch context
+    const url = `${MYCHART_BASE}/MyChartPRD/inside.asp?mode=proxyswitch&id=${encodeURIComponent(targetId)}`;
+    const cookies = await client.myChartJar.getCookieString(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { Cookie: cookies, Accept: "text/html", Referer: `${MYCHART_BASE}/MyChartPRD/Home` },
+      redirect: "follow",
+    });
+
+    if (!response.ok) {
+      return JSON.stringify({ error: true, message: `Context switch failed: HTTP ${response.status}` });
+    }
+
+    // Re-fetch CSRF token for the new context
+    if (client.myChartCsrfToken) {
+      try {
+        const csrfUrl = `${MYCHART_BASE}/MyChartPRD/Home/CSRFToken`;
+        const csrfCookies = await client.myChartJar.getCookieString(csrfUrl);
+        const csrfResponse = await fetch(csrfUrl, {
+          headers: { Cookie: csrfCookies, Accept: "text/html", Referer: `${MYCHART_BASE}/MyChartPRD/Home` },
+        });
+        if (csrfResponse.ok) {
+          const csrfHtml = (await csrfResponse.text()).trim();
+          const match = csrfHtml.match(/value="([^"]+)"/);
+          if (match) client.myChartCsrfToken = match[1];
+        }
+      } catch { /* CSRF refresh is best-effort */ }
+    }
+
+    return JSON.stringify({
+      switched: true,
+      patientId: targetId,
+      note: "Context switched. Use mc_* tools to view this patient's data.",
+    });
+  },
+
   // MyChart tools
   mc_get_health_summary: async (client) => {
     if (!client.myChartJar || !client.myChartCsrfToken) throw new Error("MyChart not connected");

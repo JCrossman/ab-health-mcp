@@ -440,6 +440,54 @@ export async function POST(req: Request) {
         z.object({ date_range: dateRangeSchema }),
         getUserId
       ),
+      get_height_weight: healthTool(
+        "Get height, weight, and BMI measurements.",
+        "get_height_weight",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_exercise: healthTool(
+        "Get exercise and physical activity records — includes calories, distance, duration.",
+        "get_exercise",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_sleep: healthTool(
+        "Get sleep session records — includes sleep duration and quality data.",
+        "get_sleep",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_dietary_intake: healthTool(
+        "Get dietary intake records — food and nutrition tracking.",
+        "get_dietary_intake",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_insulin: healthTool(
+        "Get insulin injection and usage records — injection logs and insulin regimen data.",
+        "get_insulin",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_peak_flow: healthTool(
+        "Get peak flow (asthma) readings — peak expiratory flow for respiratory monitoring.",
+        "get_peak_flow",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_waist_circumference: healthTool(
+        "Get waist circumference measurements.",
+        "get_waist_circumference",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
+      get_symptom_journal: healthTool(
+        "Get symptom journal entries — logged symptoms and health concerns.",
+        "get_symptom_journal",
+        z.object({ date_range: dateRangeSchema }),
+        getUserId
+      ),
       mc_get_health_summary: healthTool(
         "Get MyChart health summary.",
         "mc_get_health_summary",
@@ -574,6 +622,14 @@ export async function POST(req: Request) {
         "Check for shared health records and proxy access in MyChart (family member records).",
         "mc_list_proxy_access",
         z.object({}),
+        getUserId
+      ),
+      mc_switch_context: healthTool(
+        "Switch to viewing a family member's health records (proxy access). Call mc_list_proxy_access first to see available patients, then use the patient_id to switch. After switching, all mc_* tools return that patient's data.",
+        "mc_switch_context",
+        z.object({
+          patient_id: z.string().optional().describe("Patient ID from mc_list_proxy_access. Omit to list available patients."),
+        }),
         getUserId
       ),
       download_attachment: healthTool(
