@@ -344,12 +344,12 @@ const toolHandlers: Record<
   },
 
   get_health_overview: async (client) => {
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/vitals-manager", "7962");
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/vitals-manager", "");
     return JSON.stringify(data);
   },
 
   get_user_profile: async (client) => {
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/profile", "7784");
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/profile", "");
     return JSON.stringify(data);
   },
 
@@ -358,65 +358,65 @@ const toolHandlers: Record<
     params.set("labConfiguration", "00000000-0000-0000-0000-000000000000");
     params.set("showOtherSection", "True");
     params.set("ignoreConfig", "True");
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/labresult/getData", "7736", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/labresult/getData", "", params);
     return JSON.stringify(data);
   },
 
   get_medications: async (client) => {
     const params = new URLSearchParams({ type: "all", status: "Medication", includeOrphanRefills: "false" });
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/medication", "7701", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/medication", "8050", params);
     return JSON.stringify(data);
   },
 
   get_immunizations: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/immunization-data-manager", "7695", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/immunization-data-manager", "", params);
     return JSON.stringify(data);
   },
 
   get_vitals: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
     params.set("types", "Pls,Res,Tmp");
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "7715", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "", params);
     return JSON.stringify(data);
   },
 
   get_blood_pressure: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
     params.set("types", "Bp");
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "7715", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "", params);
     return JSON.stringify(data);
   },
 
   get_blood_glucose: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
     params.set("types", "Glu");
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "7715", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "", params);
     return JSON.stringify(data);
   },
 
   get_blood_oxygen: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
     params.set("types", "SpO2");
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "7715", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/VitalSigns", "", params);
     return JSON.stringify(data);
   },
 
   get_referrals: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/referral", "7705", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/referral", "", params);
     return JSON.stringify(data);
   },
 
   get_procedures: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/procedure", "7739", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/procedure", "", params);
     return JSON.stringify(data);
   },
 
   get_diagnostic_imaging: async (client, args) => {
     const params = dateRangeParams(args.date_range as string);
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/diagnosticImaging", "7741", params);
+    const data = await mhrGet(client.mhrJar, "/api/phr/v1/diagnosticImaging", "", params);
     return JSON.stringify(data);
   },
 
