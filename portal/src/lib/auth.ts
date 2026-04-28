@@ -24,8 +24,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 }
 
-// Credentials — development fallback (accepts any email/password)
-if (process.env.NODE_ENV === "development" || process.env.ALLOW_CREDENTIALS_LOGIN === "true") {
+// Credentials — development ONLY (never available in production)
+if (process.env.NODE_ENV === "development") {
   providers.push(
     Credentials({
       name: "Email",

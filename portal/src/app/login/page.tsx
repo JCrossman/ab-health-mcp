@@ -48,7 +48,7 @@ export default function LoginPage() {
   };
 
   // Check if we're in dev mode (credentials login available)
-  const showCredentials = process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_ALLOW_CREDENTIALS === "true";
+  const showCredentials = process.env.NODE_ENV === "development";
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 bg-[#f8fafc]">

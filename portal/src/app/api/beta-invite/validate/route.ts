@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -30,7 +30,11 @@ export async function POST(req: NextRequest) {
   const sig = token.slice(dotIndex + 1);
 
   const expectedSig = createHmac("sha256", secret).update(payload).digest("hex");
-  if (sig !== expectedSig) {
+
+  // Constant-time comparison to prevent timing attacks
+  const sigBuf = Buffer.from(sig, "hex");
+  const expectedBuf = Buffer.from(expectedSig, "hex");
+  if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
     return NextResponse.json({ valid: false });
   }
 
@@ -50,5 +54,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, error: "Invite link has expired." });
   }
 
-  return NextResponse.json({ valid: true, email: parsed.email, expiresAt });
+  return NextResponse.json({ valid: true, expiresAt });
 }

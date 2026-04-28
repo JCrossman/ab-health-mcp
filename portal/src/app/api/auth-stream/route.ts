@@ -19,6 +19,7 @@ import {
   registerAuthStream,
   getAuthStream,
   destroyAuthStream,
+  hasActiveStream,
 } from "@/lib/auth/auth-stream-store";
 import {
   completeAuthFlow,
@@ -26,6 +27,7 @@ import {
   findChrome,
 } from "@/lib/auth/health-auth";
 import { setHealthSession } from "@/lib/auth/health-session-store";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes max
@@ -37,6 +39,22 @@ const VIEWPORT_WIDTH = 1280;
 const VIEWPORT_HEIGHT = 800;
 const LOGIN_TIMEOUT_MS = 180_000; // 3 minutes
 const HEARTBEAT_INTERVAL_MS = 15_000;
+const MAX_TEXT_INPUT_LENGTH = 500;
+
+/** Domains the headless browser is allowed to navigate to. */
+const ALLOWED_DOMAINS = [
+  "account.alberta.ca",
+  "sts.xiduam.ca",
+  "myhealth.alberta.ca",
+  "myhealthrecords.alberta.ca",
+  "console.myhealthrecords.alberta.ca",
+  "myahsconnect.albertahealthservices.ca",
+  "ahs.queue-it.net",
+];
+
+/** Keyboard shortcuts that must be blocked (browser navigation, dev tools). */
+const BLOCKED_KEYS = new Set(["F5", "F11", "F12"]);
+const BLOCKED_CTRL_KEYS = new Set(["l", "n", "t", "w", "r", "u", "j"]);
 
 /**
  * GET — Start an SSE stream of the Alberta login page.
@@ -49,6 +67,15 @@ export async function GET(req: Request) {
 
   const userId = session.user.id;
   const abortSignal = req.signal;
+
+  // Rate limit: max 3 auth streams per 5 minutes
+  const rateLimited = checkRateLimit(`auth-stream:${userId}`, { windowMs: 5 * 60_000, maxRequests: 3 });
+  if (rateLimited) return rateLimited;
+
+  // Only one active stream per user
+  if (hasActiveStream(userId)) {
+    return new Response(JSON.stringify({ error: "Auth stream already active" }), { status: 409 });
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -84,6 +111,14 @@ export async function GET(req: Request) {
         if (heartbeatTimer) clearInterval(heartbeatTimer);
         if (loginTimer) clearTimeout(loginTimer);
         await destroyAuthStream(streamId);
+        // Clean up isolated browser profile directory
+        try {
+          const os = require("os");
+          const path = require("path");
+          const fs = require("fs");
+          const profileDir = path.join(os.tmpdir(), "auth-stream", streamId);
+          fs.rmSync(profileDir, { recursive: true, force: true });
+        } catch { /* best-effort cleanup */ }
         try {
           controller.close();
         } catch {
@@ -95,15 +130,13 @@ export async function GET(req: Request) {
       abortSignal.addEventListener("abort", () => cleanup(), { once: true });
 
       try {
-        // Launch headless Puppeteer with persistent profile for SSO cookie reuse
+        // Launch headless Puppeteer with isolated per-session profile
         const executablePath = findChrome();
+        const os = require("os");
+        const path = require("path");
         const fs = require("fs");
-        const profileDir = require("path").join(require("os").homedir(), ".mhr-records", "browser-profile");
+        const profileDir = path.join(os.tmpdir(), "auth-stream", streamId);
         fs.mkdirSync(profileDir, { recursive: true });
-        // Clean stale lock files
-        for (const f of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
-          try { fs.unlinkSync(require("path").join(profileDir, f)); } catch { /* ok */ }
-        }
 
         const browser = await puppeteer.launch({
           headless: true,
@@ -122,6 +155,19 @@ export async function GET(req: Request) {
 
         const page = await browser.newPage();
         const cdp = await page.createCDPSession();
+
+        // URL allowlist: abort navigation to unauthorized domains
+        page.on("framenavigated", (frame: { url: () => string; parentFrame: () => unknown }) => {
+          if (frame.parentFrame()) return; // only check main frame
+          try {
+            const url = new URL(frame.url());
+            if (url.protocol === "about:" || url.protocol === "data:") return;
+            if (!ALLOWED_DOMAINS.includes(url.hostname)) {
+              send({ type: "error", message: "Navigation blocked — unauthorized domain." });
+              cleanup();
+            }
+          } catch { /* invalid URL — ignore */ }
+        });
 
         // Register the session
         await registerAuthStream({
@@ -175,31 +221,6 @@ export async function GET(req: Request) {
             message:
               "Alberta's sign-in service is temporarily busy. Please wait 5–10 minutes and try again.",
           });
-          await cleanup();
-          return;
-        }
-
-        // Check if already authenticated (persistent profile may have valid SSO cookies)
-        const currentUrl = page.url();
-        const alreadyLoggedIn = !currentUrl.includes("account.alberta.ca");
-
-        if (alreadyLoggedIn || loginDetected) {
-          // SSO cookies are still valid — skip login, go straight to session establishment
-          send({ type: "status", message: "Already signed in — connecting to your health records..." });
-
-          const streamSession = getAuthStream(streamId, userId);
-          if (streamSession) streamSession.completing = true;
-
-          const authResult = await completeAuthFlow(page);
-          const sessionData = serializeSession(authResult);
-          setHealthSession(userId, sessionData);
-
-          send({
-            type: "done",
-            mhr: authResult.mhrConnected,
-            myChart: authResult.myChartConnected,
-          });
-
           await cleanup();
           return;
         }
@@ -366,12 +387,21 @@ export async function POST(req: Request) {
       }
 
       case "keydown": {
+        const key = body.key ?? "";
+        const modifiers = body.modifiers ?? 0;
+        const hasCtrl = (modifiers & 2) !== 0;
+        const hasMeta = (modifiers & 4) !== 0;
+
+        // Block dangerous keyboard shortcuts
+        if (BLOCKED_KEYS.has(key)) break;
+        if ((hasCtrl || hasMeta) && BLOCKED_CTRL_KEYS.has(key.toLowerCase())) break;
+
         await cdp.send("Input.dispatchKeyEvent", {
           type: "keyDown",
-          key: body.key ?? "",
+          key,
           code: body.code ?? "",
-          windowsVirtualKeyCode: keyToVirtualKeyCode(body.key ?? ""),
-          modifiers: body.modifiers ?? 0,
+          windowsVirtualKeyCode: keyToVirtualKeyCode(key),
+          modifiers,
         });
         break;
       }
@@ -388,10 +418,11 @@ export async function POST(req: Request) {
       }
 
       case "text": {
-        // For paste and composition — inserts text directly
-        await cdp.send("Input.insertText", {
-          text: body.text ?? "",
-        });
+        // For paste and composition — length-limited to prevent abuse
+        const text = (body.text ?? "").slice(0, MAX_TEXT_INPUT_LENGTH);
+        if (text) {
+          await cdp.send("Input.insertText", { text });
+        }
         break;
       }
 
