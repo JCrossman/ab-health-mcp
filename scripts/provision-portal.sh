@@ -51,6 +51,7 @@ az containerapp create \
     "AUTH_SECRET=$AUTH_SECRET" \
     "BETA_INVITE_SECRET=$BETA_INVITE_SECRET" \
     "BETA_INVITE_ADMIN_KEY=$BETA_INVITE_ADMIN_KEY" \
+    "BETA_ALLOWED_EMAILS=${BETA_ALLOWED_EMAILS:-}" \
     "NEXT_PUBLIC_APP_URL=https://www.myaihealth.ca"
 
 echo ""

@@ -228,6 +228,19 @@ export async function POST(req: Request) {
   const userId = session.user.id;
   const userHash = anonHash(userId);
 
+  // Beta access gate: only allowlisted emails can use the chat AI
+  const allowedEmails = process.env.BETA_ALLOWED_EMAILS;
+  if (allowedEmails) {
+    const emailList = allowedEmails.split(",").map((e) => e.trim().toLowerCase());
+    const userEmail = (session.user.email ?? userId).toLowerCase();
+    if (!emailList.includes(userEmail)) {
+      return cannedResponse(
+        "Thanks for your interest in MyAI Health! The web chat is currently in private beta. " +
+        "If you'd like to try it, email support@myaihealth.ca to request an invite."
+      );
+    }
+  }
+
   // Burst rate limit (existing): 30 req/min
   const rateLimited = checkRateLimit(`chat:${userId}`, RATE_LIMITS.chat);
   if (rateLimited) return rateLimited;
