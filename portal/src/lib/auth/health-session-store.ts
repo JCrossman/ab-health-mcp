@@ -1,17 +1,20 @@
 /**
  * Per-user health session store for the portal.
  *
- * Stores serialized health session data (cookies, CSRF tokens) in memory
+ * Stores encrypted health session data (cookies, CSRF tokens) in memory
  * per authenticated portal user. Sessions expire after 10 minutes of
  * inactivity (matching Alberta's session timeout).
  *
+ * Session data is encrypted at rest with AES-256-GCM.
  * No health data is stored — only session tokens needed to make API calls.
  */
 
 import type { HealthSessionData } from "./health-auth";
+import { encryptSession, decryptSession } from "../crypto/session-crypto";
 
 interface SessionEntry {
-  data: HealthSessionData;
+  /** AES-256-GCM encrypted JSON of HealthSessionData */
+  encryptedData: string;
   lastAccessed: number;
 }
 
@@ -40,7 +43,8 @@ export function setHealthSession(
   userId: string,
   data: HealthSessionData
 ): void {
-  sessions.set(userId, { data, lastAccessed: Date.now() });
+  const encryptedData = encryptSession(JSON.stringify(data));
+  sessions.set(userId, { encryptedData, lastAccessed: Date.now() });
 }
 
 export function getHealthSession(
@@ -55,7 +59,12 @@ export function getHealthSession(
   }
 
   entry.lastAccessed = Date.now();
-  return entry.data;
+  try {
+    return JSON.parse(decryptSession(entry.encryptedData)) as HealthSessionData;
+  } catch {
+    sessions.delete(userId);
+    return null;
+  }
 }
 
 export function clearHealthSession(userId: string): void {

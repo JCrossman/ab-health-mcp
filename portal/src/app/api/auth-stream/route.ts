@@ -146,7 +146,6 @@ export async function GET(req: Request) {
           args: [
             "--disable-blink-features=AutomationControlled",
             "--disable-infobars",
-            "--no-sandbox",
             "--disable-setuid-sandbox",
             "--disable-dev-shm-usage",
             "--disable-gpu",

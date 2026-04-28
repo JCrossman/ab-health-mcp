@@ -54,13 +54,15 @@ COPY --from=builder /app/public ./public
 
 # Non-root user for security
 RUN groupadd -r portal && useradd -r -g portal portal \
-    && mkdir -p /home/portal \
+    && mkdir -p /home/portal /dev/shm \
     && chown -R portal:portal /app /home/portal
 USER portal
 
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+# Chrome sandbox works with non-root user + --disable-setuid-sandbox
+# Container must be run with --shm-size=256m or tmpfs mount at /dev/shm
 
 EXPOSE 3000
 
