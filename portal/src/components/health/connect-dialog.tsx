@@ -160,16 +160,16 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
         {/* Status messages */}
         <div aria-live="polite" aria-atomic="true">
           {error && (
-            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" aria-hidden="true" />
-              <p className="text-red-700 dark:text-red-300" role="alert">{error}</p>
+              <p className="text-red-700" role="alert">{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
-              <p className="text-green-700 dark:text-green-300">
+              <p className="text-green-700">
                 Connected to Alberta health records!
               </p>
             </div>

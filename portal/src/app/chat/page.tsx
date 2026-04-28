@@ -561,10 +561,10 @@ export default function ChatPage() {
               {/* Inline re-auth prompt — shown after the assistant message that triggered a session expiry */}
               {reauthMsgId === message.id && message.role === "assistant" && (
                 <div aria-live="polite" className="flex justify-start">
-                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-sm max-w-[85%] space-y-2">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm max-w-[85%] space-y-2">
                     {reauthState === "needed" && (
                       <>
-                        <p className="text-amber-800 dark:text-amber-200 font-medium">
+                        <p className="text-amber-800 font-medium">
                           Your sign-in has timed out.
                         </p>
                         <Button
@@ -578,14 +578,14 @@ export default function ChatPage() {
                       </>
                     )}
                     {reauthState === "loading" && (
-                      <p className="text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                      <p className="text-amber-800 flex items-center gap-2">
                         <Loader2 className="h-3 w-3 animate-spin shrink-0" />
                         Signing you in…
                       </p>
                     )}
                     {reauthState === "error" && (
                       <>
-                        <p className="text-amber-800 dark:text-amber-200 font-medium">
+                        <p className="text-amber-800 font-medium">
                           Couldn&apos;t sign you in.
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -599,7 +599,7 @@ export default function ChatPage() {
                           </Button>
                           <a
                             href="."
-                            className="text-xs text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:no-underline"
+                            className="text-xs text-amber-700 underline underline-offset-2 hover:no-underline"
                           >
                             Refresh the page
                           </a>
@@ -629,13 +629,13 @@ export default function ChatPage() {
 
           {error && (
             <div className="flex justify-center">
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 text-sm max-w-md space-y-2">
-                <p className="font-medium text-amber-800 dark:text-amber-200">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm max-w-md space-y-2">
+                <p className="font-medium text-amber-800">
                   {error.message?.includes("API Key") || error.message?.includes("provider configured")
                     ? "No AI service set up"
                     : "Something went wrong"}
                 </p>
-                <p className="text-amber-700 dark:text-amber-300">
+                <p className="text-amber-700">
                   {error.message?.includes("API Key") || error.message?.includes("provider configured")
                     ? "Add an AI key in Settings to start chatting."
                     : error.message || "Please try again."}

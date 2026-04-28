@@ -54,9 +54,14 @@ function resolveAzureModel(): ModelSelection {
         "Azure AI Foundry endpoint set but AZURE_OPENAI_API_KEY is missing."
       );
     }
-    const azure = createAzure({ baseURL: foundryEndpoint, apiKey, apiVersion });
+    const azure = createAzure({
+      baseURL: foundryEndpoint,
+      apiKey,
+      apiVersion,
+      useDeploymentBasedUrls: true,
+    });
     return {
-      model: azure(deployment) as LanguageModel,
+      model: azure.chat(deployment) as LanguageModel,
       providerId: "azure-foundry",
       modelId: deployment,
       canadianHosted: true,

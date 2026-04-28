@@ -219,9 +219,9 @@ export default function McpSettingsPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Custom Data Sources</h2>
 
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex gap-3 text-sm">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-3 text-sm">
             <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-amber-700 dark:text-amber-300">
+            <p className="text-amber-700">
               Custom data sources can read your health data when turned on. Only add
               sources you trust.
             </p>

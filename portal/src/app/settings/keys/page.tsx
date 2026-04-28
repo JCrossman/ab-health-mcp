@@ -135,13 +135,13 @@ export default function ApiKeysPage() {
           </p>
         </section>
 
-        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex gap-3">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-medium text-amber-800 dark:text-amber-200">
+            <p className="font-medium text-amber-800">
               Data residency notice
             </p>
-            <p className="text-amber-700 dark:text-amber-300">
+            <p className="text-amber-700">
               When you use an AI service hosted outside Canada, your health data
               will be processed outside Canada. Look for the 🇨🇦 badge for
               Canadian-hosted options.
