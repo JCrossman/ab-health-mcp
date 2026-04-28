@@ -344,8 +344,44 @@ const toolHandlers: Record<
   },
 
   get_health_overview: async (client) => {
-    const data = await mhrGet(client.mhrJar, "/api/phr/v1/myhealth/vitals-manager", "");
-    return JSON.stringify(data);
+    // Composite tool: fetch from multiple MHR + MyChart endpoints in parallel
+    const results = await Promise.allSettled([
+      mhrGet(client.mhrJar, "/api/phr/v1/profile", "").catch(() => null),
+      mhrGet(client.mhrJar, "/api/phr/v1/medication", "8050",
+        new URLSearchParams({ type: "all", status: "Medication", includeOrphanRefills: "false" })
+      ).catch(() => null),
+      mhrGet(client.mhrJar, "/api/phr/v1/labresult/getData", "",
+        (() => {
+          const p = dateRangeParams("Last3Months");
+          p.set("labConfiguration", "00000000-0000-0000-0000-000000000000");
+          p.set("showOtherSection", "True");
+          p.set("ignoreConfig", "True");
+          return p;
+        })()
+      ).catch(() => null),
+      client.myChartJar && client.myChartCsrfToken
+        ? myChartPost(client.myChartJar, client.myChartCsrfToken, "api/allergies/LoadAllergies", { isHealthSummary: true }).catch(() => null)
+        : Promise.resolve(null),
+      client.myChartJar && client.myChartCsrfToken
+        ? myChartPost(client.myChartJar, client.myChartCsrfToken, "api/HealthIssues/LoadHealthIssuesData", { isHealthSummary: true }).catch(() => null)
+        : Promise.resolve(null),
+      client.myChartJar && client.myChartCsrfToken
+        ? myChartPost(client.myChartJar, client.myChartCsrfToken, "api/immunizations/LoadImmunizations").catch(() => null)
+        : Promise.resolve(null),
+    ]);
+
+    const extract = (r: PromiseSettledResult<unknown>) => r.status === "fulfilled" ? r.value : null;
+
+    return JSON.stringify({
+      profile: extract(results[0]),
+      medications_mhr: extract(results[1]),
+      recent_lab_results: extract(results[2]),
+      allergies_mychart: extract(results[3]),
+      health_issues_mychart: extract(results[4]),
+      immunizations_mychart: extract(results[5]),
+      sources: { mhr: client.mhrConnected, myChart: client.myChartConnected },
+      hint: "For more detail, use specific tools (get_lab_results, mc_get_allergies, etc). For charts, output a ```chart code block.",
+    });
   },
 
   get_user_profile: async (client) => {
