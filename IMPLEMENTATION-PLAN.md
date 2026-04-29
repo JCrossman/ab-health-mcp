@@ -68,6 +68,167 @@ Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`.
 4. **10K TPM** on Azure OpenAI sized for 20–50 users; monitor + bump if throttled.
 5. **9–12 pre-existing portal lint errors** (unrelated to this work) — separate pass.
 
+### Azure Cutover Procedure — Zero-Downtime SWA → Container App Migration
+
+Migrate `www.myaihealth.ca` from Azure Static Web App to a **new** Container App (`ab-health-portal`) running the Next.js portal as SSR. The existing `ab-health-mcp` Container App (MCP HTTP server) is unchanged.
+
+**Target state:**
+
+| Component | Where | URL |
+|-----------|-------|-----|
+| Landing page + Chat + API functions | Container App (`ab-health-portal`) | `www.myaihealth.ca` → Container App |
+| .mcpb bundle | Azure Blob Storage (unchanged) | Same SAS URLs |
+| MCP server (Phase 3) | Container App (`ab-health-mcp`, unchanged) | Not public-facing |
+
+**Critical dependency:** The `.mcpb` extension installed on users' machines calls `https://www.myaihealth.ca/api/check-update?v=X.X.X` and `https://www.myaihealth.ca/api/download-latest`. These **must keep working** during and after cutover.
+
+#### Phase 0: Pre-cutover prep (day before)
+
+1. **Lower DNS TTL** to 300s (5 min) on the `www` CNAME record. Wait 24h for old TTL to expire from caches.
+2. **Port SWA API functions to Next.js routes:**
+   - `api/check-update` → `portal/src/app/api/check-update/route.ts`
+   - `api/download-latest` → `portal/src/app/api/download-latest/route.ts`
+   - `api/request-access` → `portal/src/app/api/request-access/route.ts`
+3. **Add env vars to provision script** for the API functions: `STORAGE_CONNECTION_STRING`, `ACS_CONNECTION_STRING`, `ACS_FROM_EMAIL`, `NOTIFY_EMAIL`, `TURNSTILE_SECRET_KEY`
+4. **Migrate landing page** — Copy `static/index.html` content into `portal/src/app/page.tsx` as a Next.js page, preserving every section, class, and style exactly.
+5. **Migrate static assets** — Copy all images, PDFs, fonts, favicon, og-image from `static/` to `portal/public/`.
+6. **Migrate terms/demo** — Convert `terms.html` and `demo.html` into Next.js pages at `/terms` and `/demo`.
+7. **Migrate SEO** — Bring over structured data (JSON-LD), Open Graph tags, sitemap.xml, robots.txt.
+8. **Unify navigation** — Landing page nav links to `/chat`; chat page nav matches landing page style.
+
+#### Phase 1: Deploy the new site (cutover day)
+
+9. **Run provisioning script:** `bash scripts/provision-portal.sh`
+10. **Push to main** — CI/CD builds the Docker image and deploys to the Container App.
+11. **Verify via Container App FQDN** (before DNS change):
+    - [ ] Landing page loads (pixel-perfect match)
+    - [ ] `/chat` works (Google OAuth + AI responses)
+    - [ ] `/api/check-update?v=1.0.0` returns `{ updateAvailable: true, ... }`
+    - [ ] `/api/download-latest` redirects to SAS URL
+    - [ ] `/api/request-access` (POST with test data)
+    - [ ] "Connect" → Alberta SSO login page streams correctly
+    - [ ] Health data queries return results
+    - [ ] `/terms`, `/demo`, `/welcome`, `/privacy` all load
+
+#### Phase 2: DNS cutover
+
+12. **Add custom domain to Container App:**
+    ```bash
+    az containerapp hostname add \
+      --name ab-health-portal \
+      --resource-group ab-health-mcp \
+      --hostname www.myaihealth.ca
+    ```
+13. **Get the Container App's verification TXT record and FQDN:**
+    ```bash
+    az containerapp hostname list \
+      --name ab-health-portal \
+      --resource-group ab-health-mcp
+    ```
+14. **Update DNS records** — Add TXT record for domain verification (if required). Change `www` CNAME from SWA → Container App FQDN.
+15. **Bind managed TLS certificate:**
+    ```bash
+    az containerapp hostname bind \
+      --name ab-health-portal \
+      --resource-group ab-health-mcp \
+      --hostname www.myaihealth.ca \
+      --environment ab-health-mcp-env \
+      --validation-method CNAME
+    ```
+
+#### Phase 3: Parallel-run validation (72 hours)
+
+16. Both the SWA and Container App are live — SWA still exists, just no traffic hitting it.
+17. **Verify everything via real URL:**
+    - [ ] `https://www.myaihealth.ca` shows landing page
+    - [ ] `https://www.myaihealth.ca/chat` works end-to-end
+    - [ ] Existing `.mcpb` installs can check for updates
+    - [ ] New access requests come through
+    - [ ] TLS certificate is valid and not expiring
+18. **Monitor:** Container App logs, App Insights error spikes, Azure AI Foundry call success rate.
+
+#### Phase 4: Decommission SWA (after 72h)
+
+19. **Remove SWA deploy step from CI/CD** (`.github/workflows/ci-cd.yml`) — delete the "Deploy website to Azure Static Web Apps" step, remove `AZURE_SWA_TOKEN` from GitHub secrets.
+20. **Delete the Static Web App resource:**
+    ```bash
+    az staticwebapp delete --name myaihealth --resource-group ab-health-mcp
+    ```
+21. **Restore DNS TTL** to 3600s (1 hour) for caching efficiency.
+
+#### Rollback plan
+
+If the Container App has issues after DNS cutover:
+1. Revert DNS CNAME back to the SWA hostname (takes effect within TTL — 5 min with lowered TTL).
+2. The SWA is still running and serving the original site.
+3. Fix the Container App issue, then re-attempt cutover.
+
+#### Risk mitigation
+
+| Risk | Mitigation |
+|------|------------|
+| DNS propagation delay | TTL lowered to 300s 24h before cutover |
+| API functions break | Port and test before DNS change; SWA stays as fallback |
+| TLS certificate delay | Azure managed certs can take 15 min; verify before announcing |
+| Container App cold start | Set min-replicas=1 (already configured in provision script) |
+| `.mcpb` update checks fail | Test `/api/check-update` and `/api/download-latest` on Container App FQDN before DNS switch |
+
+---
+
+### Security Hardening (Phase 2 — Post-Beta)
+
+Deferred from initial security audit. All critical/high items from Phase 1 are fixed and pushed. These are important for production hardening but not blocking for beta.
+
+#### C3. Encrypt health session store at rest (CRITICAL)
+
+**Problem:** Health session cookies stored as plaintext in-memory Map. Any heap dump exposes all active sessions.
+
+**File:** `portal/src/lib/auth/health-session-store.ts`
+
+**Approach:** Reuse the AES-256-GCM pattern from `portal/src/lib/crypto/api-keys.ts`. Encrypt serialized `HealthSessionData` JSON before storing in Map, decrypt on read. Use `MHR_ENCRYPTION_KEY` env var with fallback to `AUTH_SECRET`. Fix static salt issue (H6) at the same time — use random salt prepended to ciphertext (`salt:iv:tag:ciphertext`).
+
+#### H3. AI output guardrails for PHI (HIGH)
+
+**Problem:** No output-side filtering for raw health data JSON or prompt injection in AI responses.
+
+**File:** `portal/src/app/api/chat/route.ts` (in `streamText` `onFinish` callback)
+
+**Approach:**
+1. Add `containsSuspiciousOutput(text)` — detects JSON blobs >500 chars, raw cookie strings, patterns like `"mhrCookies":`.
+2. Wire into `onFinish` callback — emit `chat.suspicious_output` telemetry event.
+3. Strengthen system prompt: "Never output raw JSON from tool results."
+4. Phase 2b: integrate Azure AI Content Safety API for real-time PHI detection.
+
+#### H4. Re-enable Chrome sandbox in Docker (HIGH)
+
+**Problem:** `--no-sandbox` disables Chromium's security sandbox in the Container App.
+
+**Files:** `portal/Dockerfile`, `portal/src/app/api/auth-stream/route.ts`
+
+**Approach:** Configure Docker for sandbox support — `--shm-size=256m` or tmpfs at `/dev/shm`, remove `--no-sandbox` (keep `--disable-setuid-sandbox`), update `provision-portal.sh` for shared memory.
+
+#### H5. Persistent rate limiting with Redis (HIGH)
+
+**Problem:** All rate limits, usage quotas, and spend caps are in-memory — reset on container restart.
+
+**Files:** `portal/src/lib/rate-limit.ts`, `portal/src/lib/chat/usage-limits.ts`, `portal/src/lib/chat/cost.ts`
+
+**Approach:** Azure Cache for Redis (Basic tier, Canada Central, ~$20/month). Replace in-memory Maps with Redis INCR/HSET. Fallback to in-memory if Redis unavailable. Update `provision-portal.sh`.
+
+#### L5. HIA audit trail for health data access (LOW → MEDIUM for compliance)
+
+**Problem:** Alberta HIA Section 64(1) requires audit trails for health information access. Current telemetry is anonymous.
+
+**Approach:** Encrypted, append-only audit log in Azure Table Storage (Canada Central). `logHealthAccess(userId, toolName, timestamp)` encrypted with AES-256-GCM. Wire into `executeHealthTool()` in `direct-client.ts`. Retention: 2 years per HIA.
+
+#### H6. Fix static KDF salt
+
+**Problem:** `scryptSync(secret, "api-key-salt", 32)` uses a hardcoded static salt.
+
+**Fix:** Included with C3 — use random salt prepended to ciphertext. Apply same fix to `api-keys.ts`.
+
+---
+
 ### Session artifacts (session-local, may not survive across CLI restarts)
 
 If the working session is still alive, extra context lives in `~/.copilot/session-state/<session-id>/files/`: `region-audit.md`, `adr-001-swa-migration.md`, `azure-openai-provisioning.md`, `keyvault-setup.md`, `a11y-audit.md`. If lost, the info above is sufficient to resume.
