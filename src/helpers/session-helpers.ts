@@ -15,7 +15,7 @@ import { MHRClient } from '../api/mhr-client.js';
 import { MyChartClient } from '../api/mychart-client.js';
 import { AuthRequiredError, SessionExpiredError, ApiError, NetworkError } from '../utils/errors.js';
 import { sessionContext } from '../server/session-context.js';
-import { isDemoMode, createDemoMHRClient, createDemoMyChartClient } from './demo-data.js';
+import { isDemoMode, createDemoMHRClient, createDemoMyChartClient } from './demo/index.js';
 
 const sessionManager = new SessionManager();
 

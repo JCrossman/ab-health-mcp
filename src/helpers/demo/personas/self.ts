@@ -1,11 +1,9 @@
 /**
- * Demo mode mock data and clients.
+ * Demo persona — Self (the logged-in Demo User).
  *
- * When DEMO_MODE=true, these mock clients replace the real MHR and MyChart
- * clients so Anthropic directory reviewers can explore all tools without
- * an Alberta health portal account.
- *
- * All data is clearly fictional — "Demo User" with sample records.
+ * Owns the data and the mock MHR + MyChart clients for the user whose
+ * credentials drove the (simulated) sign-in. All four personas in the
+ * demo registry follow this shape; see personas/index.ts for the contract.
  *
  * Clinical narrative: 39-year-old male with Type 2 Diabetes, Hypertension,
  * Hyperlipidemia, and Vitamin D deficiency. Lab trends show worsening
@@ -14,20 +12,16 @@
  * labs, medications, vitals, and conditions.
  */
 
-import type { MHRClient } from '../api/mhr-client.js';
-import type { MyChartClient } from '../api/mychart-client.js';
+import type { MHRClient } from '../../../api/mhr-client.js';
+import type { MyChartClient } from '../../../api/mychart-client.js';
 import type {
   UserProfile,
   SessionStatus,
   LabResult,
   ImmunizationRecord,
-} from '../types.js';
-
-// ---------------------------------------------------------------------------
-// Shared constants
-// ---------------------------------------------------------------------------
-
-const DEMO_NOTE = '[DEMO MODE — sample data, not a real patient]';
+} from '../../../types.js';
+import type { Persona } from './index.js';
+import { DEMO_NOTE } from '../shared.js';
 
 // ---------------------------------------------------------------------------
 // MHR demo data
@@ -1396,10 +1390,10 @@ const demoMyChartProxyAccess = {
 };
 
 // ---------------------------------------------------------------------------
-// Mock MHR Client
+// Mock MHR Client (this persona's data)
 // ---------------------------------------------------------------------------
 
-export function createDemoMHRClient(): MHRClient {
+function createSelfMHRClient(): MHRClient {
   return {
     getSessionStatus: async () => demoSessionStatus,
     getUser: async () => demoUserProfile,
@@ -1430,10 +1424,10 @@ export function createDemoMHRClient(): MHRClient {
 }
 
 // ---------------------------------------------------------------------------
-// Mock MyChart Client
+// Mock MyChart Client (this persona's data)
 // ---------------------------------------------------------------------------
 
-export function createDemoMyChartClient(): MyChartClient {
+function createSelfMyChartClient(): MyChartClient {
   return {
     getUpcomingVisits: async () => demoMyChartUpcomingVisits,
     getPastVisits: async () => demoMyChartPastVisits,
@@ -1713,6 +1707,8 @@ export function createDemoMyChartClient(): MyChartClient {
       buffer: Buffer.from(`${DEMO_NOTE} \u2014 no real document in demo mode.`),
       contentType: 'text/plain',
     }),
+    // getProxyAccessList, switchToProxy, switchToSelf are handled by clients.ts
+    // (they need to mutate the shared active-context state, not delegate per-persona).
     getProxyAccessList: async () => demoMyChartProxyAccess,
     switchToProxy: async () => {},
     switchToSelf: async () => {},
@@ -1720,15 +1716,22 @@ export function createDemoMyChartClient(): MyChartClient {
 }
 
 // ---------------------------------------------------------------------------
-// Helper
+// Persona export
 // ---------------------------------------------------------------------------
 
-let _runtimeDemoMode = false;
-
-export function setDemoMode(enabled: boolean): void {
-  _runtimeDemoMode = enabled;
-}
-
-export function isDemoMode(): boolean {
-  return _runtimeDemoMode;
-}
+export const selfPersona: Persona = {
+  id: 'self',
+  recordId: 'rec-demo-001',
+  proxyEid: 'self',
+  displayName: 'Demo User',
+  relationshipType: 'Self',
+  isCustodian: true,
+  isSelf: true,
+  dob: '1985-06-15',
+  age: 39,
+  patientInfo: 'DOB: 1985-06-15',
+  accessLevel: 'Full',
+  description: '39-year-old male — Type 2 Diabetes, Hypertension, Hyperlipidemia, Vitamin D deficiency',
+  mhrClient: createSelfMHRClient(),
+  myChartClient: createSelfMyChartClient(),
+};

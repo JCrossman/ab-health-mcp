@@ -15,7 +15,7 @@ import { authenticate } from '../api/auth-client.js';
 import { MHRClient } from '../api/mhr-client.js';
 import { sessionManager, loadSessionData, invalidateSessionCache } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER } from './tool-factory.js';
-import { isDemoMode, setDemoMode } from '../helpers/demo-data.js';
+import { isDemoMode, setDemoMode } from '../helpers/demo/index.js';
 import { logger } from '../utils/logger.js';
 import { access, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
