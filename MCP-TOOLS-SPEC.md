@@ -644,3 +644,52 @@ Switches MyChart to view a different patient's records via Friends & Family prox
 2. Call `mc_switch_context` with the desired proxy ID
 3. Use `mc_get_test_results` and other `mc_*` tools — they now return the proxy patient's data
 4. Call `mc_switch_context` with `proxy_id="self"` to switch back
+
+---
+
+## Demo Mode (Multi-Persona Sandwich-Generation Scenario)
+
+Demo mode (enabled via `connect_account(demo=true)`) returns realistic sample data for **four interconnected personas** instead of one. This lets users explore the sandwich-generation caregiver scenario — managing your own health while also overseeing an aging parent's care and a child's care — without any real account.
+
+### Personas
+
+| Persona ID | Display Name | Relationship | Access Level | Demographics | Clinical Highlights |
+|------------|--------------|--------------|--------------|--------------|---------------------|
+| `self` | Demo User | Self (custodial) | Full | 39M | T2D (HbA1c trending 6.2 → 6.8), Hypertension, Hyperlipidemia, Vitamin D deficiency, statin titration |
+| `mother` | Margaret User | Mother (proxy) | Full | 72F | T2D + AFib + HFpEF + mild Alzheimer-type dementia + CKD3a, 12+ active meds, recent ED visit for AFib with RVR, donepezil + metoprolol bradycardia signal |
+| `spouse` | Sarah User | Spouse (proxy) | **Limited** | 41F | Hashimoto hypothyroidism, GAD on sertraline, migraine with aura on topiramate, perimenopause, Mirena IUD, PCN allergy, caregiver-burnout thread to family doc |
+| `child` | Liam User | Son (proxy) | Full (custodial) | 7M | Mild persistent asthma w/ recent ED visit, ADHD on Concerta (with pre-stimulant ECG documented), peanut allergy + EpiPen, seasonal allergic rhinitis, recent strep treated with amoxicillin (penicillin tolerated — does NOT inherit mother's allergy) |
+
+### Cross-Persona Consistency
+
+Each persona's chart is internally consistent and references the others where clinically realistic. For example:
+- Self's `getFamilyTree` and `getMedicalHistory` list Margaret, Sarah, and Liam with their actual conditions.
+- Sarah's messages to her family doc reference helping with Margaret's October 2024 fall.
+- Liam's family history names paternal grandmother Margaret (T2D, dementia) and maternal grandmother (breast cancer).
+- Liam shares Self's family physician via custodial relationship.
+- Sarah is on Limited access (deliberately differentiated from Mother's Full) to demonstrate proxy access tiers.
+
+### Switching Between Personas in Demo Mode
+
+Use the same MyChart proxy tools as in real mode:
+
+```
+mc_list_proxy_access            → returns 4 entries (self + 3 proxies)
+mc_switch_context(proxy_id=...) → switches active persona
+mc_switch_context(proxy_id="self") → returns to Self
+```
+
+After switching, **all** subsequent MHR and MyChart tool calls (labs, meds, vitals, encounters, etc.) return the active persona's data. The active persona persists across the session until you switch again or disconnect.
+
+### Demo-vs-Real Behavior Divergence
+
+There is one deliberate divergence between demo and real behavior:
+
+- **Real MHR**: The `selectedRecordId` is fixed at SSO sign-in and cannot be changed mid-session. Real MHR tools always return the signed-in user's data even after `mc_switch_context`. MyChart, by contrast, supports mid-session proxy switching.
+- **Demo MHR**: Follows the MyChart switch so cross-persona reasoning works end-to-end. This is documented in the `mc_switch_context` response's `note` field when in demo mode.
+
+This divergence is intentional — without it, users couldn't query "show me Margaret's lab trends" via MHR tools in demo mode, which is one of the most compelling use cases.
+
+### Demo Mode Markers
+
+Every response in demo mode includes `[DEMO MODE — sample data, not a real patient]` so users and LLMs never confuse sample data with real records. Persona display names also use the "User" surname (`Demo User`, `Margaret User`, `Sarah User`, `Liam User`) so they're obviously fictional.

@@ -1,18 +1,51 @@
 # Implementation Plan
 
-## Status: Phase 1 + 2 Complete, MyChart Integration Complete, v1.1.28
+## Status: v1.2.0 — Demo Mode v2 (4-persona sandwich-generation)
 
-All core infrastructure, MHR health data tools (24), and MyChart tools (20) are implemented and working. Total: 44 tools.
-
-# Implementation Plan
-
-## Status: Phase 1 + 2 Complete, MyChart Integration Complete, v1.1.28
-
-All core infrastructure, MHR health data tools (24), and MyChart tools (20) are implemented and working. Total: 44 tools.
+All core infrastructure, MHR health data tools (24), MyChart tools (20), and a stateful 4-persona demo mode are implemented. Total: 44 tools.
 
 ---
 
-## 🟡 Active Workstream — Portal Chat Beta (paused, resume here)
+## 🟢 Active Workstream — Demo Mode v2 + Find-a-Provider
+
+Major demo upgrade: demo mode is now **stateful and multi-persona**. Four interconnected personas (Demo User / Margaret User / Sarah User / Liam User) representing a sandwich-generation household are loaded simultaneously. `mc_switch_context` mutates the active persona so all MHR + MyChart tools follow the switch, enabling cross-person reasoning (e.g., "compare HbA1c trends between me and my mom").
+
+Find-a-Provider — a new tool family for searching `albertafindaprovider.ca` — is **paused** waiting for a user-supplied HAR capture.
+
+### What shipped (this workstream)
+
+- [x] **Demo refactor** — `src/helpers/demo-data.ts` (1734-line monolith) split into `src/helpers/demo/{index,context,clients,shared}.ts` + `personas/{self,mother,spouse,child}.ts`. Self persona migrated 1:1, behavior identical.
+- [x] **Stateful clients** — `src/helpers/demo/clients.ts` wraps `MHRClient` / `MyChartClient` in a `Proxy` that late-binds every method call to the currently active persona. Adding a new persona requires zero edits to the client file.
+- [x] **Switch wires** — `switchToProxy(eid)` / `switchToSelf()` mutate the active-persona singleton. `getProxyAccessList()` and `getUser()`'s `authorizedRecords` reflect all four personas. `mc_switch_context` response carries a demo-mode `note` documenting the MHR-follows-switch divergence.
+- [x] **Persona: Mother** — Margaret User (72F): T2D + AFib + HFpEF + mild Alzheimer-type dementia + CKD3a + osteoarthritis + chronic pain. 12 active meds (polypharmacy), recent ED visit for AFib RVR + post-fall Oct 2024, donepezil + metoprolol bradycardia signal, glipizide hypos. Care team: family doc, cardiologist, endocrinologist, neurologist (cognitive), geriatrician. (`src/helpers/demo/personas/mother.ts`, ~1519 lines, commit `35afff6`)
+- [x] **Persona: Spouse** — Sarah User (41F): Hashimoto hypothyroidism, GAD on sertraline, migraine with aura on topiramate, perimenopause with hormone panel, Mirena IUD (Mar 2024), penicillin allergy, recent normal mammo/Pap. *Limited* proxy access (deliberately differentiated from Mother's Full). Caregiver-burnout thread to family doc referencing helping with Margaret's Oct 2024 fall. (`src/helpers/demo/personas/spouse.ts`, ~1134 lines, commit `1ef85b5`)
+- [x] **Persona: Child** — Liam User (7M, DOB 2017-05-14 matches Sarah's documented vaginal delivery date): mild persistent asthma w/ recent ED visit, ADHD on Concerta (pre-stimulant ECG documented), peanut allergy + EpiPen, seasonal allergic rhinitis, recent strep treated with amoxicillin (explicit "penicillin tolerated" allergy entry so AI doesn't inherit mother's PCN allergy). Full custodial proxy. (`src/helpers/demo/personas/child.ts`, ~1058 lines, commit `c7d3d43`)
+- [x] **Persona: Self refresh** — `getMedicalHistory` and `getFamilyTree` in self.ts updated so Mother family-history entry references Margaret by name with her full active condition list, and the family tree includes Sarah (spouse) and Liam (son) with their conditions. Enables consistent cross-persona reasoning. (commit `8860e73`)
+
+### What remains (in this workstream)
+
+- [ ] **`fap-har-intake`** — **BLOCKED ON USER** supplying HAR capture of `albertafindaprovider.ca/find-a-doc/map` interactions (search, filter, marker click, detail view). Mine endpoints, request/response shapes, pagination, geolocation handling. Document discovered endpoints in `API-SPEC.md`.
+- [ ] **`fap-tool-design`** — Decide tool surface based on HAR. Default proposal: `find_provider` (search/filter) + `get_provider_details` (full profile by ID).
+- [ ] **`fap-client`** — Implement `src/api/find-a-provider-client.ts` (plain `fetch`, no cookie jar, no auth — public site).
+- [ ] **`fap-tools`** — Tool files in `src/tools/`. Bypass `isDemoMode()` — always hits real site.
+- [ ] **`fap-register`** — Register in `src/server/create-server.ts`.
+- [ ] **Version bump + .mcpb release for v1.3.0** when find-a-provider lands.
+
+### Decisions / rationale
+
+- **Why split demo mode into per-persona files?** A 4-persona demo at the richness level of the original Self persona would push a single file past 6000 lines. Per-persona files (~1000–1500 lines each) keep editing manageable and let us add a 5th persona later without touching shared code.
+- **Why MHR-follows-switch divergence?** Real MHR pins `selectedRecordId` at SSO sign-in. If demo MHR did the same, asking "show Margaret's labs" would silently return Self's data after a MyChart switch. The divergence is documented in the tool's response `note` and in `COPILOT.md`.
+- **Why differentiate Spouse access (Limited vs Full)?** Demonstrates the real-world proxy access tier distinction that exists in AHS Connect Care. AI agents need to know how to handle "limited" responses gracefully.
+- **Why always-real find-a-provider, even in demo mode?** Provider data is public (no PHI), and calling the real API validates the integration is wired correctly even when the rest of the data is synthetic.
+
+### Released as
+
+- **v1.2.0** — 4-persona demo mode (this workstream's persona work)
+- **v1.3.0 (planned)** — adds find-a-provider tool family
+
+---
+
+## 🟡 Parked Workstream — Portal Chat Beta (paused pre-launch)
 
 Web-first onboarding experiment for non-technical users at `myaihealth.ca/chat`. **16 of 22 tasks done.** Portal code + Canadian infra are complete and building cleanly. Remaining work is deployment (DNS cutover, Container App wiring).
 

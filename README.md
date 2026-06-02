@@ -27,7 +27,7 @@ The MCP server authenticates with Alberta's SSO (shared across both portals), fe
 
 ### Try It First — Demo Mode
 
-Don't have an Alberta account? Want to see what the extension can do before signing in? **Demo mode** uses realistic sample data so you can explore all 44 tools without any credentials.
+Don't have an Alberta account? Want to see what the extension can do before signing in? **Demo mode** uses a realistic, multi-person sample family so you can explore all 44 tools without any credentials.
 
 After installing the extension, try this conversation:
 
@@ -38,18 +38,30 @@ After installing the extension, try this conversation:
 
 Claude will connect instantly (no browser, no login), pull sample health data, and demonstrate how AI can identify clinically meaningful patterns — like a worsening HbA1c trend, cardiovascular risk factors across multiple tests, or medication interactions worth discussing with a doctor. These are the kinds of insights that are easy to miss when browsing portal pages individually.
 
+**The demo now includes a four-person sandwich-generation scenario:**
+
+| Person | Profile | What it showcases |
+|--------|---------|-------------------|
+| **Demo User** (you, 39M) | Type 2 Diabetes, Hypertension, Hyperlipidemia, Vitamin D deficiency | Worsening HbA1c trend, statin titration, kidney function monitoring |
+| **Margaret User** (mother, 72F) | T2D, AFib, HFpEF, mild Alzheimer-type dementia, CKD3a, polypharmacy (12+ meds) | Caregiver workflow, recent ED visit, polypharmacy review, advance care planning, drug interactions (donepezil+metoprolol, glipizide+CKD) |
+| **Sarah User** (spouse, 41F) | Hashimoto hypothyroidism, GAD, migraine with aura, perimenopause, recent IUD | Women's preventive care (mammogram, Pap/HPV), mental-health continuity, migraine + perimenopause hormonal pattern |
+| **Liam User** (son, 7M) | Mild persistent asthma (recent ED), ADHD on Concerta, peanut allergy + EpiPen | Pediatric care, stimulant monitoring, anaphylaxis preparedness, vaccine schedule, asthma action plan |
+
+Switch between them with: *"List the people I have access to"* → *"Switch to my mother's chart"* → *"Compare HbA1c trends between me and my mom"*
+
 **More demo prompts to try:**
 
 | Prompt | What it showcases |
 |--------|-------------------|
 | "Show me my lab results and flag anything outside reference ranges" | AI identifies abnormal values (high LDL, low Vitamin D, elevated HbA1c) |
-| "Are any of my medications interacting with my lab results?" | Cross-references meds with kidney/liver function |
-| "How has my diabetes control changed over the past year?" | Tracks HbA1c trend: 6.2% → 6.5% → 6.8% |
+| "Are any of my mom's medications interacting with each other or her kidney function?" | Polypharmacy review across 12 meds with CKD3a (donepezil+metoprolol bradycardia, glipizide hypos) |
+| "How has my diabetes control changed over the past year?" | Tracks HbA1c trend: 6.2% → 6.5% → 6.8% (Self) or 7.4% → 7.9% (Mother) |
 | "What's my cardiovascular risk profile?" | Connects high cholesterol + diabetes + hypertension + blood pressure trends |
 | "Am I overdue for any screenings or vaccinations?" | Checks immunization records and preventive care gaps |
-| "Summarize what I should discuss with my doctor at my next appointment" | Synthesizes all data into actionable talking points |
+| "What appointments does Liam have coming up, and is his asthma plan up to date?" | Pediatric scheduling + asthma action plan retrieval |
+| "Summarize what I should discuss with each of my mom's specialists at the next visit" | Synthesizes all data into actionable talking points |
 
-> **Note:** Demo data is clearly fictional ("Demo User"). To access your real health records, use Option 1 above.
+> **Note:** Demo data is clearly fictional ("Demo User", "Margaret User", "Sarah User", "Liam User"). To access your real health records, use Option 1 above. In demo mode, *every* response is marked with `[DEMO MODE — sample data, not a real patient]`.
 
 ### Option 2: Developer Install
 
