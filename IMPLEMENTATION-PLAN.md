@@ -1,16 +1,16 @@
 # Implementation Plan
 
-## Status: v1.2.0 — Demo Mode v2 (4-persona sandwich-generation)
+## Status: v1.3.0 — Demo Mode v2 + Find-a-Provider
 
-All core infrastructure, MHR health data tools (24), MyChart tools (20), and a stateful 4-persona demo mode are implemented. Total: 44 tools.
+All core infrastructure, MHR health data tools (24), MyChart tools (20), a stateful 4-persona demo mode, and a public Alberta provider-directory tool family (4 tools) are implemented. Total: 48 tools.
 
 ---
 
 ## 🟢 Active Workstream — Demo Mode v2 + Find-a-Provider
 
-Major demo upgrade: demo mode is now **stateful and multi-persona**. Four interconnected personas (Demo User / Margaret User / Sarah User / Liam User) representing a sandwich-generation household are loaded simultaneously. `mc_switch_context` mutates the active persona so all MHR + MyChart tools follow the switch, enabling cross-person reasoning (e.g., "compare HbA1c trends between me and my mom").
+**v1.2.0** shipped a stateful 4-persona demo (Demo User / Margaret / Sarah / Liam) — a sandwich-generation household where `mc_switch_context` mutates the active persona so all tools follow the switch.
 
-Find-a-Provider — a new tool family for searching `albertafindaprovider.ca` — is **paused** waiting for a user-supplied HAR capture.
+**v1.3.0** adds the **Find-a-Provider** tool family (`find_provider`, `search_provider_by_name`, `find_provider_by_language`, `get_provider_details`) hitting the public `albertafindaprovider.ca` directory. These tools require no Alberta account, contain no PHI, and work the same way in real and demo mode.
 
 ### What shipped (this workstream)
 
@@ -21,15 +21,17 @@ Find-a-Provider — a new tool family for searching `albertafindaprovider.ca` �
 - [x] **Persona: Spouse** — Sarah User (41F): Hashimoto hypothyroidism, GAD on sertraline, migraine with aura on topiramate, perimenopause with hormone panel, Mirena IUD (Mar 2024), penicillin allergy, recent normal mammo/Pap. *Limited* proxy access (deliberately differentiated from Mother's Full). Caregiver-burnout thread to family doc referencing helping with Margaret's Oct 2024 fall. (`src/helpers/demo/personas/spouse.ts`, ~1134 lines, commit `1ef85b5`)
 - [x] **Persona: Child** — Liam User (7M, DOB 2017-05-14 matches Sarah's documented vaginal delivery date): mild persistent asthma w/ recent ED visit, ADHD on Concerta (pre-stimulant ECG documented), peanut allergy + EpiPen, seasonal allergic rhinitis, recent strep treated with amoxicillin (explicit "penicillin tolerated" allergy entry so AI doesn't inherit mother's PCN allergy). Full custodial proxy. (`src/helpers/demo/personas/child.ts`, ~1058 lines, commit `c7d3d43`)
 - [x] **Persona: Self refresh** — `getMedicalHistory` and `getFamilyTree` in self.ts updated so Mother family-history entry references Margaret by name with her full active condition list, and the family tree includes Sarah (spouse) and Liam (son) with their conditions. Enables consistent cross-persona reasoning. (commit `8860e73`)
+- [x] **Find-a-Provider client** — `src/api/find-a-provider-client.ts` reverse-engineered from a HAR capture of `albertafindaprovider.ca/find-a-doc/map`. Plain `fetch`, no auth, no cookie jar. Includes baked-in lookup tables (5 services, 29 languages, 32 PCNs), fuzzy-match helpers, response trimming (strips `polygon`, `media`, `created_at`, etc.), and a two-tier geocoder (Nominatim primary, zippopotam.us FSA fallback for patchy Canadian postal coverage).
+- [x] **Find-a-Provider tools** — 4 tools, all read-only, all bypass `ensureSession`:
+  - `find_provider` — geo-radius clinic search with filters (radius, accepting-new-patients, gender, language, PCN, services, walk-in)
+  - `search_provider_by_name` — name lookup with post-filtering (upstream `public-find` is a multi-field LIKE; we narrow to true name matches)
+  - `find_provider_by_language` — language-focused search; annotates each clinic with the specific physicians who speak the requested language
+  - `get_provider_details` — full record by ID for clinic, physician, or nurse practitioner
+- [x] **Find-a-Provider registered** — added imports + 4 `server.tool(...)` blocks in `src/server/create-server.ts`. Server `version` bumped to `1.3.0`. Total tool count now 48.
 
 ### What remains (in this workstream)
 
-- [ ] **`fap-har-intake`** — **BLOCKED ON USER** supplying HAR capture of `albertafindaprovider.ca/find-a-doc/map` interactions (search, filter, marker click, detail view). Mine endpoints, request/response shapes, pagination, geolocation handling. Document discovered endpoints in `API-SPEC.md`.
-- [ ] **`fap-tool-design`** — Decide tool surface based on HAR. Default proposal: `find_provider` (search/filter) + `get_provider_details` (full profile by ID).
-- [ ] **`fap-client`** — Implement `src/api/find-a-provider-client.ts` (plain `fetch`, no cookie jar, no auth — public site).
-- [ ] **`fap-tools`** — Tool files in `src/tools/`. Bypass `isDemoMode()` — always hits real site.
-- [ ] **`fap-register`** — Register in `src/server/create-server.ts`.
-- [ ] **Version bump + .mcpb release for v1.3.0** when find-a-provider lands.
+- [ ] **Version bump + .mcpb release for v1.3.0** — package.json, manifest.json bumped to 1.3.0; `.mcpb` to be packed and uploaded.
 
 ### Decisions / rationale
 
@@ -41,7 +43,7 @@ Find-a-Provider — a new tool family for searching `albertafindaprovider.ca` �
 ### Released as
 
 - **v1.2.0** — 4-persona demo mode (this workstream's persona work)
-- **v1.3.0 (planned)** — adds find-a-provider tool family
+- **v1.3.0** — adds find-a-provider tool family (4 tools, public Alberta directory, no auth, no PHI)
 
 ---
 

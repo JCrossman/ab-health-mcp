@@ -693,3 +693,90 @@ This divergence is intentional — without it, users couldn't query "show me Mar
 ### Demo Mode Markers
 
 Every response in demo mode includes `[DEMO MODE — sample data, not a real patient]` so users and LLMs never confuse sample data with real records. Persona display names also use the "User" surname (`Demo User`, `Margaret User`, `Sarah User`, `Liam User`) so they're obviously fictional.
+
+---
+
+## Find-a-Provider Tools (Public Alberta Provider Directory)
+
+These four tools query the public Alberta Find a Provider directory at `albertafindaprovider.ca`. They are **always real** (no demo branching) because the data is public and contains no PHI. No Alberta account, sign-in, or session is required.
+
+### find_provider
+
+Geo-radius search of clinics. Returns clinics with embedded physicians, services, PCN, contact info, and lat/lng.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| postal_code | string | Either this, address, or lat+lng | Canadian postal code (e.g. "T6G 1L7"). Resolved server-side. |
+| address | string | Either this, postal_code, or lat+lng | Free-form address. Postal code preferred. |
+| latitude / longitude | number / number | Either both, or postal_code/address | Decimal degrees. Skips geocoding. |
+| radius_km | number | No | 1–70 km. Default 10. |
+| accepting_new_patients | boolean | No | Default true. |
+| gender_preference | "male" \| "female" | No | At least one provider of this gender. |
+| language | string | No | e.g. "Mandarin", "Punjabi", "Arabic". Fuzzy-matched to internal IDs. |
+| pcn | string | No | e.g. "Edmonton West", "Calgary Foothills". Fuzzy-matched. |
+| services | string[] | No | e.g. ["Walk-in Services", "Virtual Appointments", "Online Booking", "Wheelchair Access", "Open After Hours"]. |
+| walk_in_only | boolean | No | Restrict to dedicated walk-in clinics. |
+
+**Calls:** `GET https://albertafindaprovider.ca/search?radius=...&lat=...&lng=...&anp=1&[language-ids[]=...&pcn-ids[]=...&service-ids[]=...&with[]=pcn&with[]=physicians&...]`
+
+**Geocoding:** Postal codes try Nominatim first (full-postal precision), fall back to zippopotam.us at FSA precision (~1–3 km, fine for clinic search). Free-form addresses use Nominatim only.
+
+### search_provider_by_name
+
+Look up physicians and nurse practitioners by name (partial OK). Post-filters out the upstream API's broader multi-field LIKE matches so results actually contain the queried name.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| name | string | Yes | Minimum 2 characters. |
+| include_nurse_practitioners | boolean | No | Default true. |
+| doctors_only | boolean | No | Excludes NPs. |
+| nurse_practitioners_only | boolean | No | Excludes doctors. |
+
+**Calls:** `GET /search/directory/physicians?is_nurse_practitioner=0|1&public-find={name}&with[]=...` (one call per provider type when both are requested).
+
+### find_provider_by_language
+
+Find clinics where at least one physician speaks a specific language, near a location. Returns each clinic with a `physiciansSpeakingLanguage` array calling out exactly which providers match.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| language | string | Yes | e.g. "Mandarin", "Punjabi", "Arabic", "Spanish", "French". |
+| postal_code / address / latitude+longitude | string / string / numbers | One required | Same as `find_provider`. |
+| radius_km | number | No | Default 10. |
+| accepting_new_patients | boolean | No | Default true. |
+
+**Calls:** Same `/search` endpoint with `language-ids[]` set; tool then enriches each clinic by filtering its `physicians[].languages[]` to the requested language.
+
+### get_provider_details
+
+Full details for a specific clinic, physician, or nurse practitioner by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| id | number | Yes | Numeric ID from a previous search result. |
+| type | "clinic" \| "physician" \| "nurse_practitioner" | Yes | Which directory to query. |
+
+**Calls:**
+- Clinic: `GET /search/directory/clinics?ids[]={id}&with[]=pcn&with[]=physicians&...`
+- Physician/NP: `GET /search/directory/physicians?is_nurse_practitioner={0|1}&ids[]={id}&with[]=pcn&with[]=clinics&...`
+
+### Internal lookup tables
+
+The following maps are baked into `src/api/find-a-provider-client.ts` (extracted from upstream HAR responses) and used by the fuzzy-match helpers `resolveLanguage`, `resolvePcn`, `resolveServices`:
+
+- **Services** (5): Open After Hours, Wheelchair Access, Walk-in Services, Virtual Appointments, Online Booking
+- **Languages** (~29 common): Cantonese, English, Arabic, French, German, Hungarian, Italian, Farsi, Polish, Portuguese, Hausa, Hindi, Tagalog, Spanish, Vietnamese, Korean, Japanese, Mandarin, Greek, Ukrainian, Punjabi, Romanian, Russian, Serbian, Somali, Urdu, Yoruba, Croatian, Other
+- **PCNs** (32, all of Alberta): Calgary Foothills, Highland, Calgary Rural, Calgary West Central, Mosaic, South Calgary, Lakeland, Bonnyville, Cold Lake, Wood Buffalo, Grande Prairie, Aspen, Chinook, Palliser, Big Country, Wolf Creek, Wetaskiwin, Kalyna Country, Camrose, Peaks to Prairies, Edmonton North, Edmonton O-day'min, Edmonton Southside, Edmonton West, Leduc Beaumont Devon, Sherwood Park, St. Albert Sturgeon, WestView, No PCN
+
+Unknown values throw a clear error listing the supported set.
+
+### Caveats
+
+- The upstream `public-find` parameter is a multi-field LIKE search that matches addresses, clinic names, and PCN names alongside provider names. `search_provider_by_name` post-filters to keep only true name matches.
+- The `/search` endpoint enforces `limit ≤ 25` and `radius ≤ 70` server-side.
+- Geocoding uses public free services (Nominatim and zippopotam.us); offline use will fail. Pass `latitude`/`longitude` directly to skip geocoding.
+- All four tools are read-only and contain no PHI.

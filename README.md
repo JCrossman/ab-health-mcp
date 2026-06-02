@@ -27,7 +27,7 @@ The MCP server authenticates with Alberta's SSO (shared across both portals), fe
 
 ### Try It First — Demo Mode
 
-Don't have an Alberta account? Want to see what the extension can do before signing in? **Demo mode** uses a realistic, multi-person sample family so you can explore all 44 tools without any credentials.
+Don't have an Alberta account? Want to see what the extension can do before signing in? **Demo mode** uses a realistic, multi-person sample family so you can explore all 48 tools without any credentials.
 
 After installing the extension, try this conversation:
 
@@ -154,7 +154,7 @@ Claude Desktop ──HTTPS──▶ MCP Server (Azure Canada Central) ──REST
 - **Session:** Zero server-side storage — SSO cookies are encrypted into the OAuth access token itself. The server is fully stateless.
 - **Infrastructure:** Azure Container Apps (Canada Central) — HIA/POPA compliant
 
-Both modes share the same 44 tools and session keepalive logic. Session timeout is ~10 minutes per system. Tools auto-keepalive both MHR and MyChart on each call.
+Both modes share the same 48 tools and session keepalive logic. Session timeout is ~10 minutes per system. Tools auto-keepalive both MHR and MyChart on each call.
 
 ### Auth Flow
 
@@ -176,7 +176,7 @@ myhealthrecords.alberta.ca
 
 Puppeteer handles this automatically. The persistent browser profile at `~/.mhr-records/browser-profile` preserves SSO cookies across sessions, enabling auto-login without re-entering credentials.
 
-## Tools (44)
+## Tools (48)
 
 ### Session Management
 
@@ -241,6 +241,17 @@ MyChart tools access data from AHS Connect Care (`myahsconnect.albertahealthserv
 | `mc_list_proxy_access` | List available patient records — own and shared/proxy (MyChart) |
 | `mc_switch_context` | Switch to viewing a different patient's records via proxy access (MyChart) |
 
+### Find a Provider (Public — No Login Required)
+
+Search Alberta's public provider directory at `albertafindaprovider.ca`. These tools work without an Alberta account and return public information only — no PHI is involved.
+
+| Tool | Description |
+|------|-------------|
+| `find_provider` | Find clinics by location (postal code, address, or lat/lng) with filters for radius, accepting-new-patients, gender preference, language, PCN, and services |
+| `search_provider_by_name` | Look up doctors and nurse practitioners by name (partial OK) |
+| `find_provider_by_language` | Find clinics with at least one provider who speaks a specific language (Mandarin, Punjabi, Arabic, Spanish, French, etc.) near a location |
+| `get_provider_details` | Full details for a specific clinic, physician, or nurse practitioner by ID |
+
 ### Example Queries
 
 - "Give me a complete health summary — profile, immunizations, medications, and recent labs"
@@ -254,13 +265,17 @@ MyChart tools access data from AHS Connect Care (`myahsconnect.albertahealthserv
 - "Show me my care team and any messages from my doctors"
 - "Show me my procedure history"
 - "Do I have access to any shared or family health records?"
+- "Find me a family doctor accepting new patients near T6G 1L7"
+- "Find a clinic with virtual appointments and online booking within 5 km"
+- "Find a doctor who speaks Mandarin near downtown Calgary"
+- "Look up Dr. Mahdavi's clinic"
 
 ## Project Structure
 
 ```
 ab-health-mcp/
 ├── src/
-│   ├── index.ts                    # MCP server entry point (stdio transport, 44 tools)
+│   ├── index.ts                    # MCP server entry point (stdio transport, 48 tools)
 │   ├── types.ts                    # TypeScript interfaces for API responses
 │   ├── api/
 │   │   ├── auth-client.ts          # Puppeteer SSO auth with stealth measures
@@ -274,7 +289,7 @@ ab-health-mcp/
 │   │   └── content-helpers.ts      # PDF text extraction + image rendering (mupdf WASM)
 │   ├── server/
 │   │   ├── http-index.ts           # HTTP entry point with OAuth 2.1 + portal modes
-│   │   ├── create-server.ts        # MCP server factory (registers all 44 tools with schemas)
+│   │   ├── create-server.ts        # MCP server factory (registers all 48 tools with schemas)
 │   │   ├── oauth-provider.ts       # OAuth 2.1 provider (zero-storage token architecture)
 │   │   ├── token-crypto.ts         # AES-256-GCM token encryption/decryption
 │   │   └── session-context.ts      # AsyncLocalStorage for per-request sessions
