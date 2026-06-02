@@ -14,6 +14,7 @@ import type { MyChartClient } from '../../../api/mychart-client.js';
 
 import { selfPersona } from './self.js';
 import { motherPersona } from './mother.js';
+import { spousePersona } from './spouse.js';
 
 export interface Persona {
   /** Stable id used as the proxy "EID" in mc_switch_context. */
@@ -45,6 +46,7 @@ export interface Persona {
 const PERSONA_LIST: Persona[] = [
   selfPersona,
   motherPersona,
+  spousePersona,
 ];
 
 const PERSONA_BY_ID: Map<string, Persona> = new Map(PERSONA_LIST.map(p => [p.id, p]));
