@@ -1468,10 +1468,24 @@ function createSelfMyChartClient(): MyChartClient {
           note: DEMO_NOTE,
         },
         {
-          Condition: 'Family History: Type 2 Diabetes',
+          Condition: 'Family History: Type 2 Diabetes + complex multimorbidity',
           Date: null,
           Type: 'Family',
-          Details: 'Mother — diagnosed at age 52',
+          Details: 'Mother (Margaret User, 72) — T2D diagnosed age 50, also paroxysmal AFib, HFpEF, mild Alzheimer-type dementia, CKD stage 3a, hypothyroidism, osteoporosis. Patient holds full proxy access and is primary caregiver.',
+          note: DEMO_NOTE,
+        },
+        {
+          Condition: 'Household: Spouse',
+          Date: null,
+          Type: 'Social',
+          Details: 'Spouse Sarah User (41) — Hashimoto hypothyroidism, GAD on long-term SSRI, migraine with aura on topiramate, perimenopause with recent Mirena IUD. Shares family physician (Dr. Sarah Mitchell).',
+          note: DEMO_NOTE,
+        },
+        {
+          Condition: 'Household: Dependent child',
+          Date: null,
+          Type: 'Social',
+          Details: 'Son Liam User (7) — mild persistent asthma, ADHD predominantly inattentive on methylphenidate, peanut allergy with EpiPen. Patient holds full custodial proxy.',
           note: DEMO_NOTE,
         },
       ],
@@ -1543,7 +1557,9 @@ function createSelfMyChartClient(): MyChartClient {
     getFamilyTree: async () => ({
       FamilyMembers: [
         { Relationship: 'Father', Conditions: ['Coronary Artery Disease — MI at age 58'], Deceased: true, note: DEMO_NOTE },
-        { Relationship: 'Mother', Conditions: ['Type 2 Diabetes — diagnosed age 52'], Deceased: false, note: DEMO_NOTE },
+        { Relationship: 'Mother (Margaret User)', Conditions: ['Type 2 Diabetes (dx age 50)', 'Paroxysmal AFib', 'HFpEF', 'Mild Alzheimer-type dementia', 'CKD stage 3a', 'Hypothyroidism', 'Osteoporosis', 'OA knees'], Deceased: false, note: DEMO_NOTE },
+        { Relationship: 'Spouse (Sarah User)', Conditions: ['Hashimoto hypothyroidism', 'GAD', 'Migraine with aura', 'Perimenopause', 'History of postpartum depression'], Deceased: false, note: DEMO_NOTE },
+        { Relationship: 'Son (Liam User, age 7)', Conditions: ['Mild persistent asthma', 'ADHD (inattentive)', 'Peanut allergy with EpiPen', 'Seasonal allergic rhinitis'], Deceased: false, note: DEMO_NOTE },
       ],
       note: DEMO_NOTE,
     }),
