@@ -23,7 +23,7 @@
     "mupdf": "^1.27.0",
     "puppeteer-core": "^24.40.0",
     "tough-cookie": "^6.0.1",
-    "undici": "^8.0.2"
+    "undici": "^8.3.0"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.2",
