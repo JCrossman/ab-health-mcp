@@ -7,6 +7,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { VERSION } from '../version.js';
 
 // MHR tools (complex — individual files)
 import { connectAccountTool } from '../tools/connect-account.js';
@@ -77,7 +78,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'ab-health-mcp',
-      version: '1.3.0',
+      version: VERSION,
     },
     {
       instructions: [

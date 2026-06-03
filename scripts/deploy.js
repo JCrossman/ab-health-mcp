@@ -69,27 +69,18 @@ console.log('✓ manifest.json');
 writeJson(join(root, 'static', 'version.json'), { version: newVersion });
 console.log('✓ static/version.json');
 
-// 5. Update CURRENT_VERSION in connect-account.ts
-const connectPath = join(root, 'src', 'tools', 'connect-account.ts');
-let connectSrc = readFileSync(connectPath, 'utf8');
-connectSrc = connectSrc.replace(
-  /const CURRENT_VERSION = '[^']+'/,
-  `const CURRENT_VERSION = '${newVersion}'`,
+// 5. Update VERSION in src/version.ts (single source of truth read by both
+//    create-server.ts and connect-account.ts)
+const versionTsPath = join(root, 'src', 'version.ts');
+let versionTsSrc = readFileSync(versionTsPath, 'utf8');
+versionTsSrc = versionTsSrc.replace(
+  /export const VERSION = '[^']+'/,
+  `export const VERSION = '${newVersion}'`,
 );
-writeFileSync(connectPath, connectSrc);
-console.log('✓ src/tools/connect-account.ts');
+writeFileSync(versionTsPath, versionTsSrc);
+console.log('✓ src/version.ts');
 
-// 6. Update version in create-server.ts
-const serverPath = join(root, 'src', 'server', 'create-server.ts');
-let serverSrc = readFileSync(serverPath, 'utf8');
-serverSrc = serverSrc.replace(
-  /version: '[^']+'/,
-  `version: '${newVersion}'`,
-);
-writeFileSync(serverPath, serverSrc);
-console.log('✓ src/server/create-server.ts');
-
-// 7. Build
+// 6. Build
 console.log('\n📦 Building...');
 run('npm run build:css');
 run('npm run build');
