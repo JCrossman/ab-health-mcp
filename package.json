@@ -21,7 +21,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "mupdf": "^1.27.0",
-    "puppeteer-core": "^24.40.0",
+    "puppeteer-core": "^25.1.0",
     "tough-cookie": "^6.0.1",
     "undici": "^8.0.2"
   },
