@@ -644,3 +644,139 @@ Switches MyChart to view a different patient's records via Friends & Family prox
 2. Call `mc_switch_context` with the desired proxy ID
 3. Use `mc_get_test_results` and other `mc_*` tools — they now return the proxy patient's data
 4. Call `mc_switch_context` with `proxy_id="self"` to switch back
+
+---
+
+## Demo Mode (Multi-Persona Sandwich-Generation Scenario)
+
+Demo mode (enabled via `connect_account(demo=true)`) returns realistic sample data for **four interconnected personas** instead of one. This lets users explore the sandwich-generation caregiver scenario — managing your own health while also overseeing an aging parent's care and a child's care — without any real account.
+
+### Personas
+
+| Persona ID | Display Name | Relationship | Access Level | Demographics | Clinical Highlights |
+|------------|--------------|--------------|--------------|--------------|---------------------|
+| `self` | Demo User | Self (custodial) | Full | 39M | T2D (HbA1c trending 6.2 → 6.8), Hypertension, Hyperlipidemia, Vitamin D deficiency, statin titration |
+| `mother` | Margaret User | Mother (proxy) | Full | 72F | T2D + AFib + HFpEF + mild Alzheimer-type dementia + CKD3a, 12+ active meds, recent ED visit for AFib with RVR, donepezil + metoprolol bradycardia signal |
+| `spouse` | Sarah User | Spouse (proxy) | **Limited** | 41F | Hashimoto hypothyroidism, GAD on sertraline, migraine with aura on topiramate, perimenopause, Mirena IUD, PCN allergy, caregiver-burnout thread to family doc |
+| `child` | Liam User | Son (proxy) | Full (custodial) | 7M | Mild persistent asthma w/ recent ED visit, ADHD on Concerta (with pre-stimulant ECG documented), peanut allergy + EpiPen, seasonal allergic rhinitis, recent strep treated with amoxicillin (penicillin tolerated — does NOT inherit mother's allergy) |
+
+### Cross-Persona Consistency
+
+Each persona's chart is internally consistent and references the others where clinically realistic. For example:
+- Self's `getFamilyTree` and `getMedicalHistory` list Margaret, Sarah, and Liam with their actual conditions.
+- Sarah's messages to her family doc reference helping with Margaret's October 2024 fall.
+- Liam's family history names paternal grandmother Margaret (T2D, dementia) and maternal grandmother (breast cancer).
+- Liam shares Self's family physician via custodial relationship.
+- Sarah is on Limited access (deliberately differentiated from Mother's Full) to demonstrate proxy access tiers.
+
+### Switching Between Personas in Demo Mode
+
+Use the same MyChart proxy tools as in real mode:
+
+```
+mc_list_proxy_access            → returns 4 entries (self + 3 proxies)
+mc_switch_context(proxy_id=...) → switches active persona
+mc_switch_context(proxy_id="self") → returns to Self
+```
+
+After switching, **all** subsequent MHR and MyChart tool calls (labs, meds, vitals, encounters, etc.) return the active persona's data. The active persona persists across the session until you switch again or disconnect.
+
+### Demo-vs-Real Behavior Divergence
+
+There is one deliberate divergence between demo and real behavior:
+
+- **Real MHR**: The `selectedRecordId` is fixed at SSO sign-in and cannot be changed mid-session. Real MHR tools always return the signed-in user's data even after `mc_switch_context`. MyChart, by contrast, supports mid-session proxy switching.
+- **Demo MHR**: Follows the MyChart switch so cross-persona reasoning works end-to-end. This is documented in the `mc_switch_context` response's `note` field when in demo mode.
+
+This divergence is intentional — without it, users couldn't query "show me Margaret's lab trends" via MHR tools in demo mode, which is one of the most compelling use cases.
+
+### Demo Mode Markers
+
+Every response in demo mode includes `[DEMO MODE — sample data, not a real patient]` so users and LLMs never confuse sample data with real records. Persona display names also use the "User" surname (`Demo User`, `Margaret User`, `Sarah User`, `Liam User`) so they're obviously fictional.
+
+---
+
+## Find-a-Provider Tools (Public Alberta Provider Directory)
+
+These four tools query the public Alberta Find a Provider directory at `albertafindaprovider.ca`. They are **always real** (no demo branching) because the data is public and contains no PHI. No Alberta account, sign-in, or session is required.
+
+### find_provider
+
+Geo-radius search of clinics. Returns clinics with embedded physicians, services, PCN, contact info, and lat/lng.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| postal_code | string | Either this, address, or lat+lng | Canadian postal code (e.g. "T6G 1L7"). Resolved server-side. |
+| address | string | Either this, postal_code, or lat+lng | Free-form address. Postal code preferred. |
+| latitude / longitude | number / number | Either both, or postal_code/address | Decimal degrees. Skips geocoding. |
+| radius_km | number | No | 1–70 km. Default 10. |
+| accepting_new_patients | boolean | No | Default true. |
+| gender_preference | "male" \| "female" | No | At least one provider of this gender. |
+| language | string | No | e.g. "Mandarin", "Punjabi", "Arabic". Fuzzy-matched to internal IDs. |
+| pcn | string | No | e.g. "Edmonton West", "Calgary Foothills". Fuzzy-matched. |
+| services | string[] | No | e.g. ["Walk-in Services", "Virtual Appointments", "Online Booking", "Wheelchair Access", "Open After Hours"]. |
+| walk_in_only | boolean | No | Restrict to dedicated walk-in clinics. |
+
+**Calls:** `GET https://albertafindaprovider.ca/search?radius=...&lat=...&lng=...&anp=1&[language-ids[]=...&pcn-ids[]=...&service-ids[]=...&with[]=pcn&with[]=physicians&...]`
+
+**Geocoding:** Postal codes try Nominatim first (full-postal precision), fall back to zippopotam.us at FSA precision (~1–3 km, fine for clinic search). Free-form addresses use Nominatim only.
+
+### search_provider_by_name
+
+Look up physicians and nurse practitioners by name (partial OK). Post-filters out the upstream API's broader multi-field LIKE matches so results actually contain the queried name.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| name | string | Yes | Minimum 2 characters. |
+| include_nurse_practitioners | boolean | No | Default true. |
+| doctors_only | boolean | No | Excludes NPs. |
+| nurse_practitioners_only | boolean | No | Excludes doctors. |
+
+**Calls:** `GET /search/directory/physicians?is_nurse_practitioner=0|1&public-find={name}&with[]=...` (one call per provider type when both are requested).
+
+### find_provider_by_language
+
+Find clinics where at least one physician speaks a specific language, near a location. Returns each clinic with a `physiciansSpeakingLanguage` array calling out exactly which providers match.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| language | string | Yes | e.g. "Mandarin", "Punjabi", "Arabic", "Spanish", "French". |
+| postal_code / address / latitude+longitude | string / string / numbers | One required | Same as `find_provider`. |
+| radius_km | number | No | Default 10. |
+| accepting_new_patients | boolean | No | Default true. |
+
+**Calls:** Same `/search` endpoint with `language-ids[]` set; tool then enriches each clinic by filtering its `physicians[].languages[]` to the requested language.
+
+### get_provider_details
+
+Full details for a specific clinic, physician, or nurse practitioner by ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| id | number | Yes | Numeric ID from a previous search result. |
+| type | "clinic" \| "physician" \| "nurse_practitioner" | Yes | Which directory to query. |
+
+**Calls:**
+- Clinic: `GET /search/directory/clinics?ids[]={id}&with[]=pcn&with[]=physicians&...`
+- Physician/NP: `GET /search/directory/physicians?is_nurse_practitioner={0|1}&ids[]={id}&with[]=pcn&with[]=clinics&...`
+
+### Internal lookup tables
+
+The following maps are baked into `src/api/find-a-provider-client.ts` (extracted from upstream HAR responses) and used by the fuzzy-match helpers `resolveLanguage`, `resolvePcn`, `resolveServices`:
+
+- **Services** (5): Open After Hours, Wheelchair Access, Walk-in Services, Virtual Appointments, Online Booking
+- **Languages** (~29 common): Cantonese, English, Arabic, French, German, Hungarian, Italian, Farsi, Polish, Portuguese, Hausa, Hindi, Tagalog, Spanish, Vietnamese, Korean, Japanese, Mandarin, Greek, Ukrainian, Punjabi, Romanian, Russian, Serbian, Somali, Urdu, Yoruba, Croatian, Other
+- **PCNs** (32, all of Alberta): Calgary Foothills, Highland, Calgary Rural, Calgary West Central, Mosaic, South Calgary, Lakeland, Bonnyville, Cold Lake, Wood Buffalo, Grande Prairie, Aspen, Chinook, Palliser, Big Country, Wolf Creek, Wetaskiwin, Kalyna Country, Camrose, Peaks to Prairies, Edmonton North, Edmonton O-day'min, Edmonton Southside, Edmonton West, Leduc Beaumont Devon, Sherwood Park, St. Albert Sturgeon, WestView, No PCN
+
+Unknown values throw a clear error listing the supported set.
+
+### Caveats
+
+- The upstream `public-find` parameter is a multi-field LIKE search that matches addresses, clinic names, and PCN names alongside provider names. `search_provider_by_name` post-filters to keep only true name matches.
+- The `/search` endpoint enforces `limit ≤ 25` and `radius ≤ 70` server-side.
+- Geocoding uses public free services (Nominatim and zippopotam.us); offline use will fail. Pass `latitude`/`longitude` directly to skip geocoding.
+- All four tools are read-only and contain no PHI.

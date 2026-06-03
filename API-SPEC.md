@@ -860,3 +860,88 @@ Returns immunization records.
 Returns the CSRF token needed for all MyChart API requests. Called once during authentication.
 
 **Response:** Plain text CSRF token value.
+
+---
+
+## Alberta Find a Provider (Public Directory)
+
+`https://albertafindaprovider.ca` exposes a public Laravel-backed JSON API used by the find-a-doc map UI. **No authentication required.** Returns clinic and physician directory information for all of Alberta. Reverse-engineered from a HAR capture (June 2026).
+
+### Common envelope
+
+All listing endpoints return:
+
+```json
+{
+  "items": [...],
+  "limit": "25",
+  "total": 1330,
+  "offset": 0,
+  "pages": 54,
+  "page": 1
+}
+```
+
+`limit` is enforced server-side at 25 max. `with[]` query params eager-load related objects (PCN, physicians, clinics, services, languages, anp records).
+
+### Endpoints
+
+#### `GET /search`
+
+Geo-radius search of clinics. Used by the map's circle search.
+
+**Query params:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `lat` | number | Latitude (decimal degrees) |
+| `lng` | number | Longitude (decimal degrees) |
+| `radius` | number | Radius in kilometres (max 70) |
+| `limit` | number | Page size (max 25) |
+| `anp` | 0 \| 1 | Filter to clinics accepting new patients |
+| `gender-pref` | "m" \| "f" | At least one provider of this gender |
+| `language-ids[]` | number[] | Filter to clinics with a provider speaking each language |
+| `pcn-ids[]` | number[] | Filter to one or more PCNs |
+| `service-ids[]` | number[] | Filter to clinics offering each service |
+| `is-dedicated-walk-in` | 0 \| 1 | Walk-in clinics only |
+| `address` | string | Display-only echo of the geocoded address |
+| `with[]` | string | Eager-loads (`pcn`, `physicians`, `physicians.languages`, `physicians.specialties`, `services`, `specialties`) |
+
+**Response items:** Clinic objects with `id`, `pcn_id`, `name`, `street_address`, `city`, `province`, `postal_code`, `lat`, `lng`, `phone_number`, `phone_extension`, `email`, `website`, `place_id` (Google), `is_access_clinic`, `is_dedicated_walk_in`, `anp_behaviour`, `limited_panel_message`, `is_clinic_always_anp`, `is_clinic_never_anp`, plus eager-loaded relations.
+
+#### `GET /search/directory/clinics`
+
+Paginated clinic directory. Same envelope and item shape as `/search` but no geo filtering.
+
+**Query params:** `page`, `limit` (≤25), `with[]`, `ids[]` (numeric IDs for direct lookup — bypasses pagination).
+
+#### `GET /search/directory/physicians`
+
+Paginated physician/NP directory.
+
+**Query params:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `is_nurse_practitioner` | 0 \| 1 | Required. Splits doctors and NPs into separate result sets. |
+| `page`, `limit` | number, number | Pagination (limit ≤25). |
+| `public-find` | string | Free-text search across multiple fields (name, clinic, address, PCN). NOT name-only. |
+| `ids[]` | number[] | Direct lookup. |
+| `with[]` | string[] | `pcn`, `clinics`, `anp`, `languages`, `specialties`. |
+
+**Response items:** Physician objects with `id`, `pcn_id`, `first_name`, `last_name`, `friendly_name`, `clinical_name`, `gender` ("m"/"f"), `nurse_practitioner` (0/1), `anp_qualifier_within_clinic_relationship`, plus eager-loaded relations. The `anp` relation contains per-clinic accepting-new-patients records: `{clinic_id, physician_id, anp, anp_qualifier}`.
+
+### Lookup tables (extracted from HAR)
+
+**Service IDs:** 1=Open After Hours, 2=Wheelchair Access, 4=Walk-in Services, 5=Virtual Appointments, 6=Online Booking.
+
+**Language IDs (sample):** 1=Cantonese, 2=English, 3=Arabic, 5=French, 13=Farsi, 19=Hindi, 21=Spanish, 27=Mandarin, 33=Punjabi, 35=Russian, 51=Urdu, 99=Other.
+
+**PCN IDs (sample):** 11=Cold Lake, 15=Grande Prairie, 33=Edmonton North, 34=Edmonton O-day'min, 35=Edmonton Southside, 36=Edmonton West, 42=No PCN.
+
+(Full enumerations live in `src/api/find-a-provider-client.ts`.)
+
+### Quirks
+
+- The `/search` endpoint sets `distance` to `null` in the response despite sorting by distance — clients must compute their own distance from each item's `lat`/`lng`.
+- `public-find` is a multi-field substring LIKE — matches "Smith" against "Smith Street", clinic names, etc. Post-filter on `friendly_name`/`clinical_name`/`first_name`/`last_name` for true name matches.
+- `pcn.polygon` returns a large GeoJSON FeatureCollection per PCN; strip it before passing to LLMs.
+- Postal-code geocoding via Nominatim is patchy in Canada; zippopotam.us provides reliable FSA-level fallback.

@@ -198,7 +198,7 @@ unzip -l ab-health-mcp.mcpb | grep "\.js$" | wc -l
 
 ## Current Implementation Status
 
-### Phase 1 + 2 Complete, MyChart Integration Complete (44 tools)
+### Phase 1 + 2 Complete, MyChart Integration Complete, Find-a-Provider Complete (48 tools)
 
 **Core infrastructure:**
 - `src/api/auth-client.ts` — Puppeteer browser-based SSO authentication (captures both MHR and MyChart sessions)
@@ -289,9 +289,16 @@ All MyChart tools use `__RequestVerificationToken` CSRF header. Base URL: `https
 - Anomaly detection: ML-based daily cost anomaly alert
 - Log Analytics daily cap: 0.5 GB/day (prevents runaway ingestion costs)
 
+### Recent Additions (v1.3.0)
+- **Find-a-Provider tool family** — 4 new tools (`find_provider`, `search_provider_by_name`, `find_provider_by_language`, `get_provider_details`) hitting the public `albertafindaprovider.ca` directory. No Alberta account, no PHI, no auth. Always real (no demo branching) — the data is public so calling the live API is safe even in demo mode. Client at `src/api/find-a-provider-client.ts` includes baked-in lookup tables (5 services, 29 languages, 32 PCNs) extracted from a HAR capture, fuzzy-match helpers, response trimming (drops `polygon`, `media`, `created_at` etc.), and a two-tier geocoder: Nominatim primary + zippopotam.us FSA-level fallback (Canadian postal coverage in Nominatim is patchy). Upstream `public-find` is a multi-field LIKE that matches addresses/clinic names too — `search_provider_by_name` post-filters to true name matches. Total tools 44 → 48.
+
+### Recent Additions (v1.2.0)
+- **Demo mode v2 (stateful, multi-persona)** — Demo mode is now stateful. Four interconnected personas — **Self** (Demo User, 39M, T2D+HTN+HLD), **Mother** (Margaret User, 72F, complex multimorbidity + polypharmacy), **Spouse** (Sarah User, 41F, Hashimoto + GAD + perimenopause, *Limited* access), **Child** (Liam User, 7M, asthma + ADHD + peanut allergy). `mc_list_proxy_access` returns all four. `mc_switch_context(proxy_id)` mutates the active persona singleton so every subsequent MHR + MyChart call returns that persona's data. Persona files live in `src/helpers/demo/personas/*.ts`; routing is via a `Proxy` wrapper in `src/helpers/demo/clients.ts` that late-binds every method call to the active persona — no edits needed to that file when adding a new persona. **Demo divergence from real**: real MHR can't switch mid-session (`selectedRecordId` is fixed at SSO), but demo MHR follows the MyChart switch so cross-persona reasoning works end-to-end. This is intentional and surfaced in the switch response's `note` field.
+
 ### Recent Additions (v1.1.28)
-- **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 44 tools (Anthropic directory Rule 17)
-- **Demo mode** — Activated via `connect_account(demo=true)` when the user asks for demo/sample data. Returns sample Alberta health data for all 44 tools with clinically coherent patient narrative. Calling `connect_account` without `demo=true` always exits demo mode.
+- **Tool annotations** — `readOnlyHint`, `destructiveHint`, `title` on all 48 tools (Anthropic directory Rule 17)
+- **Demo mode** — Activated via `connect_account(demo=true)` when the user asks for demo/sample data. Returns sample Alberta health data with clinically coherent patient narrative. Calling `connect_account` without `demo=true` always exits demo mode.
+- **Demo mode v2 (stateful, multi-persona)** — Demo mode is now stateful. Four interconnected personas are loaded — **Self** (Demo User, 39M, T2D+HTN+HLD), **Mother** (Margaret User, 72F, complex multimorbidity + polypharmacy), **Spouse** (Sarah User, 41F, Hashimoto + GAD + perimenopause, *Limited* access), **Child** (Liam User, 7M, asthma + ADHD + peanut allergy). `mc_list_proxy_access` returns all four. `mc_switch_context(proxy_id)` mutates the active persona singleton so every subsequent MHR + MyChart call returns that persona's data. Persona files live in `src/helpers/demo/personas/*.ts`; routing is via a `Proxy` wrapper in `src/helpers/demo/clients.ts` that late-binds every method call to the active persona — no edits needed to that file when adding a new persona. **Demo divergence from real**: real MHR can't switch mid-session (`selectedRecordId` is fixed at SSO), but demo MHR follows the MyChart switch so cross-persona reasoning works end-to-end. This is intentional and surfaced in the switch response's `note` field.
 - **Version check** — `connect_account` checks `/api/check-update` before any other logic. Update notification is a separate content block with a direct download link (30-minute SAS URL from myaihealth.ca).
 - **Formatting directives** — Every tool response prepends a `FORMATTING:` content block telling Claude how to display the data (table with columns, trend table, summary sections, etc.). Server instructions are kept minimal (~600 tokens) — medical disclaimer first, formatting rules, demo/tool usage.
 - **MHR client refactored** — `mhr-client.ts` uses `fetchDateRange()` helper to eliminate duplication across 18 endpoint methods.
@@ -420,7 +427,7 @@ The project includes a static landing page deployed to Azure Static Web Apps:
 ## Repository
 
 - **Visibility:** Public (open source, MIT license)
-- **Version:** v1.1.28 (use `npm run deploy` to bump)
+- **Version:** v1.3.0 (use `npm run deploy` to bump)
 - **Branch protection:** `main` branch has force push and deletion blocked, enforce_admins enabled
 - **Distribution:** The `.mcpb` bundle is NOT in the repo or GitHub releases. It's gated behind the myaihealth.ca access request form. Users can clone and build from source if they prefer.
 - **Do NOT** create GitHub releases with `.mcpb` attachments — this bypasses the access request flow.

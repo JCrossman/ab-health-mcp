@@ -64,6 +64,12 @@ import {
   mcGetProxyAccessListTool,
 } from '../tools/simple-mychart-tools.js';
 
+// Find-a-Provider tools (public Alberta provider directory — no auth)
+import { findProviderTool } from '../tools/find-provider.js';
+import { searchProviderByNameTool } from '../tools/search-provider-by-name.js';
+import { findProviderByLanguageTool } from '../tools/find-provider-by-language.js';
+import { getProviderDetailsTool } from '../tools/get-provider-details.js';
+
 /**
  * Create a fully configured MCP server with all 44 tools registered.
  */
@@ -71,7 +77,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'ab-health-mcp',
-      version: '1.1.28',
+      version: '1.3.0',
     },
     {
       instructions: [
@@ -305,6 +311,69 @@ export function createMcpServer(): McpServer {
     },
     { title: 'Download Document (MyChart)',readOnlyHint: true, destructiveHint: false },
     mcDownloadDocumentTool.handler,
+  );
+
+  // --- Find-a-Provider tools (public Alberta provider directory) ---
+  // No authentication required. Provider data is public, no PHI involved.
+  // These tools always hit the live API, even in demo mode.
+  server.tool(
+    findProviderTool.name,
+    findProviderTool.description,
+    {
+      postal_code: z.string().optional().describe('Canadian postal code (e.g. "T6G 1L7"). Resolved to lat/lng server-side.'),
+      address: z.string().optional().describe('Free-form address or place name (e.g. "downtown Calgary"). Resolved to lat/lng server-side. Postal code is preferred for accuracy.'),
+      latitude: z.number().optional().describe('Latitude in decimal degrees. Use with longitude to skip geocoding.'),
+      longitude: z.number().optional().describe('Longitude in decimal degrees. Use with latitude to skip geocoding.'),
+      radius_km: z.number().min(1).max(70).optional().describe('Search radius in kilometres (1–70). Default 10.'),
+      accepting_new_patients: z.boolean().optional().describe('Filter to clinics accepting new patients. Default true.'),
+      gender_preference: z.enum(['male', 'female']).optional().describe('Filter to clinics with at least one provider of this gender.'),
+      language: z.string().optional().describe('Language the provider speaks, e.g. "Mandarin", "Punjabi", "Arabic", "Spanish".'),
+      pcn: z.string().optional().describe('Primary Care Network name, e.g. "Edmonton West", "Calgary Foothills".'),
+      services: z.array(z.string()).optional().describe('Services to filter by, e.g. ["Walk-in Services", "Virtual Appointments", "Online Booking", "Wheelchair Access", "Open After Hours"].'),
+      walk_in_only: z.boolean().optional().describe('Limit to dedicated walk-in clinics. Default false.'),
+    },
+    { title: 'Find Provider', readOnlyHint: true, destructiveHint: false },
+    findProviderTool.handler,
+  );
+
+  server.tool(
+    searchProviderByNameTool.name,
+    searchProviderByNameTool.description,
+    {
+      name: z.string().describe('Full or partial name of the physician or nurse practitioner. Minimum 2 characters.'),
+      include_nurse_practitioners: z.boolean().optional().describe('Include nurse practitioners alongside doctors. Default true.'),
+      doctors_only: z.boolean().optional().describe('Restrict results to doctors (excludes nurse practitioners).'),
+      nurse_practitioners_only: z.boolean().optional().describe('Restrict results to nurse practitioners (excludes doctors).'),
+    },
+    { title: 'Search Provider by Name', readOnlyHint: true, destructiveHint: false },
+    searchProviderByNameTool.handler,
+  );
+
+  server.tool(
+    findProviderByLanguageTool.name,
+    findProviderByLanguageTool.description,
+    {
+      language: z.string().describe('Language the provider speaks, e.g. "Mandarin", "Punjabi", "Arabic", "Spanish", "French".'),
+      postal_code: z.string().optional().describe('Canadian postal code (e.g. "T6G 1L7"). Resolved to lat/lng server-side.'),
+      address: z.string().optional().describe('Free-form address (e.g. "downtown Calgary"). Postal code preferred.'),
+      latitude: z.number().optional().describe('Latitude in decimal degrees.'),
+      longitude: z.number().optional().describe('Longitude in decimal degrees.'),
+      radius_km: z.number().min(1).max(70).optional().describe('Search radius in km (1–70). Default 10.'),
+      accepting_new_patients: z.boolean().optional().describe('Filter to clinics accepting new patients. Default true.'),
+    },
+    { title: 'Find Provider by Language', readOnlyHint: true, destructiveHint: false },
+    findProviderByLanguageTool.handler,
+  );
+
+  server.tool(
+    getProviderDetailsTool.name,
+    getProviderDetailsTool.description,
+    {
+      id: z.number().describe('Numeric ID of the clinic, physician, or nurse practitioner from a previous search result.'),
+      type: z.enum(['clinic', 'physician', 'nurse_practitioner']).describe('Whether the ID refers to a clinic, physician, or nurse practitioner.'),
+    },
+    { title: 'Provider Details', readOnlyHint: true, destructiveHint: false },
+    getProviderDetailsTool.handler,
   );
 
   return server;
