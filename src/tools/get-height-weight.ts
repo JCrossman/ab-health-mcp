@@ -10,7 +10,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const getHeightWeightTool = {
   name: 'get_height_weight',
@@ -42,7 +42,7 @@ export const getHeightWeightTool = {
               height: data.height,
               weight: data.weight,
               bmi: data.bmi,
-              disclaimer: MEDICAL_DISCLAIMER,
+              disclaimer: MEDICAL_DISCLAIMER_SHORT,
             }),
           },
         ],

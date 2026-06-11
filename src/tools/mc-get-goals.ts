@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const mcGetGoalsTool = {
   name: 'mc_get_goals',
@@ -12,7 +12,7 @@ export const mcGetGoalsTool = {
         client.getPatientGoals(),
         client.getCareTeamGoals(),
       ]);
-      const data = { patientGoals, careTeamGoals, disclaimer: MEDICAL_DISCLAIMER };
+      const data = { patientGoals, careTeamGoals, disclaimer: MEDICAL_DISCLAIMER_SHORT };
       return {
         content: [
           formattingDirective('grouped_tables'),

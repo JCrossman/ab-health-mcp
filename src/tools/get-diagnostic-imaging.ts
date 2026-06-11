@@ -10,7 +10,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const getDiagnosticImagingTool = {
   name: 'get_diagnostic_imaging',
@@ -36,7 +36,7 @@ export const getDiagnosticImagingTool = {
           formattingDirective('table', ['Date', 'Study', 'Facility', 'Status', 'Attachments']),
           {
             type: 'text' as const,
-            text: JSON.stringify({ ...formatted, disclaimer: MEDICAL_DISCLAIMER }),
+            text: JSON.stringify({ ...formatted, disclaimer: MEDICAL_DISCLAIMER_SHORT }),
           },
         ],
       };

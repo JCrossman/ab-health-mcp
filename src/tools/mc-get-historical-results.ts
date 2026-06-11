@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const mcGetHistoricalResultsTool = {
   name: 'mc_get_historical_results',
@@ -11,7 +11,7 @@ export const mcGetHistoricalResultsTool = {
       return {
         content: [
           formattingDirective('trend_table', ['Date', 'Value', 'Unit', 'Reference Range', 'Status']),
-          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }) },
         ],
       };
     } catch (error) {

@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 interface Scan {
   dcsId: string;
@@ -34,7 +34,7 @@ export const mcGetTestResultsTool = {
       if (params.report_id) {
         const report = await client.getReportContent(params.report_id, params.order_id ? { ordId: params.order_id } : {});
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ ...report as object, disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ ...report as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }) }],
         };
       }
 
@@ -73,7 +73,7 @@ export const mcGetTestResultsTool = {
 
         contentBlocks.push({
           type: 'text' as const,
-          text: JSON.stringify({ ...result as object, disclaimer: MEDICAL_DISCLAIMER }),
+          text: JSON.stringify({ ...result as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }),
         });
 
         // Prepend formatting directive
@@ -95,7 +95,7 @@ export const mcGetTestResultsTool = {
       return {
         content: [
           formattingDirective('table', ['Date', 'Test', 'Status']),
-          { type: 'text' as const, text: JSON.stringify({ ...data as object, note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER }) },
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, note: 'Reference ranges may not be available from this source. Ask your healthcare provider about the significance of these results.', disclaimer: MEDICAL_DISCLAIMER_SHORT }) },
         ],
       };
     } catch (error) {

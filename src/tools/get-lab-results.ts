@@ -6,7 +6,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 import type { LabResult } from '../types.js';
 
 export const getLabResultsTool = {
@@ -67,7 +67,7 @@ export const getLabResultsTool = {
             type: 'text' as const,
             text: JSON.stringify({
               ...formatted,
-              disclaimer: MEDICAL_DISCLAIMER,
+              disclaimer: MEDICAL_DISCLAIMER_SHORT,
             }),
           },
         ],
@@ -87,33 +87,52 @@ export const getLabResultsTool = {
 function formatLabResults(results: LabResult[], testNameFilter?: string, maxResults: number = 20, offset: number = 0) {
   if (!Array.isArray(results)) return { totalResults: 0, results: [] };
 
-  const formatted = results.map(entry => ({
-    date: entry.labResultDisplayDateText,
-    laboratory: entry.laboratoryName,
-    orderedBy: entry.orderedByName,
-    facility: entry.orderByType,
-    source: entry.source,
-    thingId: entry.thingId,
-    groups: (entry.group ?? []).map(g => ({
-      name: g.groupName,
-      status: g.labOrderStatus,
-      tests: (g.results ?? []).map(r => ({
-        name: r.name,
-        value: r.values?.value ?? r.values?.displayValue ?? '',
-        displayValue: r.values?.displayValue ?? '',
-        unit: r.values?.unitText ?? '',
-        referenceRange: r.values?.rangeDisplayText,
-        status: r.labOrderStatus,
-        date: r.displayDate,
-      })),
-      attachments: (g.attachment ?? []).map(a => ({
+  const formatted = results.map(entry => {
+    const groups = (entry.group ?? []).map(g => {
+      const tests = (g.results ?? []).map(r => {
+        const value = r.values?.value ?? r.values?.displayValue ?? '';
+        const display = r.values?.displayValue ?? '';
+        const unit = r.values?.unitText ?? '';
+        const range = r.values?.rangeDisplayText;
+        const out: Record<string, unknown> = {
+          name: r.name,
+          value,
+          status: r.labOrderStatus,
+        };
+        // Only include displayValue when it actually differs from value
+        if (display && display !== String(value)) out.displayValue = display;
+        if (unit) out.unit = unit;
+        if (range) out.referenceRange = range;
+        // Per-test date repeats the panel date; only include when it differs
+        if (r.displayDate && r.displayDate !== entry.labResultDisplayDate) {
+          out.date = r.displayDate;
+        }
+        return out;
+      });
+      const attachments = (g.attachment ?? []).map(a => ({
         name: a.name,
         contentType: a.contentType,
         thing_id: entry.thingId,
         filename: a.name,
-      })),
-    })),
-  }));
+      }));
+      const group: Record<string, unknown> = {
+        name: g.groupName,
+        status: g.labOrderStatus,
+        tests,
+      };
+      if (attachments.length) group.attachments = attachments;
+      return group;
+    });
+    return {
+      date: entry.labResultDisplayDateText,
+      laboratory: entry.laboratoryName,
+      orderedBy: entry.orderedByName,
+      facility: entry.orderByType,
+      source: entry.source,
+      thingId: entry.thingId,
+      groups,
+    };
+  });
 
   // Client-side test name filter
   let filtered = formatted;
@@ -121,8 +140,8 @@ function formatLabResults(results: LabResult[], testNameFilter?: string, maxResu
     const filter = testNameFilter.toLowerCase();
     filtered = formatted.filter(entry =>
       entry.groups.some(g =>
-        g.name.toLowerCase().includes(filter) ||
-        g.tests.some(t => t.name.toLowerCase().includes(filter)),
+        (g.name as string).toLowerCase().includes(filter) ||
+        (g.tests as Array<{ name: string }>).some(t => t.name.toLowerCase().includes(filter)),
       ),
     );
   }
@@ -131,13 +150,13 @@ function formatLabResults(results: LabResult[], testNameFilter?: string, maxResu
   const page = filtered.slice(offset, offset + maxResults);
   const hasMore = offset + maxResults < totalMatching;
 
-  const hasAttachments = page.some(e => e.groups.some(g => g.attachments.length > 0));
+  const hasAttachments = page.some(e => e.groups.some(g => 'attachments' in g));
 
   return {
     totalResults: totalMatching,
     showing: `${offset + 1}–${Math.min(offset + maxResults, totalMatching)} of ${totalMatching}`,
     ...(hasMore ? { nextOffset: offset + maxResults, note: `Call again with offset=${offset + maxResults} to see the next page.` } : {}),
     results: page,
-    ...(hasAttachments ? { hint: 'Some results have PDF attachments. Use download_attachment with the thing_id and filename from the attachment metadata to view them.' } : {}),
+    ...(hasAttachments ? { hint: 'Some results have PDF attachments. Use download_attachment with the thing_id and filename to view them.' } : {}),
   };
 }

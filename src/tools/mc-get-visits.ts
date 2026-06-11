@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const mcGetVisitsTool = {
   name: 'mc_get_visits',
@@ -28,7 +28,7 @@ export const mcGetVisitsTool = {
         return {
           content: [
             formattingDirective('detail'),
-            { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+            { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }) },
           ],
         };
       }
@@ -49,7 +49,7 @@ export const mcGetVisitsTool = {
       return {
         content: [
           formattingDirective('table', ['Date', 'Type', 'Provider', 'Location', 'Status']),
-          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }) },
         ],
       };
     } catch (error) {

@@ -1,5 +1,5 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT } from './tool-factory.js';
 
 export const mcSwitchContextTool = {
   name: 'mc_switch_context',
@@ -11,7 +11,7 @@ export const mcSwitchContextTool = {
       if (params.proxy_id === 'self') {
         await client.switchToSelf();
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify({ switched: true, context: 'self', disclaimer: MEDICAL_DISCLAIMER }) }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ switched: true, context: 'self', disclaimer: MEDICAL_DISCLAIMER_SHORT }) }],
         };
       }
 
@@ -32,7 +32,7 @@ export const mcSwitchContextTool = {
             viewing: viewingName,
             privacyNotice: `You are now viewing health records for ${viewingName}. All data retrieved will be sent to Claude. The same privacy considerations apply as for your own records.`,
             note: 'Context switched. Use mc_get_test_results, mc_get_medications, and other mc_* tools to view this patient\'s data. Do NOT use get_lab_results (MHR) — it always returns the logged-in user\'s data.',
-            disclaimer: MEDICAL_DISCLAIMER,
+            disclaimer: MEDICAL_DISCLAIMER_SHORT,
           }),
         }],
       };

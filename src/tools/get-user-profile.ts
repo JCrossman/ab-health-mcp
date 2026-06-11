@@ -6,7 +6,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT } from './tool-factory.js';
 
 export const getUserProfileTool = {
   name: 'get_user_profile',
@@ -40,7 +40,7 @@ export const getUserProfileTool = {
             })),
             language: user.defaultUserLanguage,
             accountCreated: user.createdDateTimeUtc?.split('T')[0],
-            disclaimer: MEDICAL_DISCLAIMER,
+            disclaimer: MEDICAL_DISCLAIMER_SHORT,
           }),
         }],
       };

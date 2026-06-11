@@ -9,7 +9,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 import type { ImmunizationRecord } from '../types.js';
 
 export const getImmunizationsTool = {
@@ -55,7 +55,7 @@ export const getImmunizationsTool = {
             type: 'text' as const,
             text: JSON.stringify({
               ...formatted,
-              disclaimer: MEDICAL_DISCLAIMER,
+              disclaimer: MEDICAL_DISCLAIMER_SHORT,
             }),
           },
         ],
