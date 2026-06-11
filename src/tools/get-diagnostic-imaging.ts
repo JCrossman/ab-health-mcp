@@ -52,29 +52,36 @@ export const getDiagnosticImagingTool = {
 function formatImagingResults(results: unknown[]) {
   if (!Array.isArray(results)) return { totalResults: 0, results: [] };
 
-  const formatted = results.map((entry: any) => ({
-    date: entry.labResultDisplayDateText,
-    laboratory: entry.laboratoryName,
-    orderedBy: entry.orderedByName,
-    facility: entry.orderByType,
-    source: entry.source,
-    thingId: entry.thingId ?? entry.itemKey?.thingId,
-    groups: (entry.group ?? []).map((g: any) => ({
-      name: g.groupName,
-      status: g.labOrderStatus,
-      results: (g.results ?? []).map((r: any) => ({
-        name: r.name,
-        displayValue: r.values?.displayValue ?? '',
-        status: r.labOrderStatus,
-        date: r.displayDate,
-      })),
-      attachments: (g.attachment ?? []).map((a: any) => ({
+  const formatted = results.map((entry: any) => {
+    const top: Record<string, unknown> = {
+      date: entry.labResultDisplayDateText,
+      laboratory: entry.laboratoryName,
+      orderedBy: entry.orderedByName,
+      facility: entry.orderByType,
+    };
+    const tid = entry.thingId ?? entry.itemKey?.thingId;
+    if (tid) top.thingId = tid;
+    top.groups = (entry.group ?? []).map((g: any) => {
+      const groupOut: Record<string, unknown> = {
+        name: g.groupName,
+        status: g.labOrderStatus,
+      };
+      groupOut.results = (g.results ?? []).map((r: any) => {
+        const ro: Record<string, unknown> = { name: r.name };
+        if (r.values?.displayValue) ro.displayValue = r.values.displayValue;
+        if (r.labOrderStatus && r.labOrderStatus !== g.labOrderStatus) ro.status = r.labOrderStatus;
+        if (r.displayDate && r.displayDate !== entry.labResultDisplayDate) ro.date = r.displayDate;
+        return ro;
+      });
+      const attachments = (g.attachment ?? []).map((a: any) => ({
         name: a.name,
         contentType: a.contentType,
-        downloadUrl: a.downloadUrl,
-      })),
-    })),
-  }));
+      }));
+      if (attachments.length) groupOut.attachments = attachments;
+      return groupOut;
+    });
+    return top;
+  });
 
   return { totalResults: formatted.length, results: formatted };
 }

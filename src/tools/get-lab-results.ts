@@ -97,12 +97,15 @@ function formatLabResults(results: LabResult[], testNameFilter?: string, maxResu
         const out: Record<string, unknown> = {
           name: r.name,
           value,
-          status: r.labOrderStatus,
         };
         // Only include displayValue when it actually differs from value
         if (display && display !== String(value)) out.displayValue = display;
         if (unit) out.unit = unit;
         if (range) out.referenceRange = range;
+        // Per-test status only when it differs from the parent group's status
+        if (r.labOrderStatus && r.labOrderStatus !== g.labOrderStatus) {
+          out.status = r.labOrderStatus;
+        }
         // Per-test date repeats the panel date; only include when it differs
         if (r.displayDate && r.displayDate !== entry.labResultDisplayDate) {
           out.date = r.displayDate;
@@ -128,8 +131,6 @@ function formatLabResults(results: LabResult[], testNameFilter?: string, maxResu
       laboratory: entry.laboratoryName,
       orderedBy: entry.orderedByName,
       facility: entry.orderByType,
-      source: entry.source,
-      thingId: entry.thingId,
       groups,
     };
   });

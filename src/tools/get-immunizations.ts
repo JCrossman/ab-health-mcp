@@ -85,8 +85,6 @@ function formatImmunizations(records: ImmunizationRecord[]) {
       name: getValue('name'),
       administrator: getValue('administrator'),
       source: getValue('source'),
-      thingId: record.itemKey?.thingId,
-      isReadOnly: record.isReadOnly,
     };
   });
 
