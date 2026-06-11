@@ -1,6 +1,6 @@
 {
   "name": "ab-health-mcp",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "MCP server for Alberta My Health Records",
   "main": "build/index.js",
   "type": "module",
