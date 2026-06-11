@@ -11,7 +11,7 @@ import type { LabResult } from '../types.js';
 
 export const getLabResultsTool = {
   name: 'get_lab_results',
-  description: 'Get lab test results from your My Health Records account. Returns paginated results (default 20 per page). Use offset to get the next page of results.',
+  description: 'Lab test results from MHR. Paginated (default 20/page); use offset for next page.',
   inputSchema: {
     type: 'object' as const,
     properties: {

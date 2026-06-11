@@ -14,7 +14,7 @@ import type { ImmunizationRecord } from '../types.js';
 
 export const getImmunizationsTool = {
   name: 'get_immunizations',
-  description: 'Get immunization records from your My Health Records account, including vaccine names, dates administered, and sources.',
+  description: 'Immunization records from MHR — vaccine name, date, source.',
   inputSchema: {
     type: 'object' as const,
     properties: {

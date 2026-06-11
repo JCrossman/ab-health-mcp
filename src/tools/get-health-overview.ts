@@ -145,7 +145,7 @@ function shapeProfile(input: unknown): unknown {
 
 export const getHealthOverviewTool = {
   name: 'get_health_overview',
-  description: 'Get a comprehensive health overview from both MHR and MyChart in a single call — includes user profile, medications, allergies, recent lab results, health issues, and immunizations. Use this for broad health questions instead of calling individual tools.',
+  description: 'PREFER FOR BROAD HEALTH QUESTIONS. One call returns profile + medications + recent labs + allergies + health issues + immunizations from both MHR and MyChart. Use instead of chaining 4-6 single-tool calls.',
   handler: async () => {
     try {
       // Establish both sessions (MyChart failure is non-fatal)

@@ -10,7 +10,7 @@ import { MEDICAL_DISCLAIMER_SHORT } from './tool-factory.js';
 
 export const getUserProfileTool = {
   name: 'get_user_profile',
-  description: 'Get your My Health Records user profile, including authorized health records you can access.',
+  description: 'MHR user profile and the authorized health records you can access.',
   inputSchema: {
     type: 'object' as const,
     properties: {},

@@ -1,14 +1,22 @@
 /**
  * Simple MHR passthrough tools — each calls one client method and returns JSON.
  * Created via factory to eliminate boilerplate.
+ *
+ * Self-report tools (insulin, peak flow, dietary intake, etc.) are gated by
+ * the AB_HEALTH_ENABLE_SELF_REPORT env var. They duplicate MHR portal
+ * features that almost no one uses, so we hide them by default to keep the
+ * tool surface (and Claude's planning prompt) lean. Set
+ * AB_HEALTH_ENABLE_SELF_REPORT=1 to enable.
  */
 
 import { simpleMhrTool, mhrDateRangeTool } from './tool-factory.js';
 
+export const SELF_REPORT_TOOLS_ENABLED = process.env.AB_HEALTH_ENABLE_SELF_REPORT === '1';
+
 // No-param tools
 export const getMedicationsTool = simpleMhrTool(
   'get_medications',
-  'Get medication records from your provincial My Health Records account — community pharmacy prescriptions and dispensing history. For AHS/hospital-prescribed medications, use mc_get_medications instead.',
+  'Medications from MHR — community pharmacy prescriptions and dispensing history. For hospital-prescribed meds, use mc_get_medications.',
   c => c.getMedications(),
   'medications',
   { hint: 'table', columns: ['Medication', 'Dose', 'Frequency', 'Prescriber', 'Source'] },
@@ -17,7 +25,7 @@ export const getMedicationsTool = simpleMhrTool(
 // Date-range tools (default: 'All')
 export const getVitalsTool = mhrDateRangeTool(
   'get_vitals',
-  'Get vital signs from clinical visits — includes pulse, blood pressure, respiratory rate, temperature, and blood oxygen readings recorded by healthcare providers.',
+  'Vitals from clinical visits — pulse, BP, respiratory rate, temperature, SpO2 recorded by providers.',
   (c, p) => c.getVitalSigns(p),
   'vitals',
   'All',
@@ -26,7 +34,7 @@ export const getVitalsTool = mhrDateRangeTool(
 
 export const getBloodOxygenTool = mhrDateRangeTool(
   'get_blood_oxygen',
-  'Get blood oxygen saturation (SpO2) readings from your My Health Records account.',
+  'Blood oxygen (SpO2) readings from MHR self-report.',
   (c, p) => c.getBloodOxygen(p),
   'readings',
   'All',
@@ -35,7 +43,7 @@ export const getBloodOxygenTool = mhrDateRangeTool(
 
 export const getBloodPressureTool = mhrDateRangeTool(
   'get_blood_pressure',
-  'Get blood pressure readings from your My Health Records account.',
+  'Blood pressure readings from MHR.',
   (c, p) => c.getBloodPressure(p),
   'readings',
   'All',
@@ -44,7 +52,7 @@ export const getBloodPressureTool = mhrDateRangeTool(
 
 export const getExerciseTool = mhrDateRangeTool(
   'get_exercise',
-  'Get exercise and physical activity records from your My Health Records account — includes calories, distance, duration, and activity types.',
+  'Exercise records from MHR — calories, distance, duration, activity type.',
   (c, p) => c.getExercise(p),
   'exercise',
   'All',
@@ -54,7 +62,7 @@ export const getExerciseTool = mhrDateRangeTool(
 // Date-range tool with 'AllData' default
 export const getReferralsTool = mhrDateRangeTool(
   'get_referrals',
-  'Get specialist referral records from your provincial My Health Records account. For AHS-specific referral details, use mc_get_referrals instead.',
+  'Specialist referrals from MHR. For AHS-specific referral details, use mc_get_referrals.',
   (c, p) => c.getReferrals(p),
   'referrals',
   'AllData',
@@ -65,7 +73,7 @@ export const getReferralsTool = mhrDateRangeTool(
 
 export const getProceduresTool = mhrDateRangeTool(
   'get_procedures',
-  'Get medical procedure records from your My Health Records account — includes surgeries, biopsies, and other clinical procedures.',
+  'Procedure records from MHR — surgeries, biopsies, other clinical procedures.',
   (c, p) => c.getProcedures(p),
   'procedures',
   'All',
@@ -74,7 +82,7 @@ export const getProceduresTool = mhrDateRangeTool(
 
 export const getBloodGlucoseTool = mhrDateRangeTool(
   'get_blood_glucose',
-  'Get blood glucose monitoring records from your My Health Records account — includes glucose readings for diabetes management.',
+  'Blood glucose monitoring records from MHR (diabetes management).',
   (c, p) => c.getBloodGlucose(p),
   'readings',
   'All',
@@ -83,7 +91,7 @@ export const getBloodGlucoseTool = mhrDateRangeTool(
 
 export const getSleepTool = mhrDateRangeTool(
   'get_sleep',
-  'Get sleep session records from your My Health Records account — includes sleep duration and quality data.',
+  'Sleep session records from MHR self-report.',
   (c, p) => c.getSleep(p),
   'sessions',
   'All',
@@ -92,7 +100,7 @@ export const getSleepTool = mhrDateRangeTool(
 
 export const getDietaryIntakeTool = mhrDateRangeTool(
   'get_dietary_intake',
-  'Get dietary intake records from your My Health Records account — includes food and nutrition tracking data.',
+  'Dietary intake records from MHR self-report (food/nutrition tracking).',
   (c, p) => c.getDietaryIntake(p),
   'intake',
   'All',
@@ -101,7 +109,7 @@ export const getDietaryIntakeTool = mhrDateRangeTool(
 
 export const getInsulinTool = mhrDateRangeTool(
   'get_insulin',
-  'Get insulin injection and usage records from your My Health Records account — includes injection logs and insulin regimen data.',
+  'Insulin injection records from MHR self-report.',
   (c, p) => c.getInsulin(p),
   'insulin',
   'All',
@@ -110,7 +118,7 @@ export const getInsulinTool = mhrDateRangeTool(
 
 export const getPeakFlowTool = mhrDateRangeTool(
   'get_peak_flow',
-  'Get peak flow (asthma) records from your My Health Records account — includes peak expiratory flow readings for respiratory monitoring.',
+  'Peak flow (asthma) readings from MHR self-report.',
   (c, p) => c.getPeakFlow(p),
   'readings',
   'All',
@@ -119,7 +127,7 @@ export const getPeakFlowTool = mhrDateRangeTool(
 
 export const getWaistCircumferenceTool = mhrDateRangeTool(
   'get_waist_circumference',
-  'Get waist circumference measurements from your My Health Records account.',
+  'Waist circumference measurements from MHR self-report.',
   (c, p) => c.getWaistCircumference(p),
   'measurements',
   'All',
@@ -128,7 +136,7 @@ export const getWaistCircumferenceTool = mhrDateRangeTool(
 
 export const getSymptomJournalTool = mhrDateRangeTool(
   'get_symptom_journal',
-  'Get symptom journal entries from your My Health Records account — includes logged symptoms and health concerns.',
+  'Symptom journal entries from MHR self-report.',
   (c, p) => c.getSymptomJournal(p),
   'entries',
   'AllData',

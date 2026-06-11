@@ -14,7 +14,7 @@ import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js
 
 export const getDiagnosticImagingTool = {
   name: 'get_diagnostic_imaging',
-  description: 'Get diagnostic imaging results from your My Health Records — includes X-rays, ultrasounds, echocardiograms, CT scans, and MRIs. May include downloadable PDF reports.',
+  description: 'Imaging results from MHR — X-rays, ultrasounds, echos, CT, MRI. May include PDF reports as attachments.',
   inputSchema: {
     type: 'object' as const,
     properties: {

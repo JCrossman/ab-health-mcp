@@ -3,7 +3,7 @@ import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js
 
 export const mcGetMessagesTool = {
   name: 'mc_get_messages',
-  description: 'Get patient messages and conversations from AHS Connect (MyChart) — includes messages from your care team, appointment notifications, and test result letters. Use page parameter to load older messages.',
+  description: 'Messages and conversations from MyChart — care-team messages, appointment notifications, result letters. Use page for older messages.',
   inputSchema: {
     type: 'object' as const,
     properties: {

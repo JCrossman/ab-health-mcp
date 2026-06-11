@@ -3,7 +3,7 @@ import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js
 
 export const mcGetGoalsTool = {
   name: 'mc_get_goals',
-  description: 'Get health goals from MyChart — includes wellness targets, treatment objectives, and progress set by you and your care team.',
+  description: 'Health goals from MyChart — wellness targets, treatment objectives, progress.',
   inputSchema: { type: 'object' as const, properties: {} },
   handler: async () => {
     try {

@@ -3,7 +3,7 @@ import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js
 
 export const mcGetDocumentsTool = {
   name: 'mc_get_documents',
-  description: 'Get clinical documents from MyChart — includes discharge summaries, progress notes, and procedure reports. Use document_id to get a specific document.',
+  description: 'Clinical documents from MyChart — discharge summaries, progress notes, procedure reports. Use document_id for a specific one.',
   inputSchema: {
     type: 'object' as const,
     properties: {

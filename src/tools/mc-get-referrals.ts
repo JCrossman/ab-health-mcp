@@ -3,7 +3,7 @@ import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js
 
 export const mcGetReferralsTool = {
   name: 'mc_get_referrals',
-  description: 'Get specialist referral details from AHS MyChart — includes specialty, provider, status, and clinical notes.',
+  description: 'Specialist referrals from MyChart — specialty, provider, status, notes.',
   inputSchema: {
     type: 'object' as const,
     properties: {

@@ -8,7 +8,7 @@ interface Scan {
 
 export const mcGetTestResultsTool = {
   name: 'mc_get_test_results',
-  description: 'Test results from AHS labs (MyChart). When getting details for a specific test, also fetches the full report content and lists available scans/images. Use mc_download_document to retrieve individual scan images.',
+  description: 'Test results from AHS labs (MyChart). With order_id, also fetches the full report + scan list. Use mc_download_document for scan images.',
   inputSchema: {
     type: 'object' as const,
     properties: {

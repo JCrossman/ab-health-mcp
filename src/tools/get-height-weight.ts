@@ -14,7 +14,7 @@ import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js
 
 export const getHeightWeightTool = {
   name: 'get_height_weight',
-  description: 'Get height, weight, and BMI measurements from your My Health Records account. Shows trends over time.',
+  description: 'Height, weight, and BMI from MHR. Shows trends over time.',
   inputSchema: {
     type: 'object' as const,
     properties: {

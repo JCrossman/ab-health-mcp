@@ -93,7 +93,7 @@ async function checkForUpdate(): Promise<UpdateInfo | undefined> {
 
 export const connectAccountTool = {
   name: 'connect_account',
-  description: 'Sign in to your MyAlberta account to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser window for you to enter your credentials. Reuses an existing session if still valid — set force=true to re-authenticate. Set demo=true only when the user explicitly asks for demo mode or sample data.',
+  description: 'Sign in to MyAlberta to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser if no valid session. Use demo=true ONLY when the user explicitly asks for demo or sample data.',
   inputSchema: {
     type: 'object' as const,
     properties: {

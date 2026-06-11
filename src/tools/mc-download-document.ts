@@ -20,7 +20,7 @@ import { logger } from '../utils/logger.js';
 
 export const mcDownloadDocumentTool = {
   name: 'mc_download_document',
-  description: 'Download a document or image scan from MyChart. Use with dcsId and fileExtension from test result scans or clinical documents. Returns images inline and extracts text from PDFs.',
+  description: 'Download a MyChart document or scan image. Use dcsId + fileExtension from test result scans or document listings.',
   inputSchema: {
     type: 'object' as const,
     properties: {
