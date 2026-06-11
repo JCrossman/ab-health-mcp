@@ -1,0 +1,448 @@
+{
+  "capturedAt": "2026-06-11T20:53:40.947Z",
+  "nodeVersion": "v25.2.1",
+  "calls": [
+    {
+      "label": "connect_account[demo]",
+      "tool": "connect_account",
+      "duration_ms": 1882.14,
+      "response_bytes": 583,
+      "is_error": false
+    },
+    {
+      "label": "check_connection[after-connect]",
+      "tool": "check_connection",
+      "duration_ms": 0.96,
+      "response_bytes": 78,
+      "is_error": false
+    },
+    {
+      "label": "self.get_user_profile",
+      "tool": "get_user_profile",
+      "duration_ms": 0.64,
+      "response_bytes": 989,
+      "is_error": false
+    },
+    {
+      "label": "self.get_lab_results[LastYear]",
+      "tool": "get_lab_results",
+      "duration_ms": 0.77,
+      "response_bytes": 6397,
+      "is_error": false
+    },
+    {
+      "label": "self.get_lab_results[All]",
+      "tool": "get_lab_results",
+      "duration_ms": 0.36,
+      "response_bytes": 6397,
+      "is_error": false
+    },
+    {
+      "label": "self.get_medications",
+      "tool": "get_medications",
+      "duration_ms": 0.32,
+      "response_bytes": 1739,
+      "is_error": false
+    },
+    {
+      "label": "self.get_immunizations",
+      "tool": "get_immunizations",
+      "duration_ms": 0.37,
+      "response_bytes": 1409,
+      "is_error": false
+    },
+    {
+      "label": "self.get_vitals",
+      "tool": "get_vitals",
+      "duration_ms": 0.34,
+      "response_bytes": 1091,
+      "is_error": false
+    },
+    {
+      "label": "self.get_blood_pressure",
+      "tool": "get_blood_pressure",
+      "duration_ms": 0.36,
+      "response_bytes": 2204,
+      "is_error": false
+    },
+    {
+      "label": "self.get_blood_glucose",
+      "tool": "get_blood_glucose",
+      "duration_ms": 0.23,
+      "response_bytes": 2082,
+      "is_error": false
+    },
+    {
+      "label": "self.get_diagnostic_imaging",
+      "tool": "get_diagnostic_imaging",
+      "duration_ms": 0.25,
+      "response_bytes": 1109,
+      "is_error": false
+    },
+    {
+      "label": "self.mc_get_allergies",
+      "tool": "mc_get_allergies",
+      "duration_ms": 0.25,
+      "response_bytes": 914,
+      "is_error": false
+    },
+    {
+      "label": "self.mc_get_health_issues",
+      "tool": "mc_get_health_issues",
+      "duration_ms": 0.18,
+      "response_bytes": 1504,
+      "is_error": false
+    },
+    {
+      "label": "self.mc_get_medications",
+      "tool": "mc_get_medications",
+      "duration_ms": 0.15,
+      "response_bytes": 1401,
+      "is_error": false
+    },
+    {
+      "label": "self.mc_get_care_team",
+      "tool": "mc_get_care_team",
+      "duration_ms": 0.3,
+      "response_bytes": 1166,
+      "is_error": false
+    },
+    {
+      "label": "self.mc_get_visits[past]",
+      "tool": "mc_get_visits",
+      "duration_ms": 0.28,
+      "response_bytes": 1274,
+      "is_error": false
+    },
+    {
+      "label": "self.mc_get_messages[inbox]",
+      "tool": "mc_get_messages",
+      "duration_ms": 0.24,
+      "response_bytes": 1677,
+      "is_error": false
+    },
+    {
+      "label": "self.get_health_overview",
+      "tool": "get_health_overview",
+      "duration_ms": 0.62,
+      "response_bytes": 20065,
+      "is_error": false
+    },
+    {
+      "label": "mc_list_proxy_access",
+      "tool": "mc_list_proxy_access",
+      "duration_ms": 0.31,
+      "response_bytes": 2950,
+      "is_error": false
+    },
+    {
+      "label": "switch->mother",
+      "tool": "mc_switch_context",
+      "duration_ms": 0.27,
+      "response_bytes": 869,
+      "is_error": false
+    },
+    {
+      "label": "mother.get_health_overview",
+      "tool": "get_health_overview",
+      "duration_ms": 0.57,
+      "response_bytes": 27139,
+      "is_error": false
+    },
+    {
+      "label": "mother.get_medications",
+      "tool": "get_medications",
+      "duration_ms": 0.25,
+      "response_bytes": 4739,
+      "is_error": false
+    },
+    {
+      "label": "mother.get_lab_results[LastYear]",
+      "tool": "get_lab_results",
+      "duration_ms": 0.24,
+      "response_bytes": 6849,
+      "is_error": false
+    },
+    {
+      "label": "switch->spouse",
+      "tool": "mc_switch_context",
+      "duration_ms": 0.21,
+      "response_bytes": 863,
+      "is_error": false
+    },
+    {
+      "label": "spouse.get_health_overview",
+      "tool": "get_health_overview",
+      "duration_ms": 0.39,
+      "response_bytes": 16207,
+      "is_error": false
+    },
+    {
+      "label": "switch->child",
+      "tool": "mc_switch_context",
+      "duration_ms": 0.19,
+      "response_bytes": 861,
+      "is_error": false
+    },
+    {
+      "label": "child.get_health_overview",
+      "tool": "get_health_overview",
+      "duration_ms": 0.38,
+      "response_bytes": 11777,
+      "is_error": false
+    },
+    {
+      "label": "switch->self",
+      "tool": "mc_switch_context",
+      "duration_ms": 0.22,
+      "response_bytes": 460,
+      "is_error": false
+    },
+    {
+      "label": "disconnect_account",
+      "tool": "disconnect_account",
+      "duration_ms": 0.4,
+      "response_bytes": 90,
+      "is_error": false
+    }
+  ],
+  "server_perf_lines": [
+    {
+      "perf": true,
+      "tool": "connect_account",
+      "demo": true,
+      "duration_ms": 1880.32,
+      "response_bytes": 583,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "check_connection",
+      "demo": true,
+      "duration_ms": 0.24,
+      "response_bytes": 78,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_user_profile",
+      "demo": true,
+      "duration_ms": 0.19,
+      "response_bytes": 989,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_lab_results",
+      "demo": true,
+      "duration_ms": 0.29,
+      "response_bytes": 6397,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_lab_results",
+      "demo": true,
+      "duration_ms": 0.04,
+      "response_bytes": 6397,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_medications",
+      "demo": true,
+      "duration_ms": 0.09,
+      "response_bytes": 1739,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_immunizations",
+      "demo": true,
+      "duration_ms": 0.12,
+      "response_bytes": 1409,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_vitals",
+      "demo": true,
+      "duration_ms": 0.06,
+      "response_bytes": 1091,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_blood_pressure",
+      "demo": true,
+      "duration_ms": 0.03,
+      "response_bytes": 2204,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_blood_glucose",
+      "demo": true,
+      "duration_ms": 0.02,
+      "response_bytes": 2082,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_diagnostic_imaging",
+      "demo": true,
+      "duration_ms": 0.09,
+      "response_bytes": 1109,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_get_allergies",
+      "demo": true,
+      "duration_ms": 0.09,
+      "response_bytes": 914,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_get_health_issues",
+      "demo": true,
+      "duration_ms": 0.02,
+      "response_bytes": 1504,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_get_medications",
+      "demo": true,
+      "duration_ms": 0.02,
+      "response_bytes": 1401,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_get_care_team",
+      "demo": true,
+      "duration_ms": 0.03,
+      "response_bytes": 1166,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_get_visits",
+      "demo": true,
+      "duration_ms": 0.08,
+      "response_bytes": 1274,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_get_messages",
+      "demo": true,
+      "duration_ms": 0.06,
+      "response_bytes": 1677,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_health_overview",
+      "demo": true,
+      "duration_ms": 0.2,
+      "response_bytes": 20065,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_list_proxy_access",
+      "demo": true,
+      "duration_ms": 0.1,
+      "response_bytes": 2950,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_switch_context",
+      "demo": true,
+      "duration_ms": 0.1,
+      "response_bytes": 869,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_health_overview",
+      "demo": true,
+      "duration_ms": 0.19,
+      "response_bytes": 27139,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_medications",
+      "demo": true,
+      "duration_ms": 0.02,
+      "response_bytes": 4739,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_lab_results",
+      "demo": true,
+      "duration_ms": 0.03,
+      "response_bytes": 6849,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_switch_context",
+      "demo": true,
+      "duration_ms": 0.03,
+      "response_bytes": 863,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_health_overview",
+      "demo": true,
+      "duration_ms": 0.11,
+      "response_bytes": 16207,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_switch_context",
+      "demo": true,
+      "duration_ms": 0.01,
+      "response_bytes": 861,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "get_health_overview",
+      "demo": true,
+      "duration_ms": 0.11,
+      "response_bytes": 11777,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "mc_switch_context",
+      "demo": true,
+      "duration_ms": 0.04,
+      "response_bytes": 460,
+      "is_error": false
+    },
+    {
+      "perf": true,
+      "tool": "disconnect_account",
+      "demo": true,
+      "duration_ms": 0.18,
+      "response_bytes": 90,
+      "is_error": false
+    }
+  ],
+  "totals": {
+    "calls": 29,
+    "duration_ms": 1892.19,
+    "response_bytes": 124883
+  }
+}
