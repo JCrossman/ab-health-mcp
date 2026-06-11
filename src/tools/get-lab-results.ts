@@ -6,7 +6,7 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, composeNextStepHint, formattingDirective } from './tool-factory.js';
 import type { LabResult } from '../types.js';
 
 export const getLabResultsTool = {
@@ -59,6 +59,7 @@ export const getLabResultsTool = {
       });
 
       const formatted = formatLabResults(results, args.test_name, args.max_results ?? 20, args.offset ?? 0);
+      const hint = composeNextStepHint(formatted.totalResults ?? 0, 3);
 
       return {
         content: [
@@ -68,6 +69,7 @@ export const getLabResultsTool = {
             text: JSON.stringify({
               ...formatted,
               disclaimer: MEDICAL_DISCLAIMER_SHORT,
+              ...(hint && { _hint: hint }),
             }),
           },
         ],

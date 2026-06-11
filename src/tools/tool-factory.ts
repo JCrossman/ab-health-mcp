@@ -27,6 +27,23 @@ export const MEDICAL_DISCLAIMER = 'IMPORTANT: This is your health record data fo
  */
 export const MEDICAL_DISCLAIMER_SHORT = 'For information only — not medical advice. Always consult your healthcare provider.';
 
+/**
+ * Optional nudge appended to broad single-tool responses to steer the model
+ * toward the composite `get_health_overview` on future broad questions —
+ * which collapses 4-6 round trips into one. Disable via
+ * `AB_HEALTH_COMPOSITE_HINTS=0`.
+ *
+ * Designed to be a no-op when responses are small (the question was narrow)
+ * or when the env var disables it. Caller passes the threshold-triggering
+ * count so we don't have to count twice.
+ */
+const COMPOSITE_HINTS_ENABLED = process.env.AB_HEALTH_COMPOSITE_HINTS !== '0';
+export function composeNextStepHint(count: number, threshold: number): string | undefined {
+  if (!COMPOSITE_HINTS_ENABLED) return undefined;
+  if (count < threshold) return undefined;
+  return 'For broad questions about overall health, call get_health_overview once instead of multiple separate tools.';
+}
+
 const DEFAULT_MAX_RESULTS = 50;
 
 type ToolResult = {
@@ -120,11 +137,14 @@ export function simpleMhrTool(
         const data = await method(client);
         const content: Array<{ type: 'text'; text: string }> = [];
         if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        const truncated = truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0);
+        const hint = composeNextStepHint(truncated.totalRecords ?? 0, 5);
         content.push({
           type: 'text' as const,
           text: JSON.stringify({
-            ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
+            ...truncated,
             disclaimer: MEDICAL_DISCLAIMER_SHORT,
+            ...(hint && { _hint: hint }),
           }),
         });
         return { content };
@@ -153,11 +173,14 @@ export function mhrDateRangeTool(
         const data = await method(client, { dateRange: args.date_range ?? defaultRange });
         const content: Array<{ type: 'text'; text: string }> = [];
         if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        const truncated = truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0);
+        const hint = composeNextStepHint(truncated.totalRecords ?? 0, 5);
         content.push({
           type: 'text' as const,
           text: JSON.stringify({
-            ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
+            ...truncated,
             disclaimer: MEDICAL_DISCLAIMER_SHORT,
+            ...(hint && { _hint: hint }),
           }),
         });
         return { content };
