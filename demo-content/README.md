@@ -13,6 +13,7 @@ These specs are **verified working** in demo mode against the tools in this repo
 | [`cowork-slide-prompt.md`](cowork-slide-prompt.md) | **Exec preview slide** | A ready-to-paste Copilot Cowork prompt that builds a one-slide demo teaser with persona photos. |
 | [`SETUP.md`](SETUP.md) | Prerequisites & wiring | What must be installed for the demos to run. |
 | [`RUN-OF-SHOW.md`](RUN-OF-SHOW.md) | Timing & rehearsal plan | Per-step time estimates, measured API latency, and a stopwatch worksheet for pacing. |
+| [`FALLBACK-SCRIPT.md`](FALLBACK-SCRIPT.md) | Offline backup | Every prompt + its full captured response, to read or screen-share if the network drops mid-demo. |
 
 ## How to read these specs
 
