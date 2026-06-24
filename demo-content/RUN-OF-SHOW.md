@@ -51,32 +51,47 @@ data and are effectively instant (<1 s). None of this is a bottleneck.
 Estimates are response time only (tool + generation). Narration is your spoken
 budget over/after the response. Fill **Actual** during the stopwatch pass.
 
-| # | Step | Type | Tool | Gen (Sonnet) | Response est. | Narration | Actual |
-|---|------|------|------|--------------|---------------|-----------|--------|
-| 1 | Connect (demo) | Instant | ~1 s | ~4 s | **~5 s** | 20 s | |
-| 2 | Full health overview | Instant | ~1 s | ~15 s | **~16 s** | 40 s | |
-| 3 | Switch to Margaret + overview | Instant | ~1.5 s | ~18 s | **~20 s** | 45 s | |
-| 4 | Polypharmacy review | Instant | ~1 s | ~16 s | **~17 s** | 50 s | |
-| 5 | Find assisted living (LIVE, 1st live call) | Live | ~2 s cold | ~12 s | **~14 s** | 40 s | |
-| 6 | Facility deep-dive + photos | Live | ~3 s | ~18 s | **~21 s** | 45 s | |
-| 7 | Explain care options | Instant | <1 s | ~13 s | **~13 s** | 35 s | |
-| 8 | Caregiver action plan | Instant | 0 s | ~18 s | **~18 s** | 45 s | |
+| # | Step | Type | Tool | Gen (Sonnet) | Response est. | Narration | Actual (Opus) |
+|---|------|------|------|--------------|---------------|-----------|---------------|
+| 1 | Connect (demo) | Instant | ~1 s | ~4 s | **~5 s** | 20 s | **13 s** |
+| 2 | Full health overview | Instant | ~1 s | ~15 s | **~16 s** | 40 s | **18 s** |
+| 3 | Switch to Margaret + overview | Instant | ~1.5 s | ~18 s | **~20 s** | 45 s | **62 s** ¹ |
+| 4 | Polypharmacy review | Instant | ~1 s | ~16 s | **~17 s** | 50 s | **21 s** |
+| 5 | Find assisted living (LIVE, 1st live call) | Live | ~2 s cold | ~12 s | **~14 s** | 40 s | **18 s** |
+| 6 | Facility deep-dive + photos | Live | ~3 s | ~18 s | **~21 s** | 45 s | **40 s** ² |
+| 7 | Explain care options | Instant | <1 s | ~13 s | **~13 s** | 35 s | **34 s** |
+| 8 | Caregiver action plan | Instant | 0 s | ~18 s | **~18 s** | 45 s | **40 s** |
 
-**Persona 1 response total: ~2.1 min. With narration: ~7–8 min.**
+**Persona 1 measured (Opus): 248 s ≈ 4 min 8 s of response time.** With narration: ~7–8 min.
+
+> ¹ **Step 3 is inflated by the test harness, not the demo.** Margaret's overview
+> returned a 26 KB payload that my environment saved to a temp file and I had to
+> re-read and parse — plus a first proxy-switch retry. In the real demo the model
+> receives that payload in-context and switches directly, so expect **~25–30 s**,
+> not 62 s.
+> ² Step 6 includes rendering 3 facility photos — that cost is real and will
+> happen live.
 
 ---
 
 ## Persona 2 — The Newcomer (5 steps)
 
-| # | Step | Type | Tool | Gen (Sonnet) | Response est. | Narration | Actual |
-|---|------|------|------|--------------|---------------|-----------|--------|
-| 1 | Find Punjabi-speaking doctor (LIVE, 1st live call) | Live | ~2 s cold | ~11 s | **~13 s** | 30 s | |
-| 2 | Reply in Punjabi (pure translation) | Instant | 0 s | ~10 s | **~10 s** | 25 s | |
-| 3 | Filter to female doctor | Live | ~1 s | ~7 s | **~8 s** | 20 s | |
-| 4 | Walk-in / after-hours filter | Live | ~1 s | ~7 s | **~8 s** | 20 s | |
-| 5 | Clinic details | Live | ~1 s | ~9 s | **~10 s** | 20 s | |
+| # | Step | Type | Tool | Gen (Sonnet) | Response est. | Narration | Actual (Opus) |
+|---|------|------|------|--------------|---------------|-----------|---------------|
+| 1 | Find Punjabi-speaking doctor (LIVE, 1st live call) | Live | ~2 s cold | ~11 s | **~13 s** | 30 s | **29 s** |
+| 2 | Reply in Punjabi (pure translation) | Instant | 0 s | ~10 s | **~10 s** | 25 s | **44 s** ³ |
+| 3 | Filter to female doctor | Live | ~1 s | ~7 s | **~8 s** | 20 s | **25 s** |
+| 4 | Walk-in / after-hours filter | Live | ~1 s | ~7 s | **~8 s** | 20 s | **27 s** ⁴ |
+| 5 | Clinic details | Live | ~1 s | ~9 s | **~10 s** | 20 s | **14 s** |
 
-**Persona 2 response total: ~0.8 min. With narration: ~3–4 min.**
+**Persona 2 measured (Opus): 139 s ≈ 2 min 19 s of response time.** With narration: ~3–4 min.
+
+> ³ **Replying in Punjabi is genuinely the slowest step** — non-Latin script
+> (Gurmukhi) costs far more tokens to generate, so it runs ~2× a comparable
+> English answer. This *will* happen live; it's a good "watch it think in your
+> language" beat, but don't rush it.
+> ⁴ Step 4 returned a 174 KB result that my harness saved to a temp file and
+> re-parsed; in-context the model skips that, so expect closer to ~12–15 s live.
 
 ---
 
@@ -93,6 +108,25 @@ budget over/after the response. Fill **Actual** during the stopwatch pass.
 
 Aim to **present in ~15 min** so there's room for questions and the inevitable
 "can it do X?" tangent.
+
+---
+
+## What the live (Opus) pass taught us
+
+A full end-to-end timed run on **2026-06-24, Claude Opus** (an upper bound — your
+Sonnet demo will be faster on generation):
+
+- **Pure response time:** Persona 1 ≈ **4 min**, Persona 2 ≈ **2.3 min**. The rest
+  of the segment budget is your narration, not the model.
+- **Network was never the bottleneck.** Every live API call returned in ~1–2 s,
+  cold or warm. The clock is dominated by **how much the model writes.**
+- **The big synthesis steps run long** (health overviews, action plan: 30–60 s on
+  Opus). Plan to **talk over them** — they're your narration windows, not dead air.
+- **Replying in Punjabi is the single slowest step** (~44 s on Opus) because
+  non-Latin script is token-expensive. Treat it as a feature: let it render while
+  you explain what's happening. Sonnet will trim this but it stays the slow one.
+- **Sonnet adjustment:** expect roughly **0.6–0.8×** these Opus times on the
+  generation-heavy steps. Re-time once on Sonnet to lock your final numbers.
 
 ---
 
