@@ -10,6 +10,7 @@ These specs are **verified working** in demo mode against the tools in this repo
 |------|----------|----------------|
 | [`persona-1-caregiver.md`](persona-1-caregiver.md) | **The Caregiver** (Dave + mother Margaret) | One question crosses health records *and* assisted-living placement. |
 | [`persona-2-newcomer.md`](persona-2-newcomer.md) | **The Newcomer** (Amara) | Find a doctor who speaks your language — and get answers in that language. |
+| [`cowork-slide-prompt.md`](cowork-slide-prompt.md) | **Exec preview slide** | A ready-to-paste Copilot Cowork prompt that builds a one-slide demo teaser with persona photos. |
 | [`SETUP.md`](SETUP.md) | Prerequisites & wiring | What must be installed for the demos to run. |
 
 ## How to read these specs
