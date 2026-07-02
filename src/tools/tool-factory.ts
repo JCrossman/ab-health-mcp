@@ -14,6 +14,36 @@ import type { MyChartClient } from '../api/mychart-client.js';
 
 export const MEDICAL_DISCLAIMER = 'IMPORTANT: This is your health record data for informational purposes only — it is NOT medical advice. Always consult your doctor or healthcare provider to interpret results and make health decisions. Note: Health records may not reflect your complete medical history. Results may take 24-72 hours to appear after testing. Records from out-of-province providers or some community clinics may not be included.';
 
+/**
+ * Short, per-response disclaimer used by individual data tools.
+ *
+ * Trade-off: the full `MEDICAL_DISCLAIMER` is surfaced once per session via
+ * `connect_account` (session start) and again on the composite
+ * `get_health_overview` (the only tool likely to answer a broad question
+ * without follow-up calls). Repeating the full ~380-char string on every
+ * tool response was costing ~10 KB per typical session script with no
+ * additional safety value — the system prompt already enforces the medical
+ * disclaimer language on the model's outputs to the end user.
+ */
+export const MEDICAL_DISCLAIMER_SHORT = 'For information only — not medical advice. Always consult your healthcare provider.';
+
+/**
+ * Optional nudge appended to broad single-tool responses to steer the model
+ * toward the composite `get_health_overview` on future broad questions —
+ * which collapses 4-6 round trips into one. Disable via
+ * `AB_HEALTH_COMPOSITE_HINTS=0`.
+ *
+ * Designed to be a no-op when responses are small (the question was narrow)
+ * or when the env var disables it. Caller passes the threshold-triggering
+ * count so we don't have to count twice.
+ */
+const COMPOSITE_HINTS_ENABLED = process.env.AB_HEALTH_COMPOSITE_HINTS !== '0';
+export function composeNextStepHint(count: number, threshold: number): string | undefined {
+  if (!COMPOSITE_HINTS_ENABLED) return undefined;
+  if (count < threshold) return undefined;
+  return 'For broad questions about overall health, call get_health_overview once instead of multiple separate tools.';
+}
+
 const DEFAULT_MAX_RESULTS = 50;
 
 type ToolResult = {
@@ -23,26 +53,26 @@ type ToolResult = {
 
 /** Build a formatting directive content block that precedes the data. */
 export function formattingDirective(hint: string, columns?: string[]): { type: 'text'; text: string } {
-  const colStr = columns ? ` Columns: ${columns.join(' | ')}.` : '';
+  const colStr = columns ? ` Cols: ${columns.join(' | ')}.` : '';
   let instruction: string;
   switch (hint) {
     case 'table':
-      instruction = `FORMATTING: Present the following data as a markdown table.${colStr} Lead with a 1-2 sentence summary. Use 🟢 Normal / 🟡 Borderline / 🔴 Outside range for status (always include text label with emoji). Never dump as paragraphs.`;
+      instruction = `Render as markdown table.${colStr} Status: 🟢normal 🟡borderline 🔴out-of-range. Lead with a 1-2 sentence summary.`;
       break;
     case 'trend_table':
-      instruction = `FORMATTING: Present the following data as a markdown table showing trends over time.${colStr} After the table, describe the trend direction using ↑ Increasing / ↓ Decreasing / → Stable. Lead with a 1-2 sentence summary.`;
+      instruction = `Render as markdown table showing trends over time.${colStr} Add ↑↓→ for direction. Lead with a 1-2 sentence summary.`;
       break;
     case 'summary_sections':
-      instruction = `FORMATTING: Present each section of this data under its own ## heading with a brief table or bullet list. Lead with a 1-2 sentence overall summary. Never dump all data as one block of text.`;
+      instruction = `Render each section under its own ## heading with a short table or list. Lead with a 1-2 sentence summary.`;
       break;
     case 'grouped_tables':
-      instruction = `FORMATTING: Present each group of data as its own labeled markdown table under a ## heading. Lead with a brief summary.`;
+      instruction = `Render each group as its own markdown table under a ## heading. Lead with a brief summary.`;
       break;
     case 'detail':
-      instruction = `FORMATTING: Present this record's details as a clean list of key-value pairs under clear headings. Use bold for field names.`;
+      instruction = `Render as key-value pairs under clear headings. Bold field names.`;
       break;
     default:
-      instruction = `FORMATTING: Present this data in a clean, scannable format using markdown tables where appropriate. Never dump as paragraphs.`;
+      instruction = `Render with markdown tables where appropriate.`;
   }
   return { type: 'text' as const, text: instruction };
 }
@@ -80,7 +110,7 @@ export function simpleMyChartTool(
         if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
         content.push({ type: 'text' as const, text: JSON.stringify({
           ...data as object,
-          disclaimer: MEDICAL_DISCLAIMER,
+          disclaimer: MEDICAL_DISCLAIMER_SHORT,
         }) });
         return { content };
       } catch (error) {
@@ -107,11 +137,14 @@ export function simpleMhrTool(
         const data = await method(client);
         const content: Array<{ type: 'text'; text: string }> = [];
         if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        const truncated = truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0);
+        const hint = composeNextStepHint(truncated.totalRecords ?? 0, 5);
         content.push({
           type: 'text' as const,
           text: JSON.stringify({
-            ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
-            disclaimer: MEDICAL_DISCLAIMER,
+            ...truncated,
+            disclaimer: MEDICAL_DISCLAIMER_SHORT,
+            ...(hint && { _hint: hint }),
           }),
         });
         return { content };
@@ -140,11 +173,14 @@ export function mhrDateRangeTool(
         const data = await method(client, { dateRange: args.date_range ?? defaultRange });
         const content: Array<{ type: 'text'; text: string }> = [];
         if (displayHint) content.push(formattingDirective(displayHint.hint, displayHint.columns));
+        const truncated = truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0);
+        const hint = composeNextStepHint(truncated.totalRecords ?? 0, 5);
         content.push({
           type: 'text' as const,
           text: JSON.stringify({
-            ...truncateResults(data, resultKey, args.max_results ?? DEFAULT_MAX_RESULTS, args.offset ?? 0),
-            disclaimer: MEDICAL_DISCLAIMER,
+            ...truncated,
+            disclaimer: MEDICAL_DISCLAIMER_SHORT,
+            ...(hint && { _hint: hint }),
           }),
         });
         return { content };

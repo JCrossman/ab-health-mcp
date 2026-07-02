@@ -7,6 +7,22 @@
 3. **Fail to the API.** If a request is invalid, let the API return the error. Don't validate client-side.
 4. **Minimal tool surface.** Start with confirmed endpoints only. Add tools as new endpoints are verified.
 
+## Disclaimer & Steering Policy (v1.4.0+)
+
+Per-response overhead is intentionally kept lean to reduce model latency on Claude Desktop:
+
+- The **full** `MEDICAL_DISCLAIMER` (~380 chars) is emitted once per session by `connect_account` and on the composite `get_health_overview` tool.
+- All other data tools emit a **short** disclaimer (~85 chars): *"For information only — not medical advice. Always consult your healthcare provider."*
+- Broad-read tools (`get_lab_results`, `get_medications`, `get_immunizations`, etc.) emit an optional `_hint` field nudging the model toward `get_health_overview` when the returned record count suggests a holistic question.
+
+## Optional Environment Variables (v1.4.0+)
+
+| Var | Default | Effect |
+|---|---|---|
+| `AB_HEALTH_ENABLE_SELF_REPORT` | unset (off) | Set to `1` to register 7 rarely-used MHR self-report tools: `get_blood_oxygen`, `get_sleep`, `get_dietary_intake`, `get_insulin`, `get_peak_flow`, `get_waist_circumference`, `get_symptom_journal`. Off by default to keep the tool list lean (41 default, 48 with this flag). |
+| `AB_HEALTH_COMPOSITE_HINTS` | `1` (on) | Set to `0` to suppress the `_hint` steering field on broad-read responses. |
+| `AB_HEALTH_PERF_LOG` | unset (off) | Set to `1` to emit per-tool-call JSON timing lines to stderr (`{tool, demo, duration_ms, response_bytes, is_error}`). PII-safe. Used by `scripts/bench-demo.ts`. |
+
 ---
 
 ## Phase 1 Tools (Confirmed and Implemented)

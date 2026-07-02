@@ -1,13 +1,19 @@
 /**
  * MCP Server factory.
  *
- * Creates a fully configured McpServer with all 44 tools registered.
+ * Creates a fully configured McpServer with all data + session tools registered.
  * Used by both stdio (index.ts) and HTTP (http-index.ts) entry points.
+ *
+ * Tool count varies: 41 by default; 48 when AB_HEALTH_ENABLE_SELF_REPORT=1
+ * exposes the 7 self-report MHR tools (insulin, peak flow, dietary intake,
+ * etc.). These duplicate MHR portal features that almost no one uses, so
+ * they are hidden by default to keep Claude's tool-planning prompt lean.
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { VERSION } from '../version.js';
+import { withPerfTiming } from '../utils/perf.js';
 
 // MHR tools (complex — individual files)
 import { connectAccountTool } from '../tools/connect-account.js';
@@ -37,6 +43,7 @@ import {
   getPeakFlowTool,
   getWaistCircumferenceTool,
   getSymptomJournalTool,
+  SELF_REPORT_TOOLS_ENABLED,
 } from '../tools/simple-mhr-tools.js';
 
 // MyChart tools (complex — individual files)
@@ -84,26 +91,22 @@ export function createMcpServer(): McpServer {
       instructions: [
         'You are helping a user access and understand their Alberta health records.',
         '',
-        'Medical disclaimer:',
-        '• You are NOT a medical professional. Never diagnose or recommend treatments without strong caveats.',
-        '• Always remind users to consult their healthcare provider for medical decisions.',
-        '• Provide factual context (reference ranges) but clarify only their doctor can interpret results in full context.',
-        '• This tool is provided "as is" — not a medical device or health service.',
+        'Disclaimer (always honor):',
+        '• Not a medical professional. Don\'t diagnose or recommend treatments without strong caveats.',
+        '• Remind users to consult their provider for medical decisions.',
+        '• Provide factual context (reference ranges); only their doctor can fully interpret results.',
         '',
         'Formatting:',
-        '• Use markdown tables for any list of 3+ items. Never dump data as paragraphs.',
-        '• Lead with a 1-2 sentence summary, then the detail table.',
-        '• Each tool response includes a FORMATTING directive — follow it.',
-        '• Status indicators (always pair emoji with text): 🔴 High/Low, 🟡 Borderline, 🟢 Normal, ↑↓→ for trends.',
-        '',
-        'Demo mode:',
-        '• Only set demo=true when the user explicitly says "demo", "demo mode", or "sample data".',
-        '• Do NOT use demo mode when the user asks to connect to their real health data.',
+        '• Use markdown tables for any list of 3+ items. Lead with a 1-2 sentence summary.',
+        '• Status: 🟢 normal, 🟡 borderline, 🔴 high/low; ↑↓→ for trends.',
+        '• Each tool response includes a short formatting hint — follow it.',
         '',
         'Tool usage:',
-        '• Always call the appropriate tool — let it handle errors. On auth_required/session_expired, offer connect_account.',
-        '• Start with Last6Months or LastYear for dated data unless the user asks for full history.',
-        '• Do not repeat back more health information than needed to answer the question.',
+        '• For broad health questions, prefer get_health_overview over chaining single tools.',
+        '• Default to Last6Months or LastYear for dated data unless the user asks for full history.',
+        '• Only set demo=true when the user explicitly says "demo", "demo mode", or "sample data".',
+        '• On auth_required or session_expired, offer connect_account.',
+        '• Don\'t repeat back more health information than the question needs.',
       ].join('\n'),
     },
   );
@@ -113,102 +116,110 @@ export function createMcpServer(): McpServer {
     connectAccountTool.name,
     connectAccountTool.description,
     { 
-      force: z.boolean().optional().describe('Force re-authentication even if a valid session exists.'),
-      demo: z.boolean().optional().describe('Set to true ONLY when the user explicitly asks for demo mode or sample data. Do NOT set for normal connections.'),
-      accept_privacy: z.boolean().optional().describe('Set to true to acknowledge the privacy notice and proceed with connecting. Required on first use after the privacy notice is shown.'),
+      force: z.boolean().optional().describe('Force re-auth even if a valid session exists.'),
+      demo: z.boolean().optional().describe('Sample data mode — only when user explicitly asks for "demo" or "sample data".'),
+      accept_privacy: z.boolean().optional().describe('Acknowledge privacy notice; required on first use after it is shown.'),
     },
     { title: 'Connect Account',readOnlyHint: false, destructiveHint: false },
-    connectAccountTool.handler,
+    withPerfTiming(connectAccountTool.name, connectAccountTool.handler),
   );
 
-  server.tool(checkConnectionTool.name, checkConnectionTool.description, {}, { title: 'Check Connection',readOnlyHint: true, destructiveHint: false }, checkConnectionTool.handler);
-  server.tool(disconnectAccountTool.name, disconnectAccountTool.description, {}, { title: 'Disconnect Account',readOnlyHint: false, destructiveHint: false }, disconnectAccountTool.handler);
-  server.tool(getHealthOverviewTool.name, getHealthOverviewTool.description, {}, { title: 'Health Overview',readOnlyHint: true, destructiveHint: false }, getHealthOverviewTool.handler);
+  server.tool(checkConnectionTool.name, checkConnectionTool.description, {}, { title: 'Check Connection',readOnlyHint: true, destructiveHint: false }, withPerfTiming(checkConnectionTool.name, checkConnectionTool.handler));
+  server.tool(disconnectAccountTool.name, disconnectAccountTool.description, {}, { title: 'Disconnect Account',readOnlyHint: false, destructiveHint: false }, withPerfTiming(disconnectAccountTool.name, disconnectAccountTool.handler));
+  server.tool(getHealthOverviewTool.name, getHealthOverviewTool.description, {}, { title: 'Health Overview',readOnlyHint: true, destructiveHint: false }, withPerfTiming(getHealthOverviewTool.name, getHealthOverviewTool.handler));
 
   // Shared pagination params (reused across many tools)
-  const maxResultsParam = z.number().min(1).max(500).optional().describe('Results per page (default varies by tool, max 500). Increase to see more at once.');
-  const offsetParam = z.number().min(0).optional().describe('Number of results to skip for pagination (default 0). Use nextOffset from the response to get the next page.');
+  const maxResultsParam = z.number().min(1).max(500).optional().describe('Results per page (default varies, max 500).');
+  const offsetParam = z.number().min(0).optional().describe('Skip N results for pagination. Use nextOffset from the previous response.');
+  const startDateParam = z.string().optional().describe('Custom start date (YYYY-MM-DD).');
+  const endDateParam = z.string().optional().describe('Custom end date (YYYY-MM-DD).');
+  const dateRangeStdParam = z.enum(['All', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Predefined date range. Defaults to All.');
 
   // --- MHR tools with parameters ---
   server.tool(
     getLabResultsTool.name,
     getLabResultsTool.description,
     {
-      date_range: z.enum(['All', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Predefined date range filter. Defaults to All.'),
-      start_date: z.string().optional().describe('Custom start date in YYYY-MM-DD format.'),
-      end_date: z.string().optional().describe('Custom end date in YYYY-MM-DD format.'),
-      test_name: z.string().optional().describe('Filter results by test name (case-insensitive substring match).'),
+      date_range: dateRangeStdParam,
+      start_date: startDateParam,
+      end_date: endDateParam,
+      test_name: z.string().optional().describe('Filter by test name (case-insensitive substring).'),
       max_results: maxResultsParam,
       offset: offsetParam,
     },
     { title: 'Lab Results',readOnlyHint: true, destructiveHint: false },
-    getLabResultsTool.handler,
+    withPerfTiming(getLabResultsTool.name, getLabResultsTool.handler),
   );
 
-  server.tool(getUserProfileTool.name, getUserProfileTool.description, {}, { title: 'User Profile',readOnlyHint: true, destructiveHint: false }, getUserProfileTool.handler);
+  server.tool(getUserProfileTool.name, getUserProfileTool.description, {}, { title: 'User Profile',readOnlyHint: true, destructiveHint: false }, withPerfTiming(getUserProfileTool.name, getUserProfileTool.handler));
 
   server.tool(
     getImmunizationsTool.name,
     getImmunizationsTool.description,
     {
-      date_range: z.enum(['All', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Predefined date range filter. Defaults to All.'),
-      start_date: z.string().optional().describe('Custom start date in YYYY-MM-DD format.'),
-      end_date: z.string().optional().describe('Custom end date in YYYY-MM-DD format.'),
+      date_range: dateRangeStdParam,
+      start_date: startDateParam,
+      end_date: endDateParam,
       max_results: maxResultsParam,
       offset: offsetParam,
     },
     { title: 'Immunizations',readOnlyHint: true, destructiveHint: false },
-    getImmunizationsTool.handler,
+    withPerfTiming(getImmunizationsTool.name, getImmunizationsTool.handler),
   );
 
-  server.tool(getMedicationsTool.name, getMedicationsTool.description, { max_results: maxResultsParam, offset: offsetParam }, { title: 'Medications',readOnlyHint: true, destructiveHint: false }, getMedicationsTool.handler);
+  server.tool(getMedicationsTool.name, getMedicationsTool.description, { max_results: maxResultsParam, offset: offsetParam }, { title: 'Medications',readOnlyHint: true, destructiveHint: false }, withPerfTiming(getMedicationsTool.name, getMedicationsTool.handler));
 
   server.tool(
     getReferralsTool.name,
     getReferralsTool.description,
     {
-      date_range: z.enum(['AllData', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Predefined date range filter. Defaults to AllData.'),
+      date_range: z.enum(['AllData', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Date range. Defaults to AllData.'),
       max_results: maxResultsParam,
       offset: offsetParam,
     },
     { title: 'Referrals',readOnlyHint: true, destructiveHint: false },
-    getReferralsTool.handler,
+    withPerfTiming(getReferralsTool.name, getReferralsTool.handler),
   );
 
-  const dateRangeParam = z.enum(['All', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Date range filter. Defaults to All.');
-  const dateRangePaginationParams = { date_range: dateRangeParam, max_results: maxResultsParam, offset: offsetParam };
+  const dateRangePaginationParams = { date_range: dateRangeStdParam, max_results: maxResultsParam, offset: offsetParam };
 
   // Read-only annotation for all data retrieval tools
   const readOnly = { readOnlyHint: true as const, destructiveHint: false as const };
 
-  server.tool(getVitalsTool.name, getVitalsTool.description, dateRangePaginationParams, { title: 'Vitals',...readOnly}, getVitalsTool.handler);
-  server.tool(getBloodOxygenTool.name, getBloodOxygenTool.description, dateRangePaginationParams, { title: 'Blood Oxygen',...readOnly}, getBloodOxygenTool.handler);
-  server.tool(getBloodPressureTool.name, getBloodPressureTool.description, dateRangePaginationParams, { title: 'Blood Pressure',...readOnly}, getBloodPressureTool.handler);
-  server.tool(getHeightWeightTool.name, getHeightWeightTool.description, dateRangePaginationParams, { title: 'Height & Weight',...readOnly}, getHeightWeightTool.handler);
-  server.tool(getExerciseTool.name, getExerciseTool.description, dateRangePaginationParams, { title: 'Exercise',...readOnly}, getExerciseTool.handler);
-  server.tool(getDiagnosticImagingTool.name, getDiagnosticImagingTool.description, dateRangePaginationParams, { title: 'Diagnostic Imaging',...readOnly}, getDiagnosticImagingTool.handler);
-  server.tool(getProceduresTool.name, getProceduresTool.description, dateRangePaginationParams, { title: 'Procedures',...readOnly}, getProceduresTool.handler);
-  server.tool(getBloodGlucoseTool.name, getBloodGlucoseTool.description, dateRangePaginationParams, { title: 'Blood Glucose',...readOnly}, getBloodGlucoseTool.handler);
-  server.tool(getSleepTool.name, getSleepTool.description, dateRangePaginationParams, { title: 'Sleep',...readOnly}, getSleepTool.handler);
-  server.tool(getDietaryIntakeTool.name, getDietaryIntakeTool.description, dateRangePaginationParams, { title: 'Dietary Intake',...readOnly}, getDietaryIntakeTool.handler);
-  server.tool(getInsulinTool.name, getInsulinTool.description, dateRangePaginationParams, { title: 'Insulin',...readOnly}, getInsulinTool.handler);
-  server.tool(getPeakFlowTool.name, getPeakFlowTool.description, dateRangePaginationParams, { title: 'Peak Flow',...readOnly}, getPeakFlowTool.handler);
-  server.tool(getWaistCircumferenceTool.name, getWaistCircumferenceTool.description, dateRangePaginationParams, { title: 'Waist Circumference',...readOnly}, getWaistCircumferenceTool.handler);
-  server.tool(getSymptomJournalTool.name, getSymptomJournalTool.description, {
-    date_range: z.enum(['AllData', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Date range filter. Defaults to AllData.'),
-    max_results: maxResultsParam,
-    offset: offsetParam,
-  }, { title: 'Symptom Journal',...readOnly}, getSymptomJournalTool.handler);
+  server.tool(getVitalsTool.name, getVitalsTool.description, dateRangePaginationParams, { title: 'Vitals',...readOnly}, withPerfTiming(getVitalsTool.name, getVitalsTool.handler));
+  server.tool(getBloodPressureTool.name, getBloodPressureTool.description, dateRangePaginationParams, { title: 'Blood Pressure',...readOnly}, withPerfTiming(getBloodPressureTool.name, getBloodPressureTool.handler));
+  server.tool(getHeightWeightTool.name, getHeightWeightTool.description, dateRangePaginationParams, { title: 'Height & Weight',...readOnly}, withPerfTiming(getHeightWeightTool.name, getHeightWeightTool.handler));
+  server.tool(getExerciseTool.name, getExerciseTool.description, dateRangePaginationParams, { title: 'Exercise',...readOnly}, withPerfTiming(getExerciseTool.name, getExerciseTool.handler));
+  server.tool(getDiagnosticImagingTool.name, getDiagnosticImagingTool.description, dateRangePaginationParams, { title: 'Diagnostic Imaging',...readOnly}, withPerfTiming(getDiagnosticImagingTool.name, getDiagnosticImagingTool.handler));
+  server.tool(getProceduresTool.name, getProceduresTool.description, dateRangePaginationParams, { title: 'Procedures',...readOnly}, withPerfTiming(getProceduresTool.name, getProceduresTool.handler));
+  server.tool(getBloodGlucoseTool.name, getBloodGlucoseTool.description, dateRangePaginationParams, { title: 'Blood Glucose',...readOnly}, withPerfTiming(getBloodGlucoseTool.name, getBloodGlucoseTool.handler));
+
+  // Self-report MHR tools — hidden unless AB_HEALTH_ENABLE_SELF_REPORT=1 is set.
+  // These duplicate MHR portal features that almost no one uses; hiding them
+  // keeps Claude's tool-planning prompt lean. Set the env var to re-enable.
+  if (SELF_REPORT_TOOLS_ENABLED) {
+    server.tool(getBloodOxygenTool.name, getBloodOxygenTool.description, dateRangePaginationParams, { title: 'Blood Oxygen',...readOnly}, withPerfTiming(getBloodOxygenTool.name, getBloodOxygenTool.handler));
+    server.tool(getSleepTool.name, getSleepTool.description, dateRangePaginationParams, { title: 'Sleep',...readOnly}, withPerfTiming(getSleepTool.name, getSleepTool.handler));
+    server.tool(getDietaryIntakeTool.name, getDietaryIntakeTool.description, dateRangePaginationParams, { title: 'Dietary Intake',...readOnly}, withPerfTiming(getDietaryIntakeTool.name, getDietaryIntakeTool.handler));
+    server.tool(getInsulinTool.name, getInsulinTool.description, dateRangePaginationParams, { title: 'Insulin',...readOnly}, withPerfTiming(getInsulinTool.name, getInsulinTool.handler));
+    server.tool(getPeakFlowTool.name, getPeakFlowTool.description, dateRangePaginationParams, { title: 'Peak Flow',...readOnly}, withPerfTiming(getPeakFlowTool.name, getPeakFlowTool.handler));
+    server.tool(getWaistCircumferenceTool.name, getWaistCircumferenceTool.description, dateRangePaginationParams, { title: 'Waist Circumference',...readOnly}, withPerfTiming(getWaistCircumferenceTool.name, getWaistCircumferenceTool.handler));
+    server.tool(getSymptomJournalTool.name, getSymptomJournalTool.description, {
+      date_range: z.enum(['AllData', 'LastWeek', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear']).optional().describe('Date range filter. Defaults to AllData.'),
+      max_results: maxResultsParam,
+      offset: offsetParam,
+    }, { title: 'Symptom Journal',...readOnly}, withPerfTiming(getSymptomJournalTool.name, getSymptomJournalTool.handler));
+  }
 
   server.tool(
     downloadAttachmentTool.name,
     downloadAttachmentTool.description,
     {
-      thing_id: z.string().describe('The thingId from the attachment metadata returned by get_lab_results or get_diagnostic_imaging.'),
-      filename: z.string().describe('The attachment filename from the metadata.'),
+      thing_id: z.string().describe('thingId from the attachment metadata (get_lab_results / get_diagnostic_imaging).'),
+      filename: z.string().describe('Attachment filename from the metadata.'),
     },
     { title: 'Download Attachment',readOnlyHint: true, destructiveHint: false },
-    downloadAttachmentTool.handler,
+    withPerfTiming(downloadAttachmentTool.name, downloadAttachmentTool.handler),
   );
 
   // --- MyChart (AHS Connect) tools ---
@@ -221,13 +232,13 @@ export function createMcpServer(): McpServer {
       visit_id: z.string().optional().describe('CSN identifier for a specific visit to get details.'),
     },
     { title: 'Visits (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcGetVisitsTool.handler,
+    withPerfTiming(mcGetVisitsTool.name, mcGetVisitsTool.handler),
   );
 
-  server.tool(mcGetHealthSummaryTool.name, mcGetHealthSummaryTool.description, {}, { title: 'Health Summary (MyChart)',...readOnly}, mcGetHealthSummaryTool.handler);
-  server.tool(mcGetAllergiesTool.name, mcGetAllergiesTool.description, {}, { title: 'Allergies (MyChart)',...readOnly}, mcGetAllergiesTool.handler);
-  server.tool(mcGetHealthIssuesTool.name, mcGetHealthIssuesTool.description, {}, { title: 'Health Issues (MyChart)',...readOnly}, mcGetHealthIssuesTool.handler);
-  server.tool(mcGetCareTeamTool.name, mcGetCareTeamTool.description, {}, { title: 'Care Team (MyChart)',...readOnly}, mcGetCareTeamTool.handler);
+  server.tool(mcGetHealthSummaryTool.name, mcGetHealthSummaryTool.description, {}, { title: 'Health Summary (MyChart)',...readOnly}, withPerfTiming(mcGetHealthSummaryTool.name, mcGetHealthSummaryTool.handler));
+  server.tool(mcGetAllergiesTool.name, mcGetAllergiesTool.description, {}, { title: 'Allergies (MyChart)',...readOnly}, withPerfTiming(mcGetAllergiesTool.name, mcGetAllergiesTool.handler));
+  server.tool(mcGetHealthIssuesTool.name, mcGetHealthIssuesTool.description, {}, { title: 'Health Issues (MyChart)',...readOnly}, withPerfTiming(mcGetHealthIssuesTool.name, mcGetHealthIssuesTool.handler));
+  server.tool(mcGetCareTeamTool.name, mcGetCareTeamTool.description, {}, { title: 'Care Team (MyChart)',...readOnly}, withPerfTiming(mcGetCareTeamTool.name, mcGetCareTeamTool.handler));
 
   server.tool(
     mcGetMessagesTool.name,
@@ -238,10 +249,10 @@ export function createMcpServer(): McpServer {
       page: z.number().optional().describe('Page number for pagination (default: 1). Use to load older messages.'),
     },
     { title: 'Messages (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcGetMessagesTool.handler,
+    withPerfTiming(mcGetMessagesTool.name, mcGetMessagesTool.handler),
   );
 
-  server.tool(mcGetMedicalHistoryTool.name, mcGetMedicalHistoryTool.description, {}, { title: 'Medical History (MyChart)',...readOnly}, mcGetMedicalHistoryTool.handler);
+  server.tool(mcGetMedicalHistoryTool.name, mcGetMedicalHistoryTool.description, {}, { title: 'Medical History (MyChart)',...readOnly}, withPerfTiming(mcGetMedicalHistoryTool.name, mcGetMedicalHistoryTool.handler));
 
   server.tool(
     mcGetDocumentsTool.name,
@@ -251,10 +262,10 @@ export function createMcpServer(): McpServer {
       file_extension: z.string().optional().describe('File extension of the document (e.g., PDF, JPG, HTML). Defaults to PDF.'),
     },
     { title: 'Documents (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcGetDocumentsTool.handler,
+    withPerfTiming(mcGetDocumentsTool.name, mcGetDocumentsTool.handler),
   );
 
-  server.tool(mcGetUpcomingOrdersTool.name, mcGetUpcomingOrdersTool.description, {}, { title: 'Upcoming Orders (MyChart)',...readOnly}, mcGetUpcomingOrdersTool.handler);
+  server.tool(mcGetUpcomingOrdersTool.name, mcGetUpcomingOrdersTool.description, {}, { title: 'Upcoming Orders (MyChart)',...readOnly}, withPerfTiming(mcGetUpcomingOrdersTool.name, mcGetUpcomingOrdersTool.handler));
 
   server.tool(
     mcGetTestResultsTool.name,
@@ -265,31 +276,31 @@ export function createMcpServer(): McpServer {
       report_id: z.string().optional().describe('Report ID to fetch full report content (procedure narratives, findings). Found in the test result details response.'),
     },
     { title: 'Test Results (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcGetTestResultsTool.handler,
+    withPerfTiming(mcGetTestResultsTool.name, mcGetTestResultsTool.handler),
   );
 
-  server.tool(mcGetFamilyTreeTool.name, mcGetFamilyTreeTool.description, {}, { title: 'Family History (MyChart)',...readOnly}, mcGetFamilyTreeTool.handler);
-  server.tool(mcGetGoalsTool.name, mcGetGoalsTool.description, {}, { title: 'Health Goals (MyChart)',...readOnly}, mcGetGoalsTool.handler);
+  server.tool(mcGetFamilyTreeTool.name, mcGetFamilyTreeTool.description, {}, { title: 'Family History (MyChart)',...readOnly}, withPerfTiming(mcGetFamilyTreeTool.name, mcGetFamilyTreeTool.handler));
+  server.tool(mcGetGoalsTool.name, mcGetGoalsTool.description, {}, { title: 'Health Goals (MyChart)',...readOnly}, withPerfTiming(mcGetGoalsTool.name, mcGetGoalsTool.handler));
 
   server.tool(
     mcGetReferralsTool.name,
     mcGetReferralsTool.description,
     { referral_id: z.string().optional().describe('Referral ID to get details for a specific referral.') },
     { title: 'Referrals (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcGetReferralsTool.handler,
+    withPerfTiming(mcGetReferralsTool.name, mcGetReferralsTool.handler),
   );
 
-  server.tool(mcGetMedicationsTool.name, mcGetMedicationsTool.description, {}, { title: 'Medications (MyChart)',...readOnly}, mcGetMedicationsTool.handler);
-  server.tool(mcGetImmunizationsTool.name, mcGetImmunizationsTool.description, {}, { title: 'Immunizations (MyChart)',...readOnly}, mcGetImmunizationsTool.handler);
-  server.tool(mcGetAppointmentRequestsTool.name, mcGetAppointmentRequestsTool.description, {}, { title: 'Appointment Requests (MyChart)',...readOnly}, mcGetAppointmentRequestsTool.handler);
-  server.tool(mcGetProxyAccessListTool.name, mcGetProxyAccessListTool.description, {}, { title: 'Proxy Access List (MyChart)',...readOnly}, mcGetProxyAccessListTool.handler);
+  server.tool(mcGetMedicationsTool.name, mcGetMedicationsTool.description, {}, { title: 'Medications (MyChart)',...readOnly}, withPerfTiming(mcGetMedicationsTool.name, mcGetMedicationsTool.handler));
+  server.tool(mcGetImmunizationsTool.name, mcGetImmunizationsTool.description, {}, { title: 'Immunizations (MyChart)',...readOnly}, withPerfTiming(mcGetImmunizationsTool.name, mcGetImmunizationsTool.handler));
+  server.tool(mcGetAppointmentRequestsTool.name, mcGetAppointmentRequestsTool.description, {}, { title: 'Appointment Requests (MyChart)',...readOnly}, withPerfTiming(mcGetAppointmentRequestsTool.name, mcGetAppointmentRequestsTool.handler));
+  server.tool(mcGetProxyAccessListTool.name, mcGetProxyAccessListTool.description, {}, { title: 'Proxy Access List (MyChart)',...readOnly}, withPerfTiming(mcGetProxyAccessListTool.name, mcGetProxyAccessListTool.handler));
 
   server.tool(
     mcSwitchContextTool.name,
     mcSwitchContextTool.description,
     { proxy_id: z.string().describe('Patient proxy ID from mc_list_proxy_access, or "self" to switch back to your own records.') },
     { title: 'Switch Patient Context',readOnlyHint: false, destructiveHint: false },
-    mcSwitchContextTool.handler,
+    withPerfTiming(mcSwitchContextTool.name, mcSwitchContextTool.handler),
   );
 
   server.tool(
@@ -300,7 +311,7 @@ export function createMcpServer(): McpServer {
       component_ids: z.array(z.string()).describe('Array of component IDs from the test result details to get historical trends for.'),
     },
     { title: 'Historical Results (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcGetHistoricalResultsTool.handler,
+    withPerfTiming(mcGetHistoricalResultsTool.name, mcGetHistoricalResultsTool.handler),
   );
 
   server.tool(
@@ -311,7 +322,7 @@ export function createMcpServer(): McpServer {
       file_extension: z.string().describe('File extension (e.g., JPG, PNG, PDF) from the scan/document metadata.'),
     },
     { title: 'Download Document (MyChart)',readOnlyHint: true, destructiveHint: false },
-    mcDownloadDocumentTool.handler,
+    withPerfTiming(mcDownloadDocumentTool.name, mcDownloadDocumentTool.handler),
   );
 
   // --- Find-a-Provider tools (public Alberta provider directory) ---
@@ -334,7 +345,7 @@ export function createMcpServer(): McpServer {
       walk_in_only: z.boolean().optional().describe('Limit to dedicated walk-in clinics. Default false.'),
     },
     { title: 'Find Provider', readOnlyHint: true, destructiveHint: false },
-    findProviderTool.handler,
+    withPerfTiming(findProviderTool.name, findProviderTool.handler),
   );
 
   server.tool(
@@ -347,7 +358,7 @@ export function createMcpServer(): McpServer {
       nurse_practitioners_only: z.boolean().optional().describe('Restrict results to nurse practitioners (excludes doctors).'),
     },
     { title: 'Search Provider by Name', readOnlyHint: true, destructiveHint: false },
-    searchProviderByNameTool.handler,
+    withPerfTiming(searchProviderByNameTool.name, searchProviderByNameTool.handler),
   );
 
   server.tool(
@@ -363,7 +374,7 @@ export function createMcpServer(): McpServer {
       accepting_new_patients: z.boolean().optional().describe('Filter to clinics accepting new patients. Default true.'),
     },
     { title: 'Find Provider by Language', readOnlyHint: true, destructiveHint: false },
-    findProviderByLanguageTool.handler,
+    withPerfTiming(findProviderByLanguageTool.name, findProviderByLanguageTool.handler),
   );
 
   server.tool(
@@ -374,7 +385,7 @@ export function createMcpServer(): McpServer {
       type: z.enum(['clinic', 'physician', 'nurse_practitioner']).describe('Whether the ID refers to a clinic, physician, or nurse practitioner.'),
     },
     { title: 'Provider Details', readOnlyHint: true, destructiveHint: false },
-    getProviderDetailsTool.handler,
+    withPerfTiming(getProviderDetailsTool.name, getProviderDetailsTool.handler),
   );
 
   return server;

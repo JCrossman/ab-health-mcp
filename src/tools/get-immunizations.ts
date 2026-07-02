@@ -9,12 +9,12 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 import type { ImmunizationRecord } from '../types.js';
 
 export const getImmunizationsTool = {
   name: 'get_immunizations',
-  description: 'Get immunization records from your My Health Records account, including vaccine names, dates administered, and sources.',
+  description: 'Immunization records from MHR — vaccine name, date, source.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -55,7 +55,7 @@ export const getImmunizationsTool = {
             type: 'text' as const,
             text: JSON.stringify({
               ...formatted,
-              disclaimer: MEDICAL_DISCLAIMER,
+              disclaimer: MEDICAL_DISCLAIMER_SHORT,
             }),
           },
         ],
@@ -85,8 +85,6 @@ function formatImmunizations(records: ImmunizationRecord[]) {
       name: getValue('name'),
       administrator: getValue('administrator'),
       source: getValue('source'),
-      thingId: record.itemKey?.thingId,
-      isReadOnly: record.isReadOnly,
     };
   });
 

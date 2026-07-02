@@ -15,7 +15,7 @@ import { binaryToContentBlocks } from '../helpers/content-helpers.js';
 
 export const downloadAttachmentTool = {
   name: 'download_attachment',
-  description: 'Download a PDF report or file attachment from a lab result or diagnostic imaging report (MHR). Extracts text from PDFs and displays images inline. Use the thing_id and filename from the attachment metadata returned by get_lab_results or get_diagnostic_imaging.',
+  description: 'Download a PDF or image attachment from a lab result or imaging report (MHR). Use thing_id + filename from the attachment metadata.',
   handler: async (args: { thing_id: string; filename: string }) => {
     try {
       if (!args.thing_id || !args.filename) {

@@ -6,11 +6,11 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT } from './tool-factory.js';
 
 export const getUserProfileTool = {
   name: 'get_user_profile',
-  description: 'Get your My Health Records user profile, including authorized health records you can access.',
+  description: 'MHR user profile and the authorized health records you can access.',
   inputSchema: {
     type: 'object' as const,
     properties: {},
@@ -40,7 +40,7 @@ export const getUserProfileTool = {
             })),
             language: user.defaultUserLanguage,
             accountCreated: user.createdDateTimeUtc?.split('T')[0],
-            disclaimer: MEDICAL_DISCLAIMER,
+            disclaimer: MEDICAL_DISCLAIMER_SHORT,
           }),
         }],
       };

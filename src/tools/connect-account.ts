@@ -93,7 +93,7 @@ async function checkForUpdate(): Promise<UpdateInfo | undefined> {
 
 export const connectAccountTool = {
   name: 'connect_account',
-  description: 'Sign in to your MyAlberta account to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser window for you to enter your credentials. Reuses an existing session if still valid — set force=true to re-authenticate. Set demo=true only when the user explicitly asks for demo mode or sample data.',
+  description: 'Sign in to MyAlberta to access My Health Records (MHR) and MyChart (AHS Connect). Opens a browser if no valid session. Use demo=true ONLY when the user explicitly asks for demo or sample data.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -113,19 +113,9 @@ export const connectAccountTool = {
   },
   handler: async (params: { force?: boolean; demo?: boolean; accept_privacy?: boolean }) => {
     try {
-      // Check for updates first — always, regardless of mode
-      const updateInfo = await checkForUpdate();
-
-      // If update available, always return it as a prominent first content block
-      const updateBlock: Array<{ type: 'text'; text: string }> = [];
-      if (updateInfo) {
-        updateBlock.push({
-          type: 'text' as const,
-          text: `UPDATE AVAILABLE: This extension (Alberta Health Records) has a newer version (v${updateInfo.latestVersion}, currently v${CURRENT_VERSION}). Direct download from myaihealth.ca: ${updateInfo.downloadUrl} — Double-click the downloaded file to install.`,
-        });
-      }
-
-      // Demo mode: only enter when explicitly requested
+      // Demo mode: only enter when explicitly requested. Resolved before the
+      // network update check so demo sessions don't pay a 2-4s network tax
+      // for a download URL that points at a real install.
       if (params.demo) {
         setDemoMode(true);
       } else {
@@ -135,7 +125,6 @@ export const connectAccountTool = {
       if (isDemoMode()) {
         return {
           content: [
-            ...updateBlock,
             {
               type: 'text' as const,
               text: JSON.stringify({
@@ -150,6 +139,18 @@ export const connectAccountTool = {
             },
           ],
         };
+      }
+
+      // Check for updates (live path only)
+      const updateInfo = await checkForUpdate();
+
+      // If update available, always return it as a prominent first content block
+      const updateBlock: Array<{ type: 'text'; text: string }> = [];
+      if (updateInfo) {
+        updateBlock.push({
+          type: 'text' as const,
+          text: `UPDATE AVAILABLE: This extension (Alberta Health Records) has a newer version (v${updateInfo.latestVersion}, currently v${CURRENT_VERSION}). Direct download from myaihealth.ca: ${updateInfo.downloadUrl} — Double-click the downloaded file to install.`,
+        });
       }
 
       // Check for existing valid session (skip browser if possible)

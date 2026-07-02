@@ -10,7 +10,7 @@ import { ensureSession, sessionManager, loadSessionData, formatError } from '../
 
 export const checkConnectionTool = {
   name: 'check_connection',
-  description: 'Check if you are currently connected to My Health Records (MHR) and MyChart (AHS Connect), and how much session time remains.',
+  description: 'Check MHR + MyChart connection status and session time remaining.',
   inputSchema: {
     type: 'object' as const,
     properties: {},

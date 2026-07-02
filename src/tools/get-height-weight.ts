@@ -10,11 +10,11 @@
  */
 
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const getHeightWeightTool = {
   name: 'get_height_weight',
-  description: 'Get height, weight, and BMI measurements from your My Health Records account. Shows trends over time.',
+  description: 'Height, weight, and BMI from MHR. Shows trends over time.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -42,7 +42,7 @@ export const getHeightWeightTool = {
               height: data.height,
               weight: data.weight,
               bmi: data.bmi,
-              disclaimer: MEDICAL_DISCLAIMER,
+              disclaimer: MEDICAL_DISCLAIMER_SHORT,
             }),
           },
         ],

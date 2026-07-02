@@ -1,9 +1,9 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
-import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
+import { MEDICAL_DISCLAIMER_SHORT, formattingDirective } from './tool-factory.js';
 
 export const mcGetDocumentsTool = {
   name: 'mc_get_documents',
-  description: 'Get clinical documents from MyChart — includes discharge summaries, progress notes, and procedure reports. Use document_id to get a specific document.',
+  description: 'Clinical documents from MyChart — discharge summaries, progress notes, procedure reports. Use document_id for a specific one.',
   inputSchema: {
     type: 'object' as const,
     properties: {
@@ -27,7 +27,7 @@ export const mcGetDocumentsTool = {
         return {
           content: [
             formattingDirective('detail'),
-            { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+            { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }) },
           ],
         };
       }
@@ -36,7 +36,7 @@ export const mcGetDocumentsTool = {
       return {
         content: [
           formattingDirective('table', ['Date', 'Document', 'Type', 'Actions']),
-          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER }) },
+          { type: 'text' as const, text: JSON.stringify({ ...data as object, disclaimer: MEDICAL_DISCLAIMER_SHORT }) },
         ],
       };
     } catch (error) {
