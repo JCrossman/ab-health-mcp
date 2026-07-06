@@ -1,0 +1,22 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+
+    "STORAGE_CONNECTION_STRING": "<azure-storage-connection-string>",
+    "STORAGE_CONTAINER": "downloads",
+    "MCPB_BLOB_NAME": "ab-health-mcp.mcpb",
+
+    "ACS_CONNECTION_STRING": "<azure-communication-services-connection-string>",
+    "ACS_FROM_EMAIL": "noreply@myaihealth.ca",
+
+    "NOTIFY_EMAIL": "<admin-email>",
+    "DOWNLOAD_SIGNING_KEY": "<random-hex-secret>",
+    "TURNSTILE_SECRET_KEY": "<cloudflare-turnstile-secret>",
+    "DISABLE_ACCESS_REQUESTS": "false",
+
+    "BETA_INVITE_SECRET": "<random-32-bytes-hex — generate: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\">",
+    "BETA_INVITE_ADMIN_KEY": "<random-secret-for-x-admin-key-header>"
+  }
+}
