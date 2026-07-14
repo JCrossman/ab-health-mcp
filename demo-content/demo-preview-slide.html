@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My AI Health — Demonstration Overview</title>
+<style>
+  :root {
+    --navy:    #0a2540;
+    --accent:  #0277b5;
+    --ink:     #1c2733;
+    --grey:    #5b6b7c;
+    --grey-2:  #8a98a6;
+    --line:    #d9e0e6;
+    --line-2:  #eef2f5;
+    --paper:   #ffffff;
+    --wash:    #f6f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: "Helvetica Neue", "Arial", "Segoe UI", system-ui, sans-serif;
+    background: #e9edf1;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    margin: 30px auto;
+    background: var(--paper);
+    box-shadow: 0 10px 40px rgba(10, 37, 64, 0.16);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Header */
+  header { padding: 30px 48px 0; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 2.4px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 9px;
+  }
+  .title-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 2px solid var(--navy); padding-bottom: 16px;
+  }
+  h1 { font-size: 30px; font-weight: 700; color: var(--navy); letter-spacing: -0.4px; line-height: 1.1; }
+  h1 .thin { font-weight: 300; color: var(--grey); }
+  .title-meta { text-align: right; font-size: 11.5px; color: var(--grey); line-height: 1.5; font-weight: 500; }
+
+  /* Systems band */
+  .systems {
+    display: grid; grid-template-columns: 130px 1fr; align-items: stretch;
+    border-bottom: 1px solid var(--line); margin: 0 48px;
+  }
+  .systems .band-label {
+    display: flex; flex-direction: column; justify-content: center;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--grey-2); border-right: 1px solid var(--line-2); padding: 16px 16px 16px 0;
+  }
+  .systems .band-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .sys { padding: 16px 18px; border-right: 1px solid var(--line-2); display: flex; align-items: center; gap: 12px; }
+  .sys:last-child { border-right: none; }
+  .sys .ico { width: 22px; height: 22px; flex-shrink: 0; color: var(--navy); }
+  .sys .ico svg { width: 100%; height: 100%; display: block; }
+  .sys .nm { font-size: 13px; font-weight: 700; color: var(--navy); line-height: 1.15; }
+  .sys .src { font-size: 10px; font-weight: 600; color: var(--grey-2); letter-spacing: 0.2px; margin-top: 2px; text-transform: uppercase; }
+  .sys .src .tag-live { color: var(--accent); }
+
+  /* Live / Demo mode switch */
+  .switch {
+    display: inline-flex; align-items: stretch; margin-top: 7px;
+    border: 1px solid var(--line); border-radius: 999px; overflow: hidden;
+    font-size: 8px; font-weight: 800; letter-spacing: 0.7px;
+    text-transform: uppercase; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .switch .seg { padding: 3px 9px; display: flex; align-items: center; }
+  .switch .seg + .seg { border-left: 1px solid var(--line); }
+  .switch .seg.live { color: var(--accent); }
+  .switch .seg.demo { color: var(--grey-2); }
+  .switch .seg.on.live { background: var(--accent); color: #fff; }
+  .switch .seg.on.demo { background: var(--navy); color: #fff; }
+
+  /* Personas */
+  .cols { flex: 1; display: grid; grid-template-columns: 1fr 1fr; }
+  .col { padding: 26px 48px 20px; display: flex; flex-direction: column; }
+  .col.left { border-right: 1px solid var(--line); }
+
+  .p-head { display: flex; gap: 18px; margin-bottom: 18px; }
+  .portrait { width: 84px; height: 100px; flex-shrink: 0; overflow: hidden; border: 1px solid var(--line); background: var(--navy); }
+  .portrait svg { display: block; width: 100%; height: 100%; }
+  .portrait img {
+    display: block; width: 100%; height: 100%;
+    object-fit: cover; object-position: center top;
+    filter: grayscale(100%) contrast(1.06) brightness(1.02);
+    mix-blend-mode: screen;
+  }
+  .p-id { display: flex; flex-direction: column; justify-content: center; }
+  .p-kicker { font-size: 10.5px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
+  .p-name { font-size: 21px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .p-sub { font-size: 13px; color: var(--grey); margin-top: 6px; line-height: 1.4; max-width: 92%; }
+
+  .flow { list-style: none; flex: 1; }
+  .flow li {
+    display: grid; grid-template-columns: 26px 1fr; gap: 13px;
+    padding: 9px 0; border-top: 1px solid var(--line-2);
+    font-size: 12.7px; line-height: 1.42; color: var(--ink);
+  }
+  .flow li:first-child { border-top: none; padding-top: 4px; }
+  .flow li .n { font-size: 12px; font-weight: 700; color: var(--accent); padding-top: 1px; font-variant-numeric: tabular-nums; }
+  .flow li strong { color: var(--navy); font-weight: 700; }
+
+  .takeaway { margin-top: 14px; border-left: 3px solid var(--accent); background: var(--wash); padding: 11px 16px; }
+  .takeaway .lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--grey-2); margin-bottom: 3px; }
+  .takeaway .txt { font-size: 14px; font-weight: 700; color: var(--navy); line-height: 1.25; }
+
+  /* Thesis */
+  .thesis-bar { background: var(--navy); color: #fff; padding: 16px 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .thesis-bar .thesis { font-size: 14.5px; font-weight: 400; line-height: 1.4; letter-spacing: 0.1px; }
+  .thesis-bar .thesis b { font-weight: 700; }
+  .thesis-bar .mark { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; opacity: 0.85; border-left: 1px solid rgba(255,255,255,0.25); padding-left: 22px; }
+  .disclaimer { font-size: 9.5px; color: var(--grey-2); padding: 8px 48px; background: var(--paper); border-top: 1px solid var(--line-2); letter-spacing: 0.2px; }
+
+  .review-note { width: 1280px; margin: 0 auto 30px; color: var(--grey); font-size: 12.5px; line-height: 1.5; }
+  @media print { body { background: #fff; } .slide { box-shadow: none; margin: 0; } .review-note { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="slide">
+
+  <header>
+    <div class="eyebrow">Live Demonstration</div>
+    <div class="title-row">
+      <h1>My AI Health <span class="thin">Demonstration Overview</span></h1>
+      <div class="title-meta">
+        Alberta Health &amp; AHS Leadership<br/>
+        Two citizen journeys · One conversational interface
+      </div>
+    </div>
+  </header>
+
+  <div class="systems">
+    <div class="band-label">Systems<br/>Connected</div>
+    <div class="band-grid">
+      <div class="sys">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg></span>
+        <div><div class="nm">My Health Records</div><div class="src">Labs · Meds · Imaging</div><span class="switch"><span class="seg live">Live</span><span class="seg demo on">Demo</span></span></div>
+      </div>
+      <div class="sys">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+        <div><div class="nm">AHS Connect Care</div><div class="src">Visits · Referrals</div><span class="switch"><span class="seg live">Live</span><span class="seg demo on">Demo</span></span></div>
+      </div>
+      <div class="sys">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <div><div class="nm">Find a Doctor</div><div class="src">Provider Directory</div><span class="switch"><span class="seg live on">Live</span><span class="seg demo">Demo</span></span></div>
+      </div>
+      <div class="sys">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></span>
+        <div><div class="nm">Assisted Living Navigator</div><div class="src">Facilities</div><span class="switch"><span class="seg live on">Live</span><span class="seg demo">Demo</span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+
+    <div class="col left">
+      <div class="p-head">
+        <div class="portrait">
+          <img src="dave-caregiver.png" alt="Dave, fictional caregiver persona" />
+        </div>
+        <div class="p-id">
+          <div class="p-kicker">Persona 01 · The Caregiver</div>
+          <div class="p-name">Dave, 39</div>
+          <div class="p-sub">Manages his own diabetes and helps care for his mother Margaret.</div>
+        </div>
+      </div>
+      <ol class="flow">
+        <li><span class="n">01</span><span>Opens his own health record and reviews labs, medications, and conditions.</span></li>
+        <li><span class="n">02</span><span>Switches to his mother Margaret's record through proxy access.</span></li>
+        <li><span class="n">03</span><span>Reviews her medications and conditions, with questions to raise with her clinician.</span></li>
+        <li><span class="n">04</span><span>Searches for assisted living near Edmonton that fits her needs.</span></li>
+        <li><span class="n">05</span><span>Builds a tour checklist and a transition plan.</span></li>
+      </ol>
+      <div class="takeaway">
+        <div class="lbl">Why it matters</div>
+        <div class="txt">One conversation spans health records and continuing care placement.</div>
+      </div>
+    </div>
+
+    <div class="col right">
+      <div class="p-head">
+        <div class="portrait">
+          <img src="amara-newcomer.png" alt="Amara, fictional newcomer persona" />
+        </div>
+        <div class="p-id">
+          <div class="p-kicker">Persona 02 · The Newcomer</div>
+          <div class="p-name">Amara, 32</div>
+          <div class="p-sub">Newly arrived in Alberta, looking for care in her own language.</div>
+        </div>
+      </div>
+      <ol class="flow">
+        <li><span class="n">01</span><span>Asks for a family doctor in her first language, such as Punjabi.</span></li>
+        <li><span class="n">02</span><span>Receives named physicians near her who speak her language and accept new patients.</span></li>
+        <li><span class="n">03</span><span>Reads the results back in her own language.</span></li>
+        <li><span class="n">04</span><span>Narrows by preference, such as a female physician or walk-in hours.</span></li>
+      </ol>
+      <div class="takeaway">
+        <div class="lbl">Why it matters</div>
+        <div class="txt">Language is no longer a barrier to finding and understanding care.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="thesis-bar">
+    <div class="thesis">An intelligence layer over the systems Alberta <b>already operates</b>, making them understandable, connected, and accessible to every citizen.</div>
+    <div class="mark">myaihealth.ca</div>
+  </div>
+
+  <div class="disclaimer">
+    Demonstration personas are fictional and clinically synthetic. Provider and assisted-living data shown in the live demonstration are drawn from public Alberta sources. Not medical advice.
+  </div>
+
+</div>
+
+<div class="review-note">
+  <strong>Review note (not part of the slide):</strong> Portraits are fictional generated headshots
+  (<code>dave-caregiver.png</code>, <code>amara-newcomer.png</code>), rendered as a navy single-tone duotone via CSS so they stay on-brand.
+  To export: open in a browser → Print → Save as PDF (Landscape, no margins / background graphics on), or screenshot the slide at 1280×720.
+</div>
+
+</body>
+</html>
