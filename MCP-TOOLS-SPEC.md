@@ -79,14 +79,17 @@ Verifies that the auth session is established and valid.
 **Behavior:**
 1. Check if encrypted session exists
 2. Call `GET /api/phr/v1/session?SessionMode=Patient&IsKeypressed=true`
-3. Return session status
+3. Validate the user profile and authenticated MyChart Home/token
+4. Return per-source status; include a warning if MHR works but MyChart is unavailable
 
 **Response:**
 ```json
 {
   "connected": true,
   "userName": "Jane Doe",
-  "sessionTimeRemaining": 600000
+  "mhrConnected": true,
+  "myChartConnected": true,
+  "sessionTimeRemaining": 600
 }
 ```
 
@@ -211,7 +214,7 @@ All of the following tools have been implemented and verified with real API call
 
 **Calls:** `GET /api/phr/v1/medication?startIndex=-1&endIndex=-1&type=all&status=Medication&includeOrphanRefills=false`
 
-**Headers:** `Control-Mapping-Id: 8050` (required — only MHR endpoint that still needs CMID)
+**Headers:** A current `Control-Mapping-Id` resolved from the read-only Medication control in CMS metadata. No fixed ID or editable Other Medicines fallback.
 
 **Parameters:** None
 
@@ -308,6 +311,10 @@ These tools were discovered from additional HAR analysis and are fully implement
 Composite tool that calls multiple MHR and MyChart endpoints in a single request, returning a broad health snapshot (profile, medications, allergies, recent labs, health issues, immunizations).
 
 **Parameters:** None
+
+**Partial results:** Available sections remain present. Failed sections are `null`, with entries in `errors` and `partial: true`; they are never replaced with an empty list. A successful empty response remains `[]`. `sources` indicates that at least one section from that source succeeded, not that the overview is complete. If every section fails, the tool returns `isError: true` and `error: "all_sources_unavailable"`.
+
+Unexpected response/configuration shapes use `upstream_contract_error`. Preserve unrecognized medication record structures rather than reducing them to empty objects.
 
 ### get_procedures
 
@@ -442,7 +449,7 @@ export const getLabResultsTool = mhrDateRangeTool(
 
 ### Overview
 
-20 tools providing access to AHS Connect Care (MyChart) at `https://myahsconnect.albertahealthservices.ca/MyChartPRD/`. All tools are prefixed with `mc_` and use `__RequestVerificationToken` CSRF header instead of Control-Mapping-Id. CSRF token is obtained during authentication from `/MyChartPRD/Home/CSRFToken`.
+20 tools providing access to AHS Connect Care (MyChart) at `https://myahsconnect.albertahealthservices.ca/MyChartPRD/`. All tools are prefixed with `mc_`; POST data requests use `__RequestVerificationToken` rather than MHR control mappings. The desktop connector reads the token from authenticated Home and refreshes it after context changes. Updated cookies/token state is retained for the next call; an empty HTTP 200 from the obsolete token endpoint is not accepted.
 
 **Authentication:** MyChart shares Alberta's SSO with MHR. After Puppeteer SSO login, the browser navigates to MyChart's SAML endpoint which auto-authenticates. Cookies and CSRF token are stored in the v2 session format.
 

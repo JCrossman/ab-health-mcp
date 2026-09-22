@@ -6,7 +6,8 @@
  * Also serves as a session keepalive.
  */
 
-import { ensureSession, sessionManager, loadSessionData, formatError } from '../helpers/session-helpers.js';
+import { ensureSession, sessionManager, checkMyChartConnection, formatError } from '../helpers/session-helpers.js';
+import { isDemoMode } from '../helpers/demo/index.js';
 
 export const checkConnectionTool = {
   name: 'check_connection',
@@ -18,7 +19,7 @@ export const checkConnectionTool = {
   handler: async () => {
     try {
       // Check if session file exists first
-      if (!await sessionManager.exists()) {
+      if (!isDemoMode() && !await sessionManager.exists()) {
         return {
           content: [{
             type: 'text' as const,
@@ -34,9 +35,7 @@ export const checkConnectionTool = {
       const status = await client.getSessionStatus();
       const user = await client.getUser();
 
-      // Check MyChart session availability
-      const sessionData = await loadSessionData();
-      const myChartConnected = !!(sessionData?.myChartJar && sessionData?.myChartCsrfToken);
+      const myChart = await checkMyChartConnection();
 
       return {
         content: [{
@@ -45,7 +44,8 @@ export const checkConnectionTool = {
             connected: true,
             userName: user.name,
             mhrConnected: true,
-            myChartConnected,
+            myChartConnected: myChart.connected,
+            ...(myChart.connected ? {} : { warnings: { myChart: myChart.error } }),
             sessionTimeRemaining: Math.round(status.numberOfMilliSecondsLeftForSessionExpire / 1000),
             authorizedRecords: user.authorizedRecords.length,
           }),

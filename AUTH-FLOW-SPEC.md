@@ -11,7 +11,7 @@ This is fundamentally different from token-based auth. There are no Bearer token
 The flow navigates directly to the Alberta SSO login page, then establishes MyChart and MHR sessions separately via explicit navigation:
 
 ```
-1. Navigate to account.alberta.ca/ui/sign-in/signin (SSO login page)
+1. Register the SSO completion observer, then navigate to account.alberta.ca/ui/sign-in/signin
    → SPA auto-loads and makes API calls:
      - GET /api/metadata
      - GET /api/is-login-token-valid (401 if not logged in)
@@ -27,8 +27,9 @@ The flow navigates directly to the Alberta SSO login page, then establishes MyCh
 2. Navigate to MyChart SAML login (auto-authenticates via shared SSO):
    → GET myahsconnect.albertahealthservices.ca/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False
    → SAML chain uses SSO cookies to auto-authenticate
-   → Wait for URL to contain /MyChartPRD/Home or /MyChartPRD/default.asp
-   → MyChart session established
+   → Navigate to the authenticated /MyChartPRD/Home page
+   → Read the named hidden __RequestVerificationToken input
+   → Capture the MyChart cookie jar and token together
 
 3. Navigate to MHR to establish its session:
    → GET myhealthrecords.alberta.ca
@@ -36,11 +37,9 @@ The flow navigates directly to the Alberta SSO login page, then establishes MyCh
    → Wait for URL to contain /ng/
    → MHR session established
 
-4. Cookie extraction + CSRF token:
-   → Extract MyChart cookies from browser cookie store
+4. MHR cookie extraction and validation:
    → Extract MHR cookies from browser cookie store
-   → Fetch CSRF token via HTTP: GET /MyChartPRD/Home/CSRFToken
-     (returns HTML <input> with token value)
+   → Validate the MHR session and user profile before reporting success
 ```
 
 ## Implementation: Puppeteer Browser Automation
@@ -77,10 +76,11 @@ Navigates directly to `account.alberta.ca/ui/sign-in/signin` — the SSO login p
 
 ### Session Detection
 
-After SSO login, sessions are established via explicit navigation:
-- MyChart: navigate to SAML login URL, wait for `/MyChartPRD/Home` or `/MyChartPRD/default.asp`
-- MHR: navigate to `myhealthrecords.alberta.ca`, wait for `/ng/`
-- Response monitoring tracks which sessions have been successfully established
+Register the `is-login-token-valid` response observer before navigation so an existing SSO login cannot complete before the observer is installed.
+- MyChart: establish SAML, open authenticated Home, and capture its verification input plus cookies.
+- MHR: reach the actual MHR `/ng/` origin, then validate session/profile API responses.
+- Cookies or a successful resource/keepalive response are not sufficient proof of a connection.
+- Closing or timing out the sign-in window asks the user to reconnect when ready rather than automatically reopening it.
 
 ### Persistent Browser Profile
 
@@ -273,11 +273,12 @@ Use a cookie jar library (e.g., `tough-cookie`) to:
 **Local mode (stdio) — IMPLEMENTED:**
 - MHR cookies extracted from Puppeteer browser via `page.cookies()`
 - MyChart cookies extracted after SAML auto-authentication
-- CSRF token fetched from `/MyChartPRD/Home/CSRFToken`
+- CSRF token read from the authenticated Home page, not the empty `/Home/CSRFToken` endpoint
 - Loaded into separate `tough-cookie` CookieJars (MHR jar + MyChart jar)
 - Serialized to JSON in v2 format: `{version: 2, mhr: {...}, myChart: {...}, myChartCsrfToken: "..."}`
 - Encrypted with AES-256-GCM, stored at `~/.mhr-records/session.enc`
 - v2 format is backward compatible with v1 (MHR-only sessions)
+- Refreshed MyChart cookies and tokens are saved together for subsequent tool calls and restarts; failed refreshes invalidate the token.
 - Key from `MHR_ENCRYPTION_KEY` env var or auto-generated at `~/.mhr-records/key`
 
 **Browser profile:**
@@ -293,9 +294,7 @@ Use a cookie jar library (e.g., `tough-cookie`) to:
 
 ### Session Keepalive
 
-The session times out after ~10 minutes of inactivity. The MCP server should:
-1. Call `GET /api/phr/v1/session?SessionMode=Patient&IsKeypressed=true` before each API call
-2. If session is expired, prompt the user to re-authenticate
+Sessions expire after inactivity. Data calls use the API clients' error handling rather than adding a preflight to every request. Debounced cross-keepalives extend the other portal's session. `check_connection` validates MHR session/profile and MyChart Home; MyChart's keepalive can return HTTP 200 without a usable session and is not an authentication check.
 
 ---
 
@@ -305,11 +304,7 @@ The session times out after ~10 minutes of inactivity. The MCP server should:
 2. **No PII in logs.** Never log usernames, health data, or cookie values.
 3. **Encryption at rest.** Session cookies encrypted with AES-256-GCM.
 4. **Canadian data residency.** All remote storage in Azure Canada Central.
-5. **Credential handling (Option B):**
-   - Accept credentials via MCP tool parameters
-   - Use immediately for authentication
-   - Discard after session is established
-   - Note: In local/stdio mode, credentials briefly appear in Claude's context. This is acceptable for personal desktop use but not for remote/shared deployments.
+5. **Credential handling:** The direct-auth Option B is abandoned. Enter credentials only in the browser, never in MCP parameters, environment variables, logs, or shared HAR files.
 
 ---
 
@@ -325,6 +320,22 @@ The HAR capture did not show MFA (multi-factor authentication). However, `accoun
 ---
 
 ## Testing Auth
+
+Use the packaged desktop implementation rather than a separate login script:
+
+```bash
+npm run build
+mcpb validate manifest.json
+mcpb pack . ab-health-mcp.mcpb
+npm run test:bundle -- ab-health-mcp.mcpb
+npm run test:live -- ab-health-mcp.mcpb
+```
+
+The opt-in live check uses an isolated profile and encrypted test session, prints only outcomes, and removes them on exit. Responses are processed only in local memory. It checks both portals and saved-session reuse. Do not upload real HARs or commit captured responses as fixtures.
+
+### Historical direct-auth commands (unsupported)
+
+The examples below document the abandoned approach; do not use them for current authentication.
 
 ```bash
 # Quick test of direct auth flow

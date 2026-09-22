@@ -20,7 +20,7 @@ npm test -- myfile     # run a single test file by name
 npm run lint           # tsc --noEmit
 ```
 
-Test auth flow manually: `MHR_USERNAME=... MHR_PASSWORD=... npx tsx scripts/test-auth.ts`
+Validate a built installer with `npm run test:bundle -- ab-health-mcp.mcpb`. The opt-in live check is `npm run test:live -- ab-health-mcp.mcpb`; enter credentials only in Chrome, not in environment variables or tool arguments.
 
 ## Building the .mcpb Bundle
 
@@ -127,13 +127,14 @@ The lab results API uses `Date.toDateString()` format in query params (e.g., `Mo
 
 ### Required headers
 
-MHR endpoints previously required a `Control-Mapping-Id` header, but Alberta removed this requirement for most endpoints (as of March 2026). Sending the old CMID values now causes HTTP 500 errors. Only the medications endpoint still requires a CMID:
-- Medications: `8050` (changed from `7701`)
+Medications, labs, and imaging resolve their current `Control-Mapping-Id` from authenticated CMS metadata. Never hard-code captured IDs. Select the read-only configured-app Medication control, not Other Medicines; labs and imaging use different pages. Match all-record paging and reject incomplete or unsupported responses rather than returning empty lists. Keep other endpoints' verified header behavior unchanged.
 
 MyChart endpoints need a `__RequestVerificationToken` CSRF header:
-- Token obtained from `/MyChartPRD/Home/CSRFToken` during authentication
+- Token obtained from the named hidden input on authenticated `/MyChartPRD/Home`; the old `/Home/CSRFToken` route can return an empty HTTP 200
 - All `mc_` prefixed tools send this header automatically via `mychart-client.ts`
 - No Control-Mapping-Id needed for MyChart endpoints
+- Refresh token/cookie state after context changes and retain it for subsequent desktop calls; never write HTTP request-scoped sessions into desktop storage
+- Overviews must retain successful sections and explicitly flag failed ones, not conceal errors as empty records
 
 ### Implementation phases
 

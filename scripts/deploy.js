@@ -8,8 +8,8 @@
  *   npm run deploy -- minor     # bump minor (1.0.1 → 1.1.0)
  *   npm run deploy -- major     # bump major (1.1.0 → 2.0.0)
  *
- * Updates version in: package.json, manifest.json, static/version.json,
- * src/tools/connect-account.ts, and src/server/create-server.ts.
+ * Updates package.json, package-lock.json, manifest.json, static/version.json,
+ * and src/version.ts. Publishes only after tests and packaged-runtime checks.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -48,16 +48,21 @@ function run(cmd) {
   execSync(cmd, { cwd: root, stdio: 'inherit' });
 }
 
+// Validate before changing release metadata or uploading anything.
+run('npm test');
+run('npm run lint');
+
 // 1. Read current version from package.json
 const pkg = readJson(join(root, 'package.json'));
 const oldVersion = pkg.version;
+if (!/^\d+\.\d+\.\d+$/.test(oldVersion)) {
+  throw new Error('Expected a stable three-part package version.');
+}
 const newVersion = bump(oldVersion, bumpType);
 console.log(`\n🔄 Bumping version: ${oldVersion} → ${newVersion} (${bumpType})\n`);
 
-// 2. Update package.json
-pkg.version = newVersion;
-writeJson(join(root, 'package.json'), pkg);
-console.log('✓ package.json');
+// 2. Keep the dependency lockfile's package version synchronized too.
+run(`npm version ${newVersion} --no-git-tag-version`);
 
 // 3. Update manifest.json
 const manifest = readJson(join(root, 'manifest.json'));
@@ -84,19 +89,22 @@ console.log('✓ src/version.ts');
 console.log('\n📦 Building...');
 run('npm run build:css');
 run('npm run build');
+run('npm test');
+run('npm run lint');
 
 // 8. Pack
 console.log('\n📦 Packing .mcpb...');
+run('mcpb validate manifest.json');
 run('mcpb pack . ab-health-mcp.mcpb');
 
 // 9. Verify bundle
 console.log('\n🔍 Verifying bundle...');
-run('unzip -l ab-health-mcp.mcpb | grep "build/api/" | head -4');
-run('unzip -l ab-health-mcp.mcpb | grep "node_modules/debug/src/index.js"');
+run('npm run test:bundle -- ab-health-mcp.mcpb');
 
 // 10. Upload to Azure
 console.log('\n☁️  Uploading to Azure...');
-run('az storage blob upload --account-name myaihealthdownloads --container-name downloads --name ab-health-mcp.mcpb --file ab-health-mcp.mcpb --overwrite --auth-mode key');
+run('az storage blob upload --account-name myaihealthdownloads --container-name downloads --name ab-health-mcp.mcpb --file ab-health-mcp.mcpb --overwrite --auth-mode key --only-show-errors --output none');
+run('az storage blob upload --account-name myaihealthdownloads --container-name downloads --name version.json --file static/version.json --content-type application/json --overwrite --auth-mode key --only-show-errors --output none');
 
 // 11. Deploy landing page (with updated version.json)
 console.log('\n🌐 Deploying landing page...');

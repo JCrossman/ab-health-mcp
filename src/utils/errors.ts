@@ -32,3 +32,11 @@ export class NetworkError extends Error {
     this.name = 'NetworkError';
   }
 }
+
+export class UpstreamContractError extends Error {
+  constructor(public readonly source: 'mhr' | 'mychart') {
+    const portal = source === 'mhr' ? 'My Health Records' : 'MyChart (AHS Connect)';
+    super(`${portal} returned a response this extension could not read. This does not mean your records are empty. Try reconnecting; if this continues, check for an extension update.`);
+    this.name = 'UpstreamContractError';
+  }
+}

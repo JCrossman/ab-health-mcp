@@ -20,11 +20,17 @@
 
 # Development files
 /scripts/
+/tests/
 /static/
 .git/
 .github/
 .vscode/
 tsconfig.json
+/tsconfig.tests.json
+*.har
+*.enc
+.env
+.env.*
 Dockerfile
 .dockerignore
 .gitignore

@@ -4,23 +4,21 @@
  * Uses Puppeteer with a persistent browser profile so SSO cookies survive
  * across auth attempts. Includes stealth measures to avoid WAF bot detection.
  *
- * Entry point mirrors the manual login flow: navigate to myhealth.alberta.ca,
- * which redirects through the auth chain and establishes BOTH MyChart and MHR
- * sessions in a single trip (via portal redirect chain).
+ * Signs in at Alberta SSO, then establishes MyChart and MHR sessions separately.
  *
  * Credentials never touch this code — they're entered in the browser.
  */
 
-import puppeteer, { type Page } from 'puppeteer-core';
+import puppeteer, { type Page, type HTTPResponse } from 'puppeteer-core';
 import { CookieJar, Cookie } from 'tough-cookie';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { logger } from '../utils/logger.js';
+import { AuthRequiredError, SessionExpiredError } from '../utils/errors.js';
+import { isMyChartHome, MYCHART_BASE, MYCHART_HOME, selectMyChartToken } from './mychart-session.js';
 
 const MHR_BASE = 'https://myhealthrecords.alberta.ca';
-const MYCHART_BASE = 'https://myahsconnect.albertahealthservices.ca';
-const MYCHART_CSRF_URL = `${MYCHART_BASE}/MyChartPRD/Home/CSRFToken`;
 const MYCHART_SAML_URL = `${MYCHART_BASE}/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False`;
 
 // SSO login page — user authenticates here, then we navigate to
@@ -47,11 +45,56 @@ function monitorRateLimit(page: Page): () => boolean {
   let rateLimited = false;
   page.on('response', (response) => {
     const url = response.url();
-    if (response.status() === 429 && (url.includes('account-checks') || url.includes('signin'))) {
+    if (response.status() === 429 && url.startsWith('https://account.alberta.ca/') && (url.includes('account-checks') || url.includes('signin'))) {
       rateLimited = true;
     }
   });
   return () => rateLimited;
+}
+
+export function observeSsoLogin(page: Pick<Page, 'on' | 'off'>): { wait: () => Promise<void>; dispose: () => void } {
+  let signedIn = false;
+  let closed = false;
+  let resolveLogin: (() => void) | undefined;
+  let rejectLogin: ((error: Error) => void) | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const cancelled = () => new AuthRequiredError('The sign-in window was closed. Use connect_account again when you are ready.');
+  const onResponse = (response: HTTPResponse) => {
+    const url = new URL(response.url());
+    if (url.origin === 'https://account.alberta.ca' && url.pathname.endsWith('/is-login-token-valid') && response.status() === 200) {
+      signedIn = true;
+      resolveLogin?.();
+    }
+  };
+  const onClose = () => {
+    closed = true;
+    rejectLogin?.(cancelled());
+  };
+  const dispose = () => {
+    clearTimeout(timer);
+    page.off('response', onResponse);
+    page.off('close', onClose);
+  };
+  page.on('response', onResponse);
+  page.on('close', onClose);
+  return {
+    dispose,
+    wait: async () => {
+      try {
+        if (closed) throw cancelled();
+        if (signedIn) return;
+        await new Promise<void>((resolve, reject) => {
+          resolveLogin = resolve;
+          rejectLogin = reject;
+          timer = setTimeout(() => reject(new AuthRequiredError(
+            'Sign-in timed out. Use connect_account again when you are ready to sign in.',
+          )), LOGIN_TIMEOUT_MS);
+        });
+      } finally {
+        dispose();
+      }
+    },
+  };
 }
 
 /**
@@ -76,7 +119,7 @@ async function extractCookiesIntoJar(page: Page, urls: string[]): Promise<{ jar:
     try {
       await jar.setCookie(tough, cookieUrl);
     } catch {
-      // Ignore individual cookie errors
+      logger.warn('A browser cookie could not be used for the health portal session.');
     }
   }
 
@@ -91,7 +134,7 @@ async function clearBrowserProfile(): Promise<void> {
     await rm(BROWSER_PROFILE_DIR, { recursive: true, force: true });
     logger.info('Cleared browser profile');
   } catch {
-    // Directory may not exist
+    logger.warn('Could not clear the health portal browser profile. Close the sign-in window before reconnecting.');
   }
 }
 
@@ -137,12 +180,8 @@ async function applyStealthMeasures(page: Page): Promise<void> {
 /**
  * Run the browser authentication flow.
  *
- * Navigates to the health portal (myhealth.alberta.ca) which triggers the
- * same auth chain as a manual login:
- * 1. Portal → xiduam.ca (WS-Federation) → account.alberta.ca (SSO)
- * 2. User authenticates (or auto-login via persistent cookies)
- * 3. SSO → portal trust → MyChart (token) → portal trust → MHR (APPAUTHSUCCESS)
- * 4. Browser lands at MHR with both sessions established
+ * Observe SSO before navigating so persistent profiles cannot race the observer.
+ * Capture the MyChart token and cookies together before navigating to MHR.
  */
 async function runBrowserAuth(usePersistentProfile: boolean): Promise<AuthenticateResult> {
   logger.info(`Launching browser${usePersistentProfile ? ' (persistent profile)' : ' (fresh profile)'}...`);
@@ -165,75 +204,30 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
 
   try {
     const page = await browser.newPage();
+    await page.setCacheEnabled(false);
 
     // Apply stealth measures before any navigation
     await applyStealthMeasures(page);
 
     const isRateLimited = monitorRateLimit(page);
 
-    // Track which sessions have been established during navigations
-    let myChartSeen = false;
     let mhrSeen = false;
-
-    page.on('response', (response) => {
-      const url = response.url();
-      const status = response.status();
-      if (status >= 200 && status < 400) {
-        if (url.includes('myahsconnect.albertahealthservices.ca/MyChartPRD/')) {
-          myChartSeen = true;
-        }
-        if (url.includes('myhealthrecords.alberta.ca')) {
-          mhrSeen = true;
-        }
-      }
-    });
-
-    // Step 1: Navigate to SSO login page
+    const sso = observeSsoLogin(page);
     logger.info('Navigating to Alberta SSO login...');
-    await page.goto(SSO_LOGIN_URL, { waitUntil: 'networkidle2', timeout: 30_000 });
-
-    // Check for immediate rate limiting
-    await sleep(2000);
-    if (isRateLimited()) {
-      throw new Error(
-        'Alberta SSO is rate-limiting your requests. Please wait 5-10 minutes and try again.',
-      );
-    }
-
-    // Step 2: Wait for login to complete.
-    // If persistent profile has valid SSO cookies, the SPA may auto-redirect
-    // or show a logged-in state. Otherwise, user enters credentials.
-    const afterGotoUrl = page.url();
-    const needsLogin = afterGotoUrl.includes('account.alberta.ca');
-
-    if (needsLogin) {
-      logger.info('Browser at SSO login — waiting for user to sign in');
-      try {
-        // Wait for the user to complete authentication.
-        // The SPA may redirect away from the sign-in page, or the URL
-        // may change to a logged-in view within account.alberta.ca.
-        // We detect login by watching for the is-login-token-valid 200 response.
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Login timed out. Please complete the sign-in within the browser window.'));
-          }, LOGIN_TIMEOUT_MS);
-
-          page.on('response', (response) => {
-            const url = response.url();
-            if (url.includes('is-login-token-valid') && response.status() === 200) {
-              clearTimeout(timeout);
-              resolve();
-            }
-          });
-        });
-      } catch (error) {
-        if (isRateLimited()) {
-          throw new Error(
-            'Alberta SSO is rate-limiting your requests. Please wait 5-10 minutes and try again.',
-          );
-        }
-        throw error;
+    try {
+      await page.goto(SSO_LOGIN_URL, { waitUntil: 'networkidle2', timeout: 30_000 });
+      if (isRateLimited()) {
+        throw new Error('Alberta SSO is rate-limiting your requests. Please wait before trying again.');
       }
+      logger.info('Waiting for Alberta SSO sign-in');
+      await sso.wait();
+    } catch (error) {
+      if (isRateLimited()) {
+        throw new Error('Alberta SSO is rate-limiting your requests. Please wait before trying again.');
+      }
+      throw error;
+    } finally {
+      sso.dispose();
     }
 
     // Check for rate limiting after auth
@@ -246,54 +240,49 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
     logger.info('SSO login successful — establishing sessions...');
     await sleep(2000);
 
-    // Step 3: Navigate to MyChart to establish its session.
-    // The SAML URL auto-authenticates using the shared SSO cookies
-    // (no additional rate-limited calls — the SSO session is already active).
+    let myChartJar: CookieJar | undefined;
+    let myChartCsrfToken: string | undefined;
     logger.info('Establishing MyChart session...');
     try {
       await page.goto(MYCHART_SAML_URL, { waitUntil: 'networkidle2', timeout: 30_000 });
-      await page.waitForFunction(
-        () => window.location.href.includes('/MyChartPRD/Home') ||
-              window.location.href.includes('/MyChartPRD/default.asp'),
-        { timeout: 20_000 },
-      );
-      myChartSeen = true;
+      await page.goto(MYCHART_HOME, { waitUntil: 'networkidle2', timeout: 30_000 });
+      if (!isMyChartHome(page.url())) throw new SessionExpiredError();
+      await page.waitForSelector('input[type="hidden"][name="__RequestVerificationToken"]', { timeout: 20_000 });
+      const tokens = await page.$$eval('input[name="__RequestVerificationToken"]', inputs =>
+        inputs.filter((input): input is HTMLInputElement => input instanceof HTMLInputElement && input.type === 'hidden')
+          .map(input => input.value));
+      myChartCsrfToken = selectMyChartToken(tokens);
+      ({ jar: myChartJar } = await extractCookiesIntoJar(page, [`${MYCHART_BASE}/MyChartPRD/`]));
       logger.info('MyChart session established');
     } catch {
-      logger.warn('MyChart session establishment failed — MyChart tools may not work');
+      myChartCsrfToken = undefined;
+      myChartJar = undefined;
+      logger.warn('MyChart did not connect. My Health Records sign-in will continue.');
     }
 
     await sleep(1000);
-
-    // Step 4: Extract MyChart cookies
-    const { jar: myChartJar } = await extractCookiesIntoJar(page, [
-      `${MYCHART_BASE}/MyChartPRD/`,
-    ]);
 
     // Step 5: Navigate to MHR to establish its session.
     // SSO cookies auto-authenticate here too.
     logger.info('Establishing MHR session...');
     try {
       await page.goto(MHR_BASE, { waitUntil: 'networkidle2', timeout: 30_000 });
-      const mhrUrl = page.url();
-      logger.info(`MHR navigation landed at: ${mhrUrl}`);
+      const mhrUrl = new URL(page.url());
 
-      if (mhrUrl.includes('/ng/')) {
+      if (mhrUrl.origin === MHR_BASE && mhrUrl.pathname.startsWith('/ng/')) {
         mhrSeen = true;
         logger.info('MHR session established (already at /ng/)');
       } else {
         // May need to wait for SPA redirect
         await page.waitForFunction(
-          () => window.location.href.includes('/ng/'),
+          () => window.location.origin === 'https://myhealthrecords.alberta.ca' && window.location.pathname.startsWith('/ng/'),
           { timeout: 20_000 },
         );
         mhrSeen = true;
         logger.info('MHR session established (after SPA redirect)');
       }
-    } catch (mhrError) {
-      const mhrUrl = page.url();
-      logger.warn(`MHR session establishment failed at URL: ${mhrUrl}`);
-      logger.warn(`MHR error: ${mhrError instanceof Error ? mhrError.message : mhrError}`);
+    } catch {
+      logger.warn('MHR session navigation failed; retrying once.');
 
       // Retry once — MHR sometimes needs a second navigation after SSO
       try {
@@ -301,7 +290,7 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
         await sleep(2000);
         await page.goto(MHR_BASE, { waitUntil: 'networkidle2', timeout: 30_000 });
         await page.waitForFunction(
-          () => window.location.href.includes('/ng/'),
+          () => window.location.origin === 'https://myhealthrecords.alberta.ca' && window.location.pathname.startsWith('/ng/'),
           { timeout: 20_000 },
         );
         mhrSeen = true;
@@ -318,56 +307,14 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
       'https://account.alberta.ca',
     ]);
 
-    logger.info(`Sessions — MyChart: ${myChartSeen}, MHR: ${mhrSeen}. Extracting cookies...`);
-
-    // Fetch CSRF token for MyChart API calls via HTTP fetch (not page.goto).
-    // This avoids an unnecessary full page navigation.
-    let myChartCsrfToken = '';
-    try {
-      const csrfCookies = await myChartJar.getCookieString(MYCHART_CSRF_URL);
-      const csrfResponse = await fetch(MYCHART_CSRF_URL, {
-        headers: {
-          'Cookie': csrfCookies,
-          'Accept': 'text/html',
-          'Referer': `${MYCHART_BASE}/MyChartPRD/Home`,
-        },
-      });
-      if (csrfResponse.ok) {
-        const csrfHtml = (await csrfResponse.text()).trim();
-        const match = csrfHtml.match(/value="([^"]+)"/);
-        if (match) {
-          myChartCsrfToken = match[1];
-        } else if (!csrfHtml.includes('<')) {
-          myChartCsrfToken = csrfHtml;
-        }
-      }
-    } catch {
-      logger.warn('Failed to fetch MyChart CSRF token via HTTP — trying browser fallback');
-      // Fallback: use page.goto if the HTTP fetch fails (e.g., cookies insufficient)
-      try {
-        const csrfResponse = await page.goto(MYCHART_CSRF_URL, { waitUntil: 'networkidle2' });
-        if (csrfResponse) {
-          const csrfHtml = (await csrfResponse.text()).trim();
-          const match = csrfHtml.match(/value="([^"]+)"/);
-          if (match) {
-            myChartCsrfToken = match[1];
-          }
-        }
-      } catch {
-        logger.warn('CSRF token fallback also failed — MyChart tools may not work');
-      }
-    }
-
-    if (myChartCsrfToken) {
-      logger.info(`MyChart CSRF token captured (${myChartCsrfToken.length} chars)`);
-    }
+    logger.info(`Session navigation complete: MHR=${mhrSeen}, MyChart=${Boolean(myChartCsrfToken)}`);
 
     logger.info('Session cookies captured');
 
     return {
       mhrCookieJar: mhrJar,
       myChartCookieJar: myChartJar,
-      myChartCsrfToken: myChartCsrfToken || undefined,
+      myChartCsrfToken,
     };
   } finally {
     await browser.close();
@@ -397,8 +344,13 @@ export async function authenticate(): Promise<AuthenticateResult> {
       throw error;
     }
 
+    if (error instanceof AuthRequiredError) throw error;
+    if (error instanceof Error && (error.name === 'TargetCloseError' || message.includes('Target closed'))) {
+      throw new AuthRequiredError('The sign-in window was closed. Use connect_account again when you are ready.');
+    }
+
     // For other errors, try once more with a fresh profile
-    logger.warn(`Auth failed with persistent profile: ${message}`);
+    logger.warn('Sign-in failed with the persistent browser profile.');
     logger.info('Retrying with fresh browser profile...');
     await clearBrowserProfile();
 

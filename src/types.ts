@@ -105,7 +105,7 @@ export interface LabTestResult {
   whenDate: string;
   displayDate: string;
   name: string;
-  values: LabTestValues;
+  values?: LabTestValues | null;
   index: number;
   clinicalCode: LabClinicalCode;
   eduContent: string;
@@ -130,7 +130,7 @@ export interface LabGroup {
   labOrderStatus: string;
   attachmentCount: number;
   attachment: LabAttachment[];
-  results: LabTestResult[];
+  results?: LabTestResult[] | null;
   customData: unknown[];
 }
 
@@ -159,5 +159,5 @@ export interface LabResult {
   isReadOnly: boolean;
   isItemRestricted: boolean;
   customData: unknown[];
-  group: LabGroup[];
+  group: LabGroup[] | null;
 }

@@ -13,7 +13,7 @@
 import { SessionManager, type SessionData } from '../auth/session-manager.js';
 import { MHRClient } from '../api/mhr-client.js';
 import { MyChartClient } from '../api/mychart-client.js';
-import { AuthRequiredError, SessionExpiredError, ApiError, NetworkError } from '../utils/errors.js';
+import { AuthRequiredError, SessionExpiredError, ApiError, NetworkError, UpstreamContractError } from '../utils/errors.js';
 import { sessionContext } from '../server/session-context.js';
 import { isDemoMode, createDemoMHRClient, createDemoMyChartClient } from './demo/index.js';
 
@@ -24,9 +24,13 @@ export { sessionManager };
 // In-memory session cache — avoids repeated disk reads + AES decryptions.
 // Invalidated on connect, disconnect.
 let cachedSession: SessionData | null = null;
+let sessionGeneration = 0;
+let pendingSession: { generation: number; promise: Promise<SessionData | null> } | undefined;
 
 export function invalidateSessionCache(): void {
+  sessionGeneration++;
   cachedSession = null;
+  pendingSession = undefined;
 }
 
 async function loadSession(): Promise<SessionData | null> {
@@ -37,10 +41,19 @@ async function loadSession(): Promise<SessionData | null> {
   }
 
   // Fall back to global session cache (stdio mode)
-  if (!cachedSession) {
-    cachedSession = await sessionManager.load();
+  if (cachedSession) return cachedSession;
+  const pending = pendingSession ??= {
+    generation: sessionGeneration,
+    promise: sessionManager.load(),
+  };
+  try {
+    const data = await pending.promise;
+    if (pending.generation !== sessionGeneration) return loadSession();
+    cachedSession = data;
+    return data;
+  } finally {
+    if (pendingSession === pending) pendingSession = undefined;
   }
-  return cachedSession;
 }
 
 // Debounce keepalives — no point pinging every 2 seconds when sessions have 10-min timeouts
@@ -118,16 +131,27 @@ export async function ensureMyChartSession(): Promise<MyChartClient> {
     throw new AuthRequiredError();
   }
 
-  if (!data.myChartJar || !data.myChartCsrfToken) {
+  if (!data.myChartJar) {
     throw new AuthRequiredError(
-      'MyChart (AHS Connect) is not connected. Use connect_account to sign in — MyChart will be authenticated automatically via shared SSO.',
+      'MyChart (AHS Connect) is not connected. Use connect_account with force=true to sign in to both portals again.',
     );
   }
 
   // Cross-keepalive: ping MHR in the background
   keepAliveMHR().catch(() => {});
 
-  return new MyChartClient(data.myChartJar, data.myChartCsrfToken);
+  const generation = sessionGeneration;
+  const requestScoped = sessionContext.getStore() !== undefined;
+  return new MyChartClient(data.myChartJar, data.myChartCsrfToken ?? '', async (token, invalidateContext) => {
+    if (!requestScoped && generation !== sessionGeneration) throw new SessionExpiredError();
+    if (token !== undefined && !data.myChartJar) throw new SessionExpiredError();
+    if (invalidateContext) data.myChartJar = undefined;
+    data.myChartCsrfToken = token;
+    if (!requestScoped) {
+      cachedSession = data;
+      await sessionManager.save(data);
+    }
+  });
 }
 
 /**
@@ -137,52 +161,85 @@ export async function loadSessionData(): Promise<SessionData | null> {
   return loadSession();
 }
 
+export interface ToolErrorDetails {
+  error: string;
+  message: string;
+  retryable: boolean;
+  action?: string;
+  statusCode?: number;
+  source?: 'mhr' | 'mychart';
+}
+
+export async function checkMyChartConnection(): Promise<{ connected: true } | { connected: false; error: ToolErrorDetails }> {
+  if (isDemoMode()) return { connected: true };
+  try {
+    const client = await ensureMyChartSession();
+    await client.refreshSession();
+    return { connected: true };
+  } catch (error) {
+    return { connected: false, error: errorDetails(error) };
+  }
+}
+
 /**
  * Format an error into a structured JSON response for Claude.
  * Includes error type, message, suggested action, and whether retrying may help.
  */
 export function formatError(error: unknown): string {
+  return JSON.stringify(errorDetails(error));
+}
+
+export function errorDetails(error: unknown): ToolErrorDetails {
   if (error instanceof AuthRequiredError) {
-    return JSON.stringify({
+    return {
       error: 'auth_required',
       message: error.message,
-      action: 'You MUST call the connect_account tool now to sign in. It will open a browser window automatically.',
+      action: 'Use connect_account when you are ready to sign in. Use force=true if one portal needs to reconnect.',
       retryable: false,
-    });
+    };
   }
   if (error instanceof SessionExpiredError) {
-    return JSON.stringify({
+    return {
       error: 'session_expired',
       message: error.message,
-      action: 'You MUST call the connect_account tool now to re-authenticate. It will open a browser window automatically.',
+      action: 'Use connect_account with force=true to sign in again.',
       retryable: false,
-    });
+    };
+  }
+  if (error instanceof UpstreamContractError) {
+    return {
+      error: 'upstream_contract_error',
+      source: error.source,
+      message: error.message,
+      action: 'Try reconnecting. If this continues, check for an extension update.',
+      retryable: false,
+    };
   }
   if (error instanceof ApiError) {
-    return JSON.stringify({
+    return {
       error: 'api_error',
       statusCode: error.statusCode,
       message: error.message,
       retryable: error.statusCode >= 500,
-    });
+    };
   }
   if (error instanceof NetworkError) {
-    return JSON.stringify({
+    return {
       error: 'network_error',
       message: error.message,
       retryable: true,
-    });
+    };
   }
   if (error instanceof Error) {
-    return JSON.stringify({
+    return {
       error: 'unexpected_error',
       message: 'An unexpected error occurred. Please try again or reconnect.',
       retryable: false,
-    });
+    };
   }
-  return JSON.stringify({
+  return {
     error: 'unexpected_error',
     message: 'An unexpected error occurred.',
     retryable: false,
-  });
+  };
 }
