@@ -23,6 +23,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 
 import { VERSION as CURRENT_VERSION } from '../version.js';
+import { isNewerVersion } from '../utils/version.js';
 
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
@@ -83,7 +84,8 @@ async function checkForUpdate(): Promise<UpdateInfo | undefined> {
     }
     const data = await res.json() as { updateAvailable?: boolean; latestVersion?: string; downloadUrl?: string };
     logger.info(`Update check result: updateAvailable=${data.updateAvailable}, latest=${data.latestVersion}`);
-    if (data.updateAvailable && data.latestVersion && data.downloadUrl) {
+    if (data.updateAvailable && data.latestVersion && data.downloadUrl
+      && isNewerVersion(data.latestVersion, CURRENT_VERSION)) {
       return { latestVersion: data.latestVersion, downloadUrl: data.downloadUrl };
     }
   } catch (error) {

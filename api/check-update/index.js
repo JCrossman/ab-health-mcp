@@ -99,14 +99,37 @@ module.exports = async function (context, req) {
   }
 };
 
+// Mirrors src/utils/version.ts: strict semver, release > prerelease of the same core.
 function isNewer(latest, installed) {
-  const l = latest.split('.').map(Number);
-  const i = installed.split('.').map(Number);
-  for (let j = 0; j < Math.max(l.length, i.length); j++) {
-    const lv = l[j] || 0;
-    const iv = i[j] || 0;
-    if (lv > iv) return true;
-    if (lv < iv) return false;
+  const pattern = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
+  const l = pattern.exec(String(latest));
+  const i = pattern.exec(String(installed));
+  if (!l || !i) return false;
+  for (let j = 1; j <= 3; j++) {
+    const diff = Number(l[j]) - Number(i[j]);
+    if (diff !== 0) return diff > 0;
+  }
+  const lp = l[4];
+  const ip = i[4];
+  if (lp === ip) return false;
+  if (lp === undefined) return true;
+  if (ip === undefined) return false;
+  const a = lp.split('.');
+  const b = ip.split('.');
+  for (let j = 0; j < Math.max(a.length, b.length); j++) {
+    if (a[j] === undefined) return false;
+    if (b[j] === undefined) return true;
+    const an = /^\d+$/.test(a[j]) ? Number(a[j]) : undefined;
+    const bn = /^\d+$/.test(b[j]) ? Number(b[j]) : undefined;
+    if (an !== undefined && bn !== undefined) {
+      if (an !== bn) return an > bn;
+    } else if (an !== undefined) {
+      return false;
+    } else if (bn !== undefined) {
+      return true;
+    } else if (a[j] !== b[j]) {
+      return a[j] > b[j];
+    }
   }
   return false;
 }
