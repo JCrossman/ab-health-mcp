@@ -189,10 +189,16 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
   const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
     headless: false,
     channel: 'chrome',
-    defaultViewport: { width: 1280, height: 800 },
+    // Let the page fit the real window instead of a fixed emulated viewport.
+    defaultViewport: null,
+    // Hide the "controlled by automated test software" banner.
+    ignoreDefaultArgs: ['--enable-automation'],
     args: [
       '--disable-blink-features=AutomationControlled',
       '--disable-infobars',
+      '--window-size=1100,900',
+      '--no-first-run',
+      '--no-default-browser-check',
     ],
   };
 
@@ -203,7 +209,8 @@ async function runBrowserAuth(usePersistentProfile: boolean): Promise<Authentica
   const browser = await puppeteer.launch(launchOptions);
 
   try {
-    const page = await browser.newPage();
+    // Reuse Chrome's initial tab so users don't see an extra blank tab.
+    const page = (await browser.pages())[0] ?? await browser.newPage();
     await page.setCacheEnabled(false);
 
     // Apply stealth measures before any navigation
