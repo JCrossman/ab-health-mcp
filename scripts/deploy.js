@@ -106,8 +106,10 @@ console.log('\n☁️  Uploading to Azure...');
 run('az storage blob upload --account-name myaihealthdownloads --container-name downloads --name ab-health-mcp.mcpb --file ab-health-mcp.mcpb --overwrite --auth-mode key --only-show-errors --output none');
 run('az storage blob upload --account-name myaihealthdownloads --container-name downloads --name version.json --file static/version.json --content-type application/json --overwrite --auth-mode key --only-show-errors --output none');
 
-// 11. Deploy landing page (with updated version.json)
+// 11. Deploy landing page (with updated version.json). The API's runtime
+//     dependencies must be installed locally or the deployed functions return 500.
 console.log('\n🌐 Deploying landing page...');
+run('npm ci --prefix api --omit=dev --no-audit --no-fund');
 run('swa deploy ./static --api-location ./api --api-language node --api-version 18 --app-name myaihealth --env production');
 
 console.log(`\n✅ Deployed v${newVersion} successfully!\n`);
