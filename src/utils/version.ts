@@ -1,3 +1,5 @@
+export const OFFICIAL_DOWNLOAD_URL = 'https://www.myaihealth.ca/api/download-latest';
+
 const VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 
 function comparePrerelease(a: string | undefined, b: string | undefined): number {
@@ -35,4 +37,20 @@ export function isNewerVersion(candidate: string, current: string): boolean {
     if (diff !== 0) return diff > 0;
   }
   return comparePrerelease(c[4], i[4]) > 0;
+}
+
+/**
+ * Interpret an update-check response. Only a strictly newer version is offered, and
+ * the user is always pointed at the fixed official download link, never a
+ * server-supplied URL that is then presented to the model as an instruction.
+ */
+export function parseUpdateResponse(
+  data: unknown,
+  currentVersion: string,
+): { latestVersion: string; downloadUrl: string } | undefined {
+  if (typeof data !== 'object' || data === null) return undefined;
+  const { updateAvailable, latestVersion } = data as Record<string, unknown>;
+  if (updateAvailable !== true || typeof latestVersion !== 'string') return undefined;
+  if (!isNewerVersion(latestVersion, currentVersion)) return undefined;
+  return { latestVersion, downloadUrl: OFFICIAL_DOWNLOAD_URL };
 }
