@@ -188,7 +188,7 @@ Puppeteer handles this automatically. The persistent browser profile at `~/.mhr-
 
 ### Health Data (MHR)
 
-> **Note:** As of March 2026, Alberta removed the `Control-Mapping-Id` header requirement from most MHR endpoints. Only medications still requires it (CMID `8050`).
+> **Compatibility:** Medications, labs, and imaging discover their current portal control mappings rather than using fixed IDs. Failed requests are reported as errors, not as empty health records. The overview keeps available sections and clearly identifies sections it could not load.
 
 | Tool | Description | API Endpoint |
 |------|-------------|-------------|
@@ -197,7 +197,7 @@ Puppeteer handles this automatically. The persistent browser profile at `~/.mhr-
 | `get_lab_results` | Lab test results with date/name filtering (MHR) | `/api/phr/v1/labresult/getData` |
 | `get_diagnostic_imaging` | X-rays, ultrasounds, echocardiograms, CT/MRI (MHR) | `/api/phr/v1/labresult/getData` |
 | `get_immunizations` | Vaccine records — dates, names, sources (MHR) | `/api/phr/v1/myhealth/immunization-data-manager` |
-| `get_medications` | Current and past prescriptions (MHR) | `/api/phr/v1/medication` (CMID: 8050) |
+| `get_medications` | Current and past prescriptions (MHR) | `/api/phr/v1/medication` (discovered read-only mapping) |
 | `get_referrals` | Specialist referral records (MHR) | `/api/phr/v1/referral` |
 | `get_vitals` | Clinical vitals — pulse, temp, respiratory rate (MHR) | `/api/phr/v1/VitalSigns` |
 | `get_blood_oxygen` | SpO2 saturation readings (MHR) | `/api/phr/v1/myhealth/blood-oxygensaturation-data-manager` |
@@ -336,15 +336,16 @@ The `.mcpb` file is the one-click installer for Claude Desktop. Use the [`mcpb` 
 npm run build                          # compile TypeScript first
 mcpb validate manifest.json            # check manifest
 mcpb pack . ab-health-mcp.mcpb         # build bundle (~16MB)
+npm run test:bundle -- ab-health-mcp.mcpb # verify the extracted runtime
 ```
 
-Upload to Azure Blob Storage for distribution:
+These commands build a local candidate without publishing it. After review and explicit release approval, use the standard release entry point:
+
 ```bash
-az storage blob upload \
-  --account-name myaihealthdownloads --container-name downloads \
-  --name ab-health-mcp.mcpb --file ab-health-mcp.mcpb \
-  --overwrite --auth-mode key
+npm run deploy
 ```
+
+GitHub Actions builds the installer; the existing user-facing download links redirect through `myaihealth.ca` to Azure storage. Publication updates the bundle before matching blob/static version metadata. Existing users receive the repaired installer through the same links; no GitHub Releases migration is required.
 
 > **Note:** `.mcpbignore` excludes dev dependencies, source code, docs, and non-runtime directories. Never use raw `zip` — it will include everything and produce a 1GB+ file instead of 16MB.
 >
@@ -353,10 +354,10 @@ az storage blob upload \
 ### Test Auth Flow
 
 ```bash
-npx tsx scripts/test-auth.ts
+npm run test:live -- ab-health-mcp.mcpb
 ```
 
-Opens a browser, you log in, and it verifies session + API calls work.
+This opt-in check starts the packaged MCP with an isolated home directory. Sign in directly in Chrome. It checks session reuse and read-only records from both portals, prints only pass/fail metadata, and removes its temporary browser profile and encrypted test session. Credentials and record values are not printed or saved as fixtures.
 
 ## Accessibility Benefits
 
@@ -449,7 +450,7 @@ swa deploy ./static \
 
 - [x] **Phase 1 + 2: MHR Tools** — 24 tools for My Health Records (lab results, immunizations, medications, vitals, procedures, imaging, and more)
 - [x] **MyChart Integration** — 20 tools for AHS Connect Care (visits, allergies, care team, messages, documents, scan downloads, proxy access, etc.)
-- [x] **Session auto-refresh** — Cross-keepalive between MHR and MyChart, retry-once-with-keepalive on 401/403
+- [x] **Session auto-refresh** — Cross-keepalives, authenticated MyChart Home/token refresh on auth failures, and desktop cookie/token persistence after context changes
 - [x] **Desktop Extension** — One-click `.mcpb` install for Claude Desktop
 - [x] **Landing Page** — myaihealth.ca with gated download access via Azure Communication Services email
 - [x] **Open Source** — [Public repository](https://github.com/JCrossman/ab-health-mcp) with security-audited codebase

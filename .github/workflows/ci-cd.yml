@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Lint
+    name: Build, Test & Package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +32,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Regression tests
+        run: npm test
+
+      - name: Validate and pack installer
+        run: |
+          npm install -g @anthropic-ai/mcpb@2.1.2
+          mcpb validate manifest.json
+          mcpb pack . ab-health-mcp.mcpb
+
+      - name: Verify packaged runtime
+        run: npm run test:bundle -- ab-health-mcp.mcpb
+
       - name: Upload build artifacts
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
@@ -40,6 +52,7 @@ jobs:
           path: |
             build/
             static/styles.css
+            ab-health-mcp.mcpb
           retention-days: 1
 
   deploy:
@@ -58,28 +71,32 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: build
 
-      - name: Pack .mcpb bundle
-        run: |
-          npm install -g @anthropic-ai/mcpb
-          mcpb pack . ab-health-mcp.mcpb
-
       - name: Upload .mcpb to Azure Blob Storage
         uses: azure/cli@v2
         with:
           inlineScript: |
+            set -euo pipefail
             az storage blob upload \
               --account-name myaihealthdownloads \
               --container-name downloads \
               --name ab-health-mcp.mcpb \
               --file ab-health-mcp.mcpb \
               --overwrite \
+              --only-show-errors --output none \
+              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
+            az storage blob upload \
+              --account-name myaihealthdownloads \
+              --container-name downloads \
+              --name version.json \
+              --file static/version.json \
+              --content-type application/json \
+              --overwrite \
+              --only-show-errors --output none \
               --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
 
       - name: Deploy website to Azure Static Web Apps

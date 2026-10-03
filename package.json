@@ -1,6 +1,6 @@
 {
   "name": "ab-health-mcp",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "MCP server for Alberta My Health Records",
   "main": "build/index.js",
   "type": "module",
@@ -10,7 +10,9 @@
     "start": "node build/index.js",
     "start:http": "node build/server/http-index.js",
     "test": "vitest run",
-    "lint": "tsc --noEmit",
+    "test:bundle": "tsx scripts/verify-bundle.ts",
+    "test:live": "tsx scripts/test-auth.ts",
+    "lint": "tsc --noEmit --project tsconfig.tests.json",
     "deploy": "node scripts/deploy.js"
   },
   "keywords": [],
@@ -21,6 +23,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "mupdf": "^1.27.0",
+    "parse5": "^8.0.1",
     "puppeteer-core": "^24.40.0",
     "tough-cookie": "^6.0.1",
     "undici": "^8.0.2"

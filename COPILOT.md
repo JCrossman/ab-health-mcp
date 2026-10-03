@@ -61,7 +61,7 @@ npm test               # vitest run
 npm run lint           # tsc --noEmit
 ```
 
-Test auth flow: `npx tsx scripts/test-auth.ts`
+After building a candidate, use `npm run test:bundle -- ab-health-mcp.mcpb` for offline checks and `npm run test:live -- ab-health-mcp.mcpb` for an explicitly authorized, read-only browser sign-in check. Never pass credentials in the shell or print record values.
 
 ### Deploying a New Version
 
@@ -75,14 +75,14 @@ npm run deploy -- major     # bump major (1.1.0 → 2.0.0)
 
 This updates the version in all 5 locations automatically:
 - `package.json`
+- `package-lock.json`
 - `manifest.json`
 - `static/version.json` (checked by installed extensions for update notifications)
-- `src/tools/connect-account.ts` (`CURRENT_VERSION`)
-- `src/server/create-server.ts` (server info)
+- `src/version.ts` (shared runtime/update version)
 
-**Note:** The landing page (`static/`) is deployed via GitHub Actions on push to `main`, not by `npm run deploy`. The deploy script uploads the `.mcpb` bundle to Azure Blob Storage. Push to `main` to trigger the landing page + `version.json` deploy.
+The deploy script runs tests/type checks, builds, validates and smoke-tests the final package, uploads it, publishes matching blob version metadata, and deploys the static site. GitHub Actions also validates the package and deploys on `main`. The updater prefers a storage `version.json` blob, so updating only the static version file is insufficient. Publishing or pushing/merging into an auto-deploying branch requires explicit release approval.
 
-**Do NOT** manually run `mcpb pack` or `az storage blob upload` — use `npm run deploy` instead.
+For publishing, do not bypass `npm run deploy` with manual packaging/upload commands. Local candidate packaging without upload is supported below.
 
 ### Building Without Deploying
 
@@ -92,6 +92,7 @@ For local development only (no version bump, no upload):
 npm run build                          # compile TypeScript
 mcpb validate manifest.json            # check manifest is valid
 mcpb pack . ab-health-mcp.mcpb         # build the bundle (~16MB)
+npm run test:bundle -- ab-health-mcp.mcpb # verify actual packaged code
 ```
 
 ### .mcpbignore — Critical Rules
@@ -213,7 +214,7 @@ unzip -l ab-health-mcp.mcpb | grep "\.js$" | wc -l
 
 **MHR health data tools (21, confirmed via HAR captures):**
 
-> **Note:** As of March 2026, Alberta removed the `Control-Mapping-Id` header requirement from most MHR endpoints. Only the medications endpoint still requires it (CMID `8050`). The old CMID values (7xxx) now cause HTTP 500 errors.
+> **Compatibility:** Resolve current medication, lab, and imaging mappings from `/api/cms/v1/pages/root/browser`; never hard-code deployment IDs. The medication control must be the read-only configured-app view, not Other Medicines. Match the portal's all-record paging parameters and distinguish complete lists from failed or incomplete responses.
 
 | Tool | Endpoint |
 |------|----------|
@@ -222,7 +223,7 @@ unzip -l ab-health-mcp.mcpb | grep "\.js$" | wc -l
 | `get_lab_results` | `/api/phr/v1/labresult/getData` |
 | `get_diagnostic_imaging` | `/api/phr/v1/labresult/getData` |
 | `get_immunizations` | `/api/phr/v1/myhealth/immunization-data-manager` |
-| `get_medications` | `/api/phr/v1/medication` (CMID: 8050) |
+| `get_medications` | `/api/phr/v1/medication` (discovered read-only control mapping) |
 | `get_referrals` | `/api/phr/v1/referral` |
 | `get_vitals` | `/api/phr/v1/VitalSigns` |
 | `get_blood_oxygen` | `/api/phr/v1/myhealth/blood-oxygensaturation-data-manager` |
@@ -322,7 +323,7 @@ myhealthrecords.alberta.ca
       → sts.xiduam.ca → account.alberta.ca (user signs in here)
 ```
 
-Puppeteer handles the entire SAML chain automatically. After MHR login, the browser navigates to MyChart's SAML endpoint (`/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False`) which auto-authenticates via shared SSO. Cookies are extracted from both portals and loaded into separate `tough-cookie` CookieJars for API calls. A CSRF token is fetched from `/MyChartPRD/Home/CSRFToken` for MyChart requests.
+Puppeteer observes SSO completion before navigation, then establishes MyChart through SAML and MHR through the shared SSO. Capture the named hidden verification input from authenticated MyChart Home and its cookie jar together. `/Home/CSRFToken` may return an empty HTTP 200 and is not a usable token source. Desktop refresh and context changes persist the new cookie/token pair for subsequent calls.
 
 **Browser profile** persists at `~/.mhr-records/browser-profile` to maintain SSO state between sessions.
 
@@ -350,23 +351,23 @@ connect_account
   -> launch Puppeteer browser (headless: false, channel: 'chrome')
   -> user logs in through real Alberta SSO at account.alberta.ca
   -> navigate to MyChart SAML login (auto-authenticates via shared SSO)
-  -> extract MyChart cookies from browser
+  -> read authenticated Home's verification input and extract MyChart cookies
   -> navigate to MHR (auto-authenticates via shared SSO, retry once if needed)
   -> extract MHR cookies from browser
-  -> fetch CSRF token from /MyChartPRD/Home/CSRFToken
-  -> verify MHR session with /api/phr/v1/user
+  -> verify MHR session status and /api/phr/v1/user
+  -> report each portal's actual availability; never infer it from cookies alone
   -> encrypt and store v2 session (MHR jar + MyChart jar + CSRF token)
 
 [any MHR tool call]
   -> load encrypted session
-  -> check session: GET /api/phr/v1/session (keepalive)
-  -> if expired, return "Session expired, reconnect"
+  -> trust API error handling; use debounced cross-keepalives
+  -> resolve mapping metadata lazily for medications/labs/imaging
   -> make MHR API call with cookies
   -> return formatted data
 
 [any MyChart tool call]
   -> load encrypted session
-  -> ensure MyChart jar and CSRF token available
+  -> ensure MyChart jar is available; recover a missing token from authenticated Home
   -> make MyChart API call with cookies + __RequestVerificationToken header
   -> return formatted data
 

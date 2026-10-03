@@ -15,7 +15,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { readFile, writeFile, mkdir, unlink, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, unlink, access, rename } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { CookieJar } from 'tough-cookie';
@@ -98,10 +98,23 @@ function decrypt(data: Buffer, key: Buffer): string {
 }
 
 export class SessionManager {
+  private pendingWrite: Promise<void> = Promise.resolve();
+
+  private queueWrite(operation: () => Promise<void>): Promise<void> {
+    const result = this.pendingWrite.then(operation);
+    // The caller receives the failure; later writes and disconnects can still run.
+    this.pendingWrite = result.catch(() => {});
+    return result;
+  }
+
   /**
    * Save session data (MHR + optional MyChart) to encrypted storage.
    */
-  async save(data: SessionData): Promise<void> {
+  save(data: SessionData): Promise<void> {
+    return this.queueWrite(() => this.writeSession(data));
+  }
+
+  private async writeSession(data: SessionData): Promise<void> {
     await ensureStorageDir();
     const key = await getEncryptionKey();
 
@@ -113,7 +126,19 @@ export class SessionManager {
     };
 
     const encrypted = encrypt(JSON.stringify(envelope), key);
-    await writeFile(SESSION_FILE, encrypted, { mode: 0o600 });
+    const temporaryFile = join(STORAGE_DIR, `session-${randomBytes(8).toString('hex')}.tmp`);
+    try {
+      await writeFile(temporaryFile, encrypted, { mode: 0o600 });
+      await rename(temporaryFile, SESSION_FILE);
+    } finally {
+      try {
+        await unlink(temporaryFile);
+      } catch (error) {
+        if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT')) {
+          logger.warn('Could not remove a temporary encrypted session file.');
+        }
+      }
+    }
     logger.info('Session saved');
   }
 
@@ -123,6 +148,7 @@ export class SessionManager {
    * Returns null if no session exists.
    */
   async load(): Promise<SessionData | null> {
+    await this.pendingWrite;
     try {
       const key = await getEncryptionKey();
       const encrypted = await readFile(SESSION_FILE);
@@ -156,6 +182,7 @@ export class SessionManager {
    * Check if a stored session exists.
    */
   async exists(): Promise<boolean> {
+    await this.pendingWrite;
     try {
       await access(SESSION_FILE);
       return true;
@@ -167,12 +194,16 @@ export class SessionManager {
   /**
    * Delete the stored session.
    */
-  async clear(): Promise<void> {
-    try {
-      await unlink(SESSION_FILE);
-      logger.info('Session cleared');
-    } catch {
-      // File may not exist — that's fine
-    }
+  clear(): Promise<void> {
+    return this.queueWrite(async () => {
+      try {
+        await unlink(SESSION_FILE);
+        logger.info('Session cleared');
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT') return;
+        logger.error('Could not remove the saved health portal session.');
+        throw error;
+      }
+    });
   }
 }

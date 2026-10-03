@@ -13,7 +13,8 @@
 
 import { authenticate } from '../api/auth-client.js';
 import { MHRClient } from '../api/mhr-client.js';
-import { sessionManager, loadSessionData, invalidateSessionCache } from '../helpers/session-helpers.js';
+import { sessionManager, loadSessionData, invalidateSessionCache, checkMyChartConnection, formatError } from '../helpers/session-helpers.js';
+import { ApiError, AuthRequiredError, NetworkError, SessionExpiredError, UpstreamContractError } from '../utils/errors.js';
 import { MEDICAL_DISCLAIMER } from './tool-factory.js';
 import { isDemoMode, setDemoMode } from '../helpers/demo/index.js';
 import { logger } from '../utils/logger.js';
@@ -22,6 +23,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 
 import { VERSION as CURRENT_VERSION } from '../version.js';
+import { parseUpdateResponse } from '../utils/version.js';
 
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
@@ -80,11 +82,9 @@ async function checkForUpdate(): Promise<UpdateInfo | undefined> {
       logger.warn(`Update check returned HTTP ${res.status}`);
       return undefined;
     }
-    const data = await res.json() as { updateAvailable?: boolean; latestVersion?: string; downloadUrl?: string };
-    logger.info(`Update check result: updateAvailable=${data.updateAvailable}, latest=${data.latestVersion}`);
-    if (data.updateAvailable && data.latestVersion && data.downloadUrl) {
-      return { latestVersion: data.latestVersion, downloadUrl: data.downloadUrl };
-    }
+    const update = parseUpdateResponse(await res.json(), CURRENT_VERSION);
+    logger.info(`Update check result: updateAvailable=${update !== undefined}, latest=${update?.latestVersion ?? 'none'}`);
+    return update;
   } catch (error) {
     logger.warn(`Update check failed: ${error instanceof Error ? error.message : error}`);
   }
@@ -162,14 +162,17 @@ export const connectAccountTool = {
             const status = await existingClient.getSessionStatus();
             if (!status.isSessionExpired) {
               const user = await existingClient.getUser();
-              const myChartConnected = !!(data.myChartJar && data.myChartCsrfToken);
+              const myChart = await checkMyChartConnection();
               const response: Record<string, unknown> = {
                 connected: true,
-                message: 'Already connected (existing session reused).',
+                message: myChart.connected
+                  ? 'Already connected to My Health Records and MyChart.'
+                  : 'My Health Records is connected. MyChart could not reconnect; use connect_account with force=true to try both portals again.',
                 userName: user.name,
                 authorizedRecords: user.authorizedRecords.length,
                 mhrConnected: true,
-                myChartConnected,
+                myChartConnected: myChart.connected,
+                ...(myChart.connected ? {} : { warnings: { myChart: myChart.error } }),
                 sessionTimeRemaining: Math.round(status.numberOfMilliSecondsLeftForSessionExpire / 1000),
                 disclaimer: MEDICAL_DISCLAIMER,
               };
@@ -183,8 +186,8 @@ export const connectAccountTool = {
                 ],
               };
             }
-          } catch {
-            // Session invalid or expired — fall through to fresh auth
+          } catch (error) {
+            if (!(error instanceof AuthRequiredError) && !(error instanceof SessionExpiredError)) throw error;
           }
         }
       }
@@ -216,10 +219,12 @@ export const connectAccountTool = {
       }
 
       // Authenticate with SSO via browser
+      invalidateSessionCache();
       const { mhrCookieJar, myChartCookieJar, myChartCsrfToken } = await authenticate();
 
       // Verify the MHR session works by fetching user profile
       const client = new MHRClient(mhrCookieJar);
+      await client.getSessionStatus();
       const user = await client.getUser();
 
       // Save encrypted session (both MHR and MyChart)
@@ -230,13 +235,19 @@ export const connectAccountTool = {
       });
       invalidateSessionCache();
 
+      const myChartConnected = Boolean(myChartCookieJar && myChartCsrfToken);
       const response: Record<string, unknown> = {
         connected: true,
-        message: 'Successfully connected to My Health Records and MyChart (AHS Connect).',
+        message: myChartConnected
+          ? 'Successfully connected to My Health Records and MyChart (AHS Connect).'
+          : 'Connected to My Health Records. MyChart did not connect; use connect_account with force=true to try both portals again.',
         userName: user.name,
         authorizedRecords: user.authorizedRecords.length,
         mhrConnected: true,
-        myChartConnected: !!myChartCookieJar,
+        myChartConnected,
+        ...(!myChartConnected && { warnings: {
+          myChart: { error: 'auth_required', message: 'MyChart is unavailable for this session. Other My Health Records tools can still be used.' },
+        } }),
         disclaimer: MEDICAL_DISCLAIMER,
       };
       return {
@@ -246,9 +257,12 @@ export const connectAccountTool = {
         }],
       };
     } catch (error) {
-      // Log the actual error to stderr for diagnostics (never log PII)
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error(`connect_account failed: ${errMsg}`);
+      logger.error('connect_account could not complete sign-in.');
+      if (error instanceof AuthRequiredError || error instanceof SessionExpiredError ||
+        error instanceof ApiError || error instanceof NetworkError || error instanceof UpstreamContractError) {
+        return { content: [{ type: 'text' as const, text: formatError(error) }], isError: true };
+      }
 
       // Return a generic message — never expose internal error details to the caller
       const isChromeMissing = errMsg.includes('Could not find') || errMsg.includes('chrome') || errMsg.includes('Chrome');

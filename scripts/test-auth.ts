@@ -1,170 +1,125 @@
-#!/usr/bin/env npx tsx
 /**
- * Standalone auth test script for Alberta My Health Records.
+ * Opt-in, read-only check of the actual installer, not a separate auth implementation.
+ * Credentials are entered only in Chrome. Responses remain in memory; only outcomes
+ * are printed. The isolated profile and encrypted test session are removed on exit.
  *
- * Uses Puppeteer to open the real MHR login page in a visible browser.
- * The user logs in normally — the browser handles all SAML/SSO complexity.
- * After login, cookies are extracted and used for direct API calls.
- *
- * Usage:
- *   npx tsx scripts/test-auth.ts
- *
- * No credentials needed as env vars — you enter them in the browser.
- * Security: Only session cookies are captured. No PII is logged.
+ * npm run test:live -- ab-health-mcp.mcpb
  */
+import { withBundle, withMcpClient, toolData } from './verify-bundle.js';
+import { isRecord } from '../src/api/response-helpers.js';
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 
-import puppeteer from 'puppeteer-core';
-import { CookieJar, Cookie } from 'tough-cookie';
+let failures = 0;
+const safeErrors = new Set([
+  'auth_required', 'session_expired', 'auth_failed', 'api_error',
+  'network_error', 'upstream_contract_error', 'all_sources_unavailable',
+]);
 
-const MHR_BASE = 'https://myhealthrecords.alberta.ca';
-const LOGIN_TIMEOUT_MS = 120_000; // 2 minutes to complete login
-
-async function main(): Promise<void> {
-  console.log('=== Alberta My Health Records Auth Test ===\n');
-
-  // --- Step 1: Launch browser and navigate to MHR ---
-  console.log('Step 1: Launching browser...');
-  const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: { width: 1280, height: 800 },
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-
-  const page = await browser.newPage();
-  await page.goto(MHR_BASE, { waitUntil: 'networkidle2' });
-  console.log('  Browser opened. Please log in with your MyAlberta account.\n');
-  console.log('  ⏳ Waiting for login (up to 2 minutes)...\n');
-
-  // --- Step 2: Wait for login to complete ---
-  // After successful login, the URL should contain /ng/ (the Angular dashboard)
+async function check(
+  client: Client,
+  name: string,
+  args: Record<string, unknown>,
+  valid: (data: Record<string, unknown>) => boolean,
+): Promise<Record<string, unknown> | undefined> {
   try {
-    await page.waitForFunction(
-      () => window.location.href.includes('/ng/'),
-      { timeout: LOGIN_TIMEOUT_MS },
-    );
-  } catch {
-    console.error('  ❌ Login timed out. Did you complete the login in the browser?');
-    await browser.close();
-    process.exit(1);
-  }
-
-  const finalUrl = page.url();
-  console.log(`Step 2: Login detected! URL: ${new URL(finalUrl).pathname}`);
-
-  // --- Step 3: Extract cookies from browser ---
-  console.log('\nStep 3: Extracting cookies from browser...');
-
-  // Get cookies for all relevant domains
-  const browserCookies = await page.cookies(
-    'https://myhealthrecords.alberta.ca',
-    'https://console.myhealthrecords.alberta.ca',
-    'https://account.alberta.ca',
-  );
-  console.log(`  Captured ${browserCookies.length} cookies`);
-
-  const domains = new Set(browserCookies.map(c => c.domain));
-  console.log(`  Domains: ${[...domains].join(', ')}`);
-
-  // Close browser — we have what we need
-  await browser.close();
-  console.log('  Browser closed.');
-
-  // --- Step 4: Load cookies into tough-cookie jar ---
-  console.log('\nStep 4: Loading cookies into cookie jar...');
-  const jar = new CookieJar();
-
-  for (const bc of browserCookies) {
-    const tough = new Cookie({
-      key: bc.name,
-      value: bc.value,
-      domain: bc.domain,
-      path: bc.path,
-      secure: bc.secure,
-      httpOnly: bc.httpOnly,
-      expires: bc.expires > 0 ? new Date(bc.expires * 1000) : 'Infinity',
-      sameSite: bc.sameSite === 'None' ? 'none' : bc.sameSite?.toLowerCase() as 'lax' | 'strict' | undefined,
+    const result = await client.callTool({ name, arguments: args }, undefined, {
+      timeout: name === 'connect_account' ? 600_000 : 120_000,
     });
-
-    const cookieUrl = `https://${bc.domain.replace(/^\./, '')}${bc.path}`;
-    try {
-      await jar.setCookie(tough, cookieUrl);
-    } catch {
-      // Ignore cookie setting errors
-    }
-  }
-
-  // Helper: fetch with cookie jar
-  async function fetchWithCookies(url: string, extraHeaders: Record<string, string> = {}): Promise<Response> {
-    const cookies = await jar.getCookieString(url);
-    return fetch(url, {
-      headers: {
-        'Cookie': cookies,
-        'Accept': 'application/json',
-        'Accept-Language': 'en-CA',
-        'Referer': `${MHR_BASE}/ng/`,
-        'Cache-Control': 'no-cache',
-        ...extraHeaders,
-      },
-    });
-  }
-
-  // --- Step 5: Test session endpoint ---
-  console.log('\nStep 5: Testing MHR session...');
-  const sessionResp = await fetchWithCookies(
-    `${MHR_BASE}/api/phr/v1/session?SessionMode=Patient&IsKeypressed=true`,
-  );
-  console.log(`  Session endpoint: ${sessionResp.status}`);
-  if (sessionResp.ok) {
-    const data = await sessionResp.json();
-    console.log(`  Session expired: ${data.isSessionExpired}`);
-    console.log(`  Time remaining: ${Math.round(data.numberOfMilliSecondsLeftForSessionExpire / 1000)}s`);
-  }
-
-  // --- Step 6: Test user profile endpoint ---
-  console.log('\nStep 6: Testing user profile...');
-  const userResp = await fetchWithCookies(`${MHR_BASE}/api/phr/v1/user`);
-  console.log(`  User endpoint: ${userResp.status}`);
-  if (userResp.ok) {
-    const data = await userResp.json();
-    console.log(`  Fields: ${Object.keys(data).length}`);
-    console.log(`  Authorized records: ${data.authorizedRecords?.length ?? 0}`);
-  } else {
-    console.log(`  ❌ User endpoint failed`);
-    const text = await userResp.text();
-    console.log(`  Response: ${text.substring(0, 200)}`);
-  }
-
-  // --- Step 7: Test lab results endpoint ---
-  console.log('\nStep 7: Testing lab results...');
-  const params = new URLSearchParams({
-    startDate: 'Mon Jan 01 1753',
-    endDate: 'Fri Dec 31 9999',
-    dateRangeOptions: 'All',
-    labConfiguration: '00000000-0000-0000-0000-000000000000',
-    showOtherSection: 'True',
-    ignoreConfig: 'True',
-  });
-  const labResp = await fetchWithCookies(
-    `${MHR_BASE}/api/phr/v1/labresult/getData?${params}`,
-    { 'Control-Mapping-Id': '7736' },
-  );
-  console.log(`  Lab results endpoint: ${labResp.status}`);
-  if (labResp.ok) {
-    const data = await labResp.json();
-    console.log(`  Results: ${Array.isArray(data) ? data.length : 'non-array'} entries`);
-  }
-
-  // --- Summary ---
-  const allOk = sessionResp.ok && userResp.ok && labResp.ok;
-  if (allOk) {
-    console.log('\n✅ Auth flow completed successfully! All API endpoints working.');
-    console.log('   Cookie-based session capture is proven. Ready for Step 2.');
-  } else {
-    console.log('\n⚠️  Some endpoints failed. Check output above.');
+    const data = toolData(result);
+    const passed = !result.isError && valid(data);
+    if (!passed) failures++;
+    console.log(JSON.stringify({
+      check: name, outcome: passed ? 'pass' : 'fail',
+      ...(typeof data.error === 'string' && safeErrors.has(data.error) ? { error: data.error } : {}),
+      ...(isRecord(data.errors) ? { failedSections: Object.keys(data.errors).filter(key => [
+        'profile', 'medications_mhr', 'recent_lab_results', 'allergies_mychart',
+        'health_issues_mychart', 'immunizations_mychart',
+      ].includes(key)) } : {}),
+    }));
+    return passed ? data : undefined;
+  } catch (error) {
+    failures++;
+    console.log(JSON.stringify({ check: name, outcome: 'fail', errorType: error instanceof Error ? error.name : 'Error' }));
+    return undefined;
   }
 }
 
-main().catch((error) => {
-  console.error('Unhandled error:', error);
-  process.exit(1);
+function findField(value: unknown, key: string, depth = 0): string | undefined {
+  if (depth > 6) return undefined;
+  if (isRecord(value) && typeof value[key] === 'string' && value[key]) return value[key];
+  const children = Array.isArray(value) ? value : isRecord(value) ? Object.values(value) : [];
+  for (const child of children) {
+    const found = findField(child, key, depth + 1);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+async function main(): Promise<void> {
+  console.log('Read-only installer check. Sign in only in the Chrome window. No record values or credentials will be printed.');
+  await withBundle(process.argv[2] ?? 'ab-health-mcp.mcpb', async context => {
+    let connected = false;
+    await withMcpClient(context, false, async client => {
+      const connection = await check(client, 'connect_account', { force: true, accept_privacy: true },
+        data => data.connected === true && data.mhrConnected === true && data.myChartConnected === true);
+      if (!connection) return;
+      connected = true;
+      await check(client, 'check_connection', {},
+        data => data.connected === true && data.mhrConnected === true && data.myChartConnected === true);
+      await check(client, 'get_medications', { max_results: 1 },
+        data => Array.isArray(data.medications) && typeof data.totalRecords === 'number');
+      const labs = await check(client, 'get_lab_results', { date_range: 'LastYear', max_results: 1 },
+        data => Array.isArray(data.results) && typeof data.totalResults === 'number');
+      await check(client, 'get_diagnostic_imaging', { date_range: 'LastYear', max_results: 1 },
+        data => Array.isArray(data.results) && typeof data.totalResults === 'number');
+      for (const name of ['mc_get_allergies', 'mc_get_health_issues', 'mc_get_medications', 'mc_get_immunizations', 'mc_get_visits']) {
+        await check(client, name, {}, data => !data.error);
+      }
+      const tests = await check(client, 'mc_get_test_results', {}, data => !data.error);
+      const orderKey = findField(tests, 'orderKey');
+      if (orderKey) {
+        await check(client, 'mc_get_test_results', { order_id: orderKey }, data => !data.error);
+      } else {
+        console.log(JSON.stringify({ check: 'MyChart result details', outcome: 'not-exercised', reason: 'no supported order key in the response' }));
+      }
+      await check(client, 'get_health_overview', {}, data =>
+        data.partial === false && isRecord(data.errors) && Object.keys(data.errors).length === 0 &&
+        isRecord(data.sources) && data.sources.mhr === true && data.sources.myChart === true);
+
+      const attachmentId = findField(labs, 'thing_id');
+      const filename = findField(labs, 'filename');
+      if (attachmentId && filename) {
+        try {
+          const result = await client.callTool({
+            name: 'download_attachment', arguments: { thing_id: attachmentId, filename },
+          }, undefined, { timeout: 120_000 });
+          const passed = !result.isError && Array.isArray(result.content) && result.content.length > 0;
+          if (!passed) failures++;
+          console.log(JSON.stringify({ check: 'download_attachment', outcome: passed ? 'pass' : 'fail' }));
+        } catch {
+          failures++;
+          console.log(JSON.stringify({ check: 'download_attachment', outcome: 'fail' }));
+        }
+      } else {
+        console.log(JSON.stringify({ check: 'download_attachment', outcome: 'not-exercised', reason: 'no attachment in the sampled result' }));
+      }
+    });
+
+    if (connected) {
+      await withMcpClient(context, false, async client => {
+        await check(client, 'connect_account', {},
+          data => data.connected === true && data.mhrConnected === true && data.myChartConnected === true);
+        await check(client, 'mc_get_allergies', {}, data => !data.error);
+        await check(client, 'disconnect_account', {}, data => data.connected === false);
+      });
+    }
+    console.log(JSON.stringify({ check: 'live-installer', outcome: failures ? 'fail' : 'pass', failures, version: context.version }));
+  });
+  console.log('Temporary browser profile and encrypted test session removed.');
+  if (failures) process.exitCode = 1;
+}
+
+main().catch(error => {
+  console.error(JSON.stringify({ check: 'live-installer', outcome: 'fail', errorType: error instanceof Error ? error.name : 'Error' }));
+  process.exitCode = 1;
 });
