@@ -8,6 +8,7 @@
 import { ensureSession, formatError } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER_SHORT, composeNextStepHint, formattingDirective } from './tool-factory.js';
 import type { LabResult } from '../types.js';
+import { UpstreamContractError } from '../utils/errors.js';
 
 export const getLabResultsTool = {
   name: 'get_lab_results',
@@ -87,7 +88,7 @@ export const getLabResultsTool = {
 };
 
 function formatLabResults(results: LabResult[], testNameFilter?: string, maxResults: number = 20, offset: number = 0) {
-  if (!Array.isArray(results)) return { totalResults: 0, results: [] };
+  if (!Array.isArray(results)) throw new UpstreamContractError('mhr');
 
   const formatted = results.map(entry => {
     const groups = (entry.group ?? []).map(g => {

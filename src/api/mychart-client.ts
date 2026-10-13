@@ -8,43 +8,41 @@
 
 import { CookieJar } from 'tough-cookie';
 import { SessionExpiredError, ApiError, NetworkError } from '../utils/errors.js';
-
-const MYCHART_BASE = 'https://myahsconnect.albertahealthservices.ca';
+import { fetchMyChartToken, MYCHART_BASE } from './mychart-session.js';
+import { readJsonResponse, storeResponseCookies } from './response-helpers.js';
 
 export class MyChartClient {
+  private refreshing?: Promise<void>;
+
   constructor(
     private cookieJar: CookieJar,
     private csrfToken: string,
+    private onSessionUpdated?: (token: string | undefined, invalidateContext?: boolean) => Promise<void>,
   ) {}
 
   /**
    * Check response status and throw appropriate errors.
    */
   private checkResponse(response: Response): void {
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401 || response.status === 403 || (response.status >= 300 && response.status < 400)) {
       throw new SessionExpiredError('MyChart session expired. Use connect_account to sign in again.');
     }
-    if (response.status >= 500) {
+    if (!response.ok) {
       throw new ApiError(response.status, 'MyChart (AHS Connect) is currently unavailable. Try again later.');
     }
   }
 
   /**
-   * Retry a request once after a keepalive ping when 401/403 is received.
+   * Retry once with a freshly validated session/token after an auth failure.
    * Avoids false "session expired" errors from transient auth failures.
    */
   private async withRetry<T>(fn: () => Promise<T>): Promise<T> {
+    if (!this.csrfToken) await this.refreshSession();
     try {
       return await fn();
     } catch (error) {
       if (error instanceof SessionExpiredError) {
-        // Try refreshing the session before giving up
-        try {
-          await this.keepAlive();
-        } catch {
-          throw error; // Keepalive also failed — session truly expired
-        }
-        // Keepalive succeeded — retry the original request
+        await this.refreshSession();
         return await fn();
       }
       throw error;
@@ -63,6 +61,7 @@ export class MyChartClient {
       try {
         response = await fetch(url, {
           method: 'GET',
+          redirect: 'manual',
           headers: {
             'Cookie': cookies,
             'Accept': 'application/json',
@@ -74,9 +73,9 @@ export class MyChartClient {
         throw new NetworkError('Could not reach MyChart (AHS Connect). Check your internet connection.');
       }
 
-      this.checkResponse(response);
       await this.storeCookies(response, url);
-      return response.json();
+      this.checkResponse(response);
+      return readJsonResponse(response, 'mychart');
     });
   }
 
@@ -84,14 +83,7 @@ export class MyChartClient {
    * Store Set-Cookie response headers back into the cookie jar.
    */
   private async storeCookies(response: Response, url: string): Promise<void> {
-    const setCookies = response.headers.getSetCookie?.() ?? [];
-    for (const cookie of setCookies) {
-      try {
-        await this.cookieJar.setCookie(cookie, url);
-      } catch {
-        // Ignore malformed cookies
-      }
-    }
+    await storeResponseCookies(this.cookieJar, response, url);
   }
 
   /**
@@ -100,55 +92,16 @@ export class MyChartClient {
    * Follows redirects and stores any Set-Cookie headers.
    */
   private async navigate(path: string): Promise<void> {
-    const url = `${MYCHART_BASE}/MyChartPRD/${path}`;
-    const cookies = await this.cookieJar.getCookieString(url);
-
-    let response: Response;
-    try {
-      // Use manual redirect following to capture cookies at each hop
-      response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Cookie': cookies,
-          'Accept': 'text/html',
-          'Referer': `${MYCHART_BASE}/MyChartPRD/Home`,
-        },
-        redirect: 'manual',
-      });
-    } catch {
-      throw new NetworkError('Could not reach MyChart (AHS Connect). Check your internet connection.');
-    }
-
-    await this.storeCookies(response, url);
-
-    // Follow redirects manually to capture cookies at each step
-    let redirectCount = 0;
-    while ((response.status === 301 || response.status === 302 || response.status === 303 || response.status === 307) && redirectCount < 10) {
-      redirectCount++;
-      const location = response.headers.get('location');
-      if (!location) break;
-
-      const nextUrl = location.startsWith('http') ? location : new URL(location, url).href;
-
-      // Validate redirect stays on trusted domains
+    let url = `${MYCHART_BASE}/MyChartPRD/${path}`;
+    for (let redirects = 0; redirects <= 10; redirects++) {
+      let response: Response;
       try {
-        const redirectHost = new URL(nextUrl).hostname;
-        if (!redirectHost.endsWith('.alberta.ca') && !redirectHost.endsWith('.albertahealthservices.ca')) {
-          break; // Stop following redirects to untrusted domains
-        }
-      } catch {
-        break; // Invalid URL — stop
-      }
-
-      const nextCookies = await this.cookieJar.getCookieString(nextUrl);
-
-      try {
-        response = await fetch(nextUrl, {
+        response = await fetch(url, {
           method: 'GET',
           headers: {
-            'Cookie': nextCookies,
+            'Cookie': await this.cookieJar.getCookieString(url),
             'Accept': 'text/html',
-            'Referer': url,
+            'Referer': `${MYCHART_BASE}/MyChartPRD/Home`,
           },
           redirect: 'manual',
         });
@@ -156,42 +109,45 @@ export class MyChartClient {
         throw new NetworkError('Could not reach MyChart (AHS Connect). Check your internet connection.');
       }
 
-      await this.storeCookies(response, nextUrl);
+      await this.storeCookies(response, url);
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location');
+        if (!location) throw new SessionExpiredError();
+        const next = new URL(location, url);
+        if (next.origin !== MYCHART_BASE || /\/Authentication\//i.test(next.pathname)) {
+          throw new SessionExpiredError('MyChart session expired. Use connect_account to sign in again.');
+        }
+        await response.body?.cancel();
+        url = next.href;
+        continue;
+      }
+      this.checkResponse(response);
+      await response.text();
+      return;
     }
-
-    this.checkResponse(response);
-    await response.text();
+    throw new SessionExpiredError('MyChart could not complete the context switch. Use connect_account to sign in again.');
   }
 
   /**
    * Refresh the CSRF token from the server.
    * Must be called after context switches.
    */
-  private async refreshCsrfToken(): Promise<void> {
-    const url = `${MYCHART_BASE}/MyChartPRD/Home/CSRFToken`;
-    const cookies = await this.cookieJar.getCookieString(url);
+  refreshSession(): Promise<void> {
+    this.refreshing ??= this.refreshToken().finally(() => { this.refreshing = undefined; });
+    return this.refreshing;
+  }
 
+  private async refreshToken(): Promise<void> {
+    let token: string;
     try {
-      const response = await fetch(url, {
-        headers: {
-          'Cookie': cookies,
-          'Accept': 'text/html',
-          'Referer': `${MYCHART_BASE}/MyChartPRD/Home`,
-        },
-      });
-      await this.storeCookies(response, url);
-      if (response.ok) {
-        const html = (await response.text()).trim();
-        const match = html.match(/value="([^"]+)"/);
-        if (match) {
-          this.csrfToken = match[1];
-        } else if (!html.includes('<')) {
-          this.csrfToken = html;
-        }
-      }
-    } catch {
-      // Non-critical — existing token may still work
+      token = await fetchMyChartToken(this.cookieJar);
+    } catch (error) {
+      this.csrfToken = '';
+      await this.onSessionUpdated?.(undefined);
+      throw error;
     }
+    this.csrfToken = token;
+    await this.onSessionUpdated?.(token);
   }
 
   /**
@@ -207,6 +163,7 @@ export class MyChartClient {
       try {
         response = await fetch(url, {
           method: 'POST',
+          redirect: 'manual',
           headers: {
             'Cookie': cookies,
             'Content-Type': 'application/json',
@@ -222,13 +179,14 @@ export class MyChartClient {
         throw new NetworkError('Could not reach MyChart (AHS Connect). Check your internet connection.');
       }
 
+      await this.storeCookies(response, url);
       this.checkResponse(response);
 
       if (response.status === 204) {
         return {};
       }
 
-      return response.json();
+      return readJsonResponse(response, 'mychart');
     });
   }
 
@@ -246,6 +204,7 @@ export class MyChartClient {
       try {
         response = await fetch(url, {
           method: 'POST',
+          redirect: 'manual',
           headers: {
             'Cookie': cookies,
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -261,9 +220,10 @@ export class MyChartClient {
         throw new NetworkError('Could not reach MyChart (AHS Connect). Check your internet connection.');
       }
 
+      await this.storeCookies(response, url);
       this.checkResponse(response);
 
-      return response.json();
+      return readJsonResponse(response, 'mychart');
     });
   }
 
@@ -487,7 +447,7 @@ export class MyChartClient {
   /**
    * Ping MyChart to keep the session alive.
    * Uses the lightweight KeepAlive endpoint (no data returned).
-   * Throws SessionExpiredError if the session is no longer valid.
+   * A successful ping alone does not prove authentication; use refreshSession for that.
    */
   async keepAlive(): Promise<void> {
     const url = `${MYCHART_BASE}/MyChartPRD/Home/KeepAlive?cnt=1&noCache=${Math.random()}`;
@@ -497,6 +457,7 @@ export class MyChartClient {
     try {
       response = await fetch(url, {
         method: 'GET',
+        redirect: 'manual',
         headers: {
           'Cookie': cookies,
           'Accept': 'text/html',
@@ -507,9 +468,9 @@ export class MyChartClient {
       throw new NetworkError('Could not reach MyChart (AHS Connect). Check your internet connection.');
     }
 
-    if (response.status === 401 || response.status === 403) {
-      throw new SessionExpiredError('MyChart session expired. Use connect_account to sign in again.');
-    }
+    await this.storeCookies(response, url);
+    this.checkResponse(response);
+    await response.body?.cancel();
   }
 
   // --- Document Download ---
@@ -602,15 +563,24 @@ export class MyChartClient {
    * After switching, all subsequent API calls return the proxy patient's data.
    */
   async switchToProxy(proxyId: string): Promise<void> {
-    await this.navigate(`inside.asp?mode=proxyswitch&action=switchcontext&src=0&eid=${encodeURIComponent(proxyId)}`);
-    await this.refreshCsrfToken();
+    await this.switchContext(`inside.asp?mode=proxyswitch&action=switchcontext&src=0&eid=${encodeURIComponent(proxyId)}`);
   }
 
   /**
    * Switch back to viewing your own records.
    */
   async switchToSelf(): Promise<void> {
-    await this.navigate('inside.asp?mode=self');
-    await this.refreshCsrfToken();
+    await this.switchContext('inside.asp?mode=self');
+  }
+
+  private async switchContext(path: string): Promise<void> {
+    try {
+      await this.navigate(path);
+      await this.refreshSession();
+    } catch (error) {
+      this.csrfToken = '';
+      await this.onSessionUpdated?.(undefined, true);
+      throw error;
+    }
   }
 }

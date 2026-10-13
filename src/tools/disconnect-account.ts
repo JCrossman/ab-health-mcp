@@ -5,7 +5,7 @@
  * with connect_account to access health records again.
  */
 
-import { sessionManager, invalidateSessionCache } from '../helpers/session-helpers.js';
+import { sessionManager, invalidateSessionCache, formatError } from '../helpers/session-helpers.js';
 
 export const disconnectAccountTool = {
   name: 'disconnect_account',
@@ -15,8 +15,12 @@ export const disconnectAccountTool = {
     properties: {},
   },
   handler: async () => {
-    await sessionManager.clear();
     invalidateSessionCache();
+    try {
+      await sessionManager.clear();
+    } catch (error) {
+      return { content: [{ type: 'text' as const, text: formatError(error) }], isError: true };
+    }
     return {
       content: [{
         type: 'text' as const,

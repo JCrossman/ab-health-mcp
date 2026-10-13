@@ -14,9 +14,10 @@
  * 20-27 KB; with shaping it's ~5-8 KB.
  */
 
-import { ensureSession, ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
+import { ensureSession, ensureMyChartSession, formatError, errorDetails, type ToolErrorDetails } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER, formattingDirective } from './tool-factory.js';
-import type { LabResult } from '../types.js';
+import { isRecord } from '../api/response-helpers.js';
+import { UpstreamContractError } from '../utils/errors.js';
 
 const RECENT_LABS_MAX = 10;
 const RECENT_IMMS_MAX = 10;
@@ -25,29 +26,38 @@ interface RawRecord {
   [key: string]: unknown;
 }
 
-function pick<T extends RawRecord>(obj: unknown, keys: ReadonlyArray<keyof T | string>): RawRecord {
-  if (!obj || typeof obj !== 'object') return {};
-  const src = obj as RawRecord;
+function pick(obj: RawRecord, keys: readonly string[]): RawRecord {
   const out: RawRecord = {};
   for (const k of keys) {
-    const v = src[k as string];
-    if (v !== undefined && v !== null && v !== '') out[k as string] = v;
+    const v = obj[k];
+    if (v !== undefined && v !== null && v !== '') out[k] = v;
   }
-  return out;
+  return Object.keys(out).length ? out : obj;
+}
+
+function records(input: unknown, source: 'mhr' | 'mychart'): RawRecord[] {
+  if (!Array.isArray(input) || !input.every(isRecord)) throw new UpstreamContractError(source);
+  return input;
+}
+
+function pickNamedRecord(obj: RawRecord, keys: readonly string[]): RawRecord {
+  const names = ['Name', 'name', 'displayName', 'brandName', 'genericName'];
+  if (!names.some(key => typeof obj[key] === 'string' && obj[key] !== '')) return obj;
+  return pick(obj, keys);
 }
 
 function shapeLabResults(input: unknown): unknown {
-  if (!Array.isArray(input)) return [];
-  return input.slice(0, RECENT_LABS_MAX).map((entry: RawRecord) => ({
+  return records(input, 'mhr').slice(0, RECENT_LABS_MAX).map(entry => ({
     date: entry.labResultDisplayDateText ?? entry.labResultDisplayDate,
     laboratory: entry.laboratoryName,
     orderedBy: entry.orderedByName,
     facility: entry.orderByType,
-    groups: (Array.isArray(entry.group) ? entry.group : []).map((g: RawRecord) => ({
+    groups: records(entry.group ?? [], 'mhr').map(g => ({
       name: g.groupName,
       status: g.labOrderStatus,
-      tests: (Array.isArray(g.results) ? g.results : []).map((r: RawRecord) => {
-        const values = (r.values as RawRecord) ?? {};
+      tests: records(g.results ?? [], 'mhr').map(r => {
+        if (r.values != null && !isRecord(r.values)) throw new UpstreamContractError('mhr');
+        const values = r.values ?? {};
         const value = values.value ?? values.displayValue ?? '';
         const display = values.displayValue ?? '';
         const out: RawRecord = {
@@ -70,8 +80,7 @@ function shapeLabResults(input: unknown): unknown {
 }
 
 function shapeMedications(input: unknown): unknown {
-  if (!Array.isArray(input)) return [];
-  return input.map((m: RawRecord) => pick(m, [
+  return records(input, 'mhr').map(m => pickNamedRecord(m, [
     'name',
     'genericName',
     'brandName',
@@ -92,12 +101,12 @@ function shapeMedications(input: unknown): unknown {
 }
 
 function shapeAllergies(input: unknown): unknown {
-  if (!input || typeof input !== 'object') return input;
-  const src = input as RawRecord;
+  if (!isRecord(input)) throw new UpstreamContractError('mychart');
+  const src = input;
   const list = Array.isArray(src.Allergies) ? src.Allergies : Array.isArray(src.allergies) ? src.allergies : [];
   if (!list.length) return src;
   return {
-    allergies: list.map((a: RawRecord) => pick(a, [
+    allergies: records(list, 'mychart').map(a => pickNamedRecord(a, [
       'Name', 'name',
       'Severity', 'severity',
       'Reactions', 'reactions',
@@ -109,12 +118,12 @@ function shapeAllergies(input: unknown): unknown {
 }
 
 function shapeHealthIssues(input: unknown): unknown {
-  if (!input || typeof input !== 'object') return input;
-  const src = input as RawRecord;
+  if (!isRecord(input)) throw new UpstreamContractError('mychart');
+  const src = input;
   const list = Array.isArray(src.HealthIssues) ? src.HealthIssues : Array.isArray(src.healthIssues) ? src.healthIssues : [];
   if (!list.length) return src;
   return {
-    healthIssues: list.map((h: RawRecord) => pick(h, [
+    healthIssues: records(list, 'mychart').map(h => pickNamedRecord(h, [
       'Name', 'name',
       'Status', 'status',
       'OnsetDate', 'onsetDate',
@@ -125,11 +134,11 @@ function shapeHealthIssues(input: unknown): unknown {
 }
 
 function shapeImmunizations(input: unknown): unknown {
-  if (!input || typeof input !== 'object') return input;
-  const src = input as RawRecord;
+  if (!isRecord(input)) throw new UpstreamContractError('mychart');
+  const src = input;
   const list = Array.isArray(src.Immunizations) ? src.Immunizations : Array.isArray(src.immunizations) ? src.immunizations : [];
   if (!list.length) return src;
-  const slim = list.slice(0, RECENT_IMMS_MAX).map((i: RawRecord) => pick(i, [
+  const slim = records(list, 'mychart').slice(0, RECENT_IMMS_MAX).map(i => pickNamedRecord(i, [
     'Name', 'name',
     'AdministrationDate', 'administrationDate', 'DateAdministered', 'dateAdministered',
     'Manufacturer', 'manufacturer',
@@ -139,7 +148,7 @@ function shapeImmunizations(input: unknown): unknown {
 }
 
 function shapeProfile(input: unknown): unknown {
-  if (!input || typeof input !== 'object') return input;
+  if (!isRecord(input)) throw new UpstreamContractError('mhr');
   return pick(input, ['name', 'displayName', 'selectedRecordId', 'defaultUserLanguage', 'authorizedRecords']);
 }
 
@@ -148,53 +157,41 @@ export const getHealthOverviewTool = {
   description: 'PREFER FOR BROAD HEALTH QUESTIONS. One call returns profile + medications + recent labs + allergies + health issues + immunizations from both MHR and MyChart. Use instead of chaining 4-6 single-tool calls.',
   handler: async () => {
     try {
-      // Establish both sessions (MyChart failure is non-fatal)
-      const mhrClient = await ensureSession();
-      let mcClient: Awaited<ReturnType<typeof ensureMyChartSession>> | null = null;
-      try {
-        mcClient = await ensureMyChartSession();
-      } catch {
-        // MyChart not available — continue with MHR only
-      }
-
-      // Fire all API calls in parallel
-      const allergiesPromise = mcClient ? mcClient.getAllergies() : Promise.reject('MyChart not connected');
-      const healthIssuesPromise = mcClient ? mcClient.getHealthIssues() : Promise.reject('MyChart not connected');
-      const immunizationsPromise = mcClient ? mcClient.getImmunizations() : Promise.reject('MyChart not connected');
-
-      const [profile, mhrMeds, labs, allergies, healthIssues, immunizations] =
-        await Promise.allSettled([
-          mhrClient.getUser(),
-          mhrClient.getMedications(),
-          mhrClient.getLabResults({
-            dateRange: 'Last3Months',
-            startDate: '',
-            endDate: '',
-          }),
-          allergiesPromise,
-          healthIssuesPromise,
-          immunizationsPromise,
-        ]);
-
-      const extract = (result: PromiseSettledResult<unknown>) =>
-        result.status === 'fulfilled' ? result.value : null;
-
+      const mhr = ensureSession();
+      const myChart = ensureMyChartSession();
+      const sections = [
+        ['profile', mhr.then(client => client.getUser()).then(shapeProfile)],
+        ['medications_mhr', mhr.then(client => client.getMedications()).then(shapeMedications)],
+        ['recent_lab_results', mhr.then(client => client.getLabResults({ dateRange: 'Last3Months' })).then(shapeLabResults)],
+        ['allergies_mychart', myChart.then(client => client.getAllergies()).then(shapeAllergies)],
+        ['health_issues_mychart', myChart.then(client => client.getHealthIssues()).then(shapeHealthIssues)],
+        ['immunizations_mychart', myChart.then(client => client.getImmunizations()).then(shapeImmunizations)],
+      ] as const;
+      const outcomes = await Promise.allSettled(sections.map(([, promise]) => promise));
+      const data: Record<string, unknown> = {};
+      const errors: Record<string, ToolErrorDetails> = {};
+      outcomes.forEach((outcome, index) => {
+        const [name] = sections[index];
+        data[name] = outcome.status === 'fulfilled' ? outcome.value : null;
+        if (outcome.status === 'rejected') errors[name] = errorDetails(outcome.reason);
+      });
+      const failed = Object.keys(errors).length;
+      const allFailed = failed === sections.length;
       const overview = {
-        profile: shapeProfile(extract(profile)),
-        medications_mhr: shapeMedications(extract(mhrMeds)),
-        recent_lab_results: shapeLabResults(extract(labs) as LabResult[] | null),
-        allergies_mychart: shapeAllergies(extract(allergies)),
-        health_issues_mychart: shapeHealthIssues(extract(healthIssues)),
-        immunizations_mychart: shapeImmunizations(extract(immunizations)),
+        ...data,
+        partial: failed > 0 && !allFailed,
+        errors,
+        ...(allFailed && { error: 'all_sources_unavailable', message: 'No overview sections could be loaded. This does not mean your records are empty.' }),
         sources: {
-          mhr: true,
-          myChart: mcClient !== null,
+          mhr: ['profile', 'medications_mhr', 'recent_lab_results'].some(name => !Object.hasOwn(errors, name)),
+          myChart: ['allergies_mychart', 'health_issues_mychart', 'immunizations_mychart'].some(name => !Object.hasOwn(errors, name)),
         },
         hint: 'For more detail on any section, use the specific tool (e.g., get_lab_results, mc_get_allergies). For attachments/PDFs in lab results, use download_attachment.',
         disclaimer: MEDICAL_DISCLAIMER,
       };
 
       return {
+        ...(allFailed && { isError: true }),
         content: [
           formattingDirective('summary_sections'),
           { type: 'text' as const, text: JSON.stringify(overview) },

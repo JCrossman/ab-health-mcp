@@ -49,8 +49,9 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 - **Session Storage:** Local encrypted file (AES-256-GCM) at `~/.mhr-records/session.enc` for stdio; encrypted into OAuth access token for HTTP mode (zero server-side storage)
   - v2 format: MHR cookie jar + MyChart cookie jar + CSRF token (backward compatible with v1)
 - **Browser Profile:** Persistent at `~/.mhr-records/browser-profile`
-- **MHR Auth:** Most endpoints no longer require `Control-Mapping-Id` (removed by Alberta, March 2026). Medications still requires CMID `8050`.
-- **MyChart Auth:** `__RequestVerificationToken` CSRF header (token obtained from `/MyChartPRD/Home/CSRFToken`)
+- **MHR requests:** Medications, labs, and imaging resolve their control mappings from authenticated CMS metadata. Mappings are per-view and reused within a client instance, never fixed deployment IDs.
+- **MyChart Auth:** `__RequestVerificationToken` from the authenticated Home page. DOM capture is used at sign-in; `parse5` handles HTML refresh. Cookie/token changes persist together in desktop sessions.
+- **Failure handling:** Unsupported/incomplete responses are errors, not empty records. Overviews retain successful sections and identify failed sections with `null`, structured errors, and `partial: true`.
 
 ## Key Domains
 

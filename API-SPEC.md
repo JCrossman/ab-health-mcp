@@ -144,11 +144,12 @@ The primary health data endpoint. Returns all lab test results.
 | `labConfiguration` | `00000000-0000-0000-0000-000000000000` | Lab config UUID (zeros = all) |
 | `showOtherSection` | `True` | Include "Other" section |
 | `ignoreConfig` | `True` | Ignore lab configuration filtering |
+| `startIndex`, `endIndex` | `-1`, `-1` | Request the complete list, as the current portal does |
 
 **Request Header:**
-- `Control-Mapping-Id: 7736` (required, appears to be a page/control identifier)
+- `Control-Mapping-Id: <resolved lab mapping>` from the authenticated CMS configuration; never hard-code a captured ID.
 
-**Response:** Array of lab result entries.
+**Response:** An array of lab result entries, or a `{ "totalCount": number, "data": [...] }` envelope. The client accepts complete envelopes and rejects incomplete or unsupported responses instead of reporting zero records. Preset ranges such as `LastYear` omit all-time date bounds; explicit dates use `dateRangeOptions=Custom`.
 
 ```json
 [
@@ -368,7 +369,7 @@ These endpoints were verified by navigating the MHR portal and capturing network
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions` (same pattern as lab results)
 
-**Request Header:** `Control-Mapping-Id: 7695`
+**Historical header:** `Control-Mapping-Id: 7695` (not sent by the current client).
 
 **Response:** Array of immunization records. Each has `itemKey` (thingId, versionStamp), `effectiveDate`, and `values` array with entries for `date-administered`, `administrator`, `name`, `edu-content`, `source`.
 
@@ -376,9 +377,9 @@ These endpoints were verified by navigating the MHR portal and capturing network
 
 #### GET /api/phr/v1/medication
 
-**Query Parameters:** `type=all`, `status=Medication`, `includeOrphanRefills=false`
+**Query Parameters:** `startIndex=-1`, `endIndex=-1`, `type=all`, `status=Medication`, `includeOrphanRefills=false`
 
-**Request Header:** `Control-Mapping-Id: 7701`
+**Request Header:** Resolve the read-only Medication control from CMS and send its `Control-Mapping-Id`. Select `FilterByConfiguredAppIds`, not the editable Other Medicines control.
 
 ### Referrals
 
@@ -386,13 +387,13 @@ These endpoints were verified by navigating the MHR portal and capturing network
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions=AllData`
 
-**Request Header:** `Control-Mapping-Id: 7705`
+**Historical header:** `Control-Mapping-Id: 7705` (not sent by the current client).
 
 ### Diagnostic Imaging
 
-#### GET /api/phr/v1/labresult/getData (with CMID 7712)
+#### GET /api/phr/v1/labresult/getData (diagnostic-imaging mapping)
 
-Same endpoint as lab results but returns diagnostic imaging reports (X-rays, ultrasounds, echocardiograms, CT, MRI) when called with `Control-Mapping-Id: 7712` instead of `7736`.
+Same endpoint and paging contract as lab results, but resolve the control on `/ResultsAndReadings/DiagnosticImagingReports` rather than `/ResultsAndReadings/LabResults`. Do not reuse the lab mapping or a historical CMID.
 
 Response includes PDF attachments with download URLs.
 
@@ -402,7 +403,7 @@ Response includes PDF attachments with download URLs.
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`, `types`
 
-The `types` parameter and CMID work together to select which vital signs are returned:
+The current client selects vital signs with `types`. CMIDs in the historical reference below are not sent by the client:
 
 | CMID | types | Description |
 |------|-------|-------------|
@@ -411,7 +412,7 @@ The `types` parameter and CMID work together to select which vital signs are ret
 | 7718 | `Tmp` | Temperature only |
 | 7730 | `Res` | Respiration only |
 
-**Request Header:** `Control-Mapping-Id: 7715` (for combined vitals)
+**Current client:** `types=Pls,Res,Tmp`; no fixed control-mapping header.
 
 **Response:** Array of vital sign readings with `when`, `whenDS`, `title`, `value`, `unit`, `description`.
 
@@ -419,13 +420,13 @@ The `types` parameter and CMID work together to select which vital signs are ret
 
 #### GET /api/phr/v1/myhealth/blood-oxygensaturation-data-manager
 
-**Request Header:** `Control-Mapping-Id: 7722`
+**Historical header:** `Control-Mapping-Id: 7722` (not sent by the current client).
 
 ### Blood Pressure
 
 #### GET /api/phr/v1/myhealth/blood-pressure-data-manager
 
-**Request Header:** `Control-Mapping-Id: 7716`
+**Historical header:** `Control-Mapping-Id: 7716` (not sent by the current client).
 
 ### Height / Weight / BMI
 
@@ -439,7 +440,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 #### GET /api/phr/v1/exercise
 
-**Request Header:** `Control-Mapping-Id: 7742`
+**Historical header:** `Control-Mapping-Id: 7742` (not sent by the current client).
 
 **Response:** Array with `source`, `calorieUnit`, `distanceUnit`, `durationUnit`, `exerciseValues`.
 
@@ -449,7 +450,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`
 
-**Request Header:** `Control-Mapping-Id: 7739`
+**Historical header:** `Control-Mapping-Id: 7739` (not sent by the current client).
 
 ### Blood Glucose
 
@@ -457,7 +458,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`
 
-**Request Header:** `Control-Mapping-Id: 7724`
+**Historical header:** `Control-Mapping-Id: 7724` (not sent by the current client).
 
 ### Insulin
 
@@ -472,7 +473,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`
 
-**Request Header:** `Control-Mapping-Id: 7731`
+**Historical header:** `Control-Mapping-Id: 7731` (not sent by the current client).
 
 ### Sleep Sessions
 
@@ -480,7 +481,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`
 
-**Request Header:** `Control-Mapping-Id: 7757`
+**Historical header:** `Control-Mapping-Id: 7757` (not sent by the current client).
 
 ### Dietary Intake
 
@@ -488,7 +489,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`
 
-**Request Header:** `Control-Mapping-Id: 7764`
+**Historical header:** `Control-Mapping-Id: 7764` (not sent by the current client).
 
 ### Waist Circumference
 
@@ -496,7 +497,7 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions`
 
-**Request Header:** `Control-Mapping-Id: 7751`
+**Historical header:** `Control-Mapping-Id: 7751` (not sent by the current client).
 
 ### Symptom Journal
 
@@ -504,23 +505,21 @@ BMI response has different structure: `heightValue`, `weightValue`, `when`, `bmi
 
 **Query Parameters:** `startDate`, `endDate`, `dateRangeOptions=AllData`
 
-**Request Header:** `Control-Mapping-Id: 7760`
+**Historical header:** `Control-Mapping-Id: 7760` (not sent by the current client).
 
 ---
 
 ## Control-Mapping-Id Reference
 
-> **⚠️ Deprecated (March 2026):** Alberta removed the `Control-Mapping-Id` requirement from most MHR endpoints. Sending the old 7xxx CMID values now causes HTTP 500 errors. Only the medications endpoint still requires a CMID, with a new value of `8050`. The table below is preserved for historical reference.
+Control mappings are deployment-specific metadata, not stable API constants. Read `GET /api/cms/v1/pages/root/browser` with the active session and locale, then resolve the requested page and control. Settings may be an object or a list. Missing or ambiguous matches are errors.
 
-| ID | Endpoint | Description | Status |
-|----|----------|-------------|--------|
-| **8050** | **medication** | **Medications** | **Active — required** |
-| 7695 | immunization-data-manager | Immunizations | Deprecated — do not send |
-| 7701 | medication | Medications (old) | Replaced by 8050 |
-| 7705 | referral | Referrals | Deprecated — do not send |
-| 7712 | labresult/getData | Diagnostic Imaging | Deprecated — do not send |
-| 7715 | VitalSigns (types=Pls,Res,Tmp) | Combined Vitals | Deprecated — do not send |
-| 7736 | labresult/getData | Lab Results | Deprecated — do not send |
+| View | CMS page | Selection |
+|------|----------|-----------|
+| Medications | `/HealthSummary/Medicines` | `MedicationCtrl.Medication`, `FilterByConfiguredAppIds`, read-only |
+| Labs | `/ResultsAndReadings/LabResults` | `LabResultCtrls.LabResult` |
+| Imaging | `/ResultsAndReadings/DiagnosticImagingReports` | `LabResultCtrls.LabResult` |
+
+The old medication ID `8050` now fails. Other historical 7xxx IDs are not usable fallbacks. The editable Other Medicines control is not interchangeable with read-only pharmacy records. Metadata is reused only within an API client instance; health data is not cached.
 
 ---
 
@@ -534,12 +533,12 @@ Cache-Control: no-cache
 Referer: https://myhealthrecords.alberta.ca/ng/
 ```
 
-The medications endpoint additionally requires:
+Medications, labs, and imaging additionally send their discovered view mapping:
 ```
-Control-Mapping-Id: 8050
+Control-Mapping-Id: <resolved mapping>
 ```
 
-Most other endpoints no longer require or accept a `Control-Mapping-Id` header.
+Do not add mapping headers to other endpoints without a verified contract.
 
 ---
 
@@ -576,7 +575,7 @@ MyChart shares Alberta's SSO with MHR. During Puppeteer-based authentication:
 2. Browser navigates to `/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False`
 3. Shared SSO session auto-authenticates MyChart (no re-prompt)
 4. Cookies are captured from `myahsconnect.albertahealthservices.ca`
-5. CSRF token is obtained from `GET /MyChartPRD/Home/CSRFToken`
+5. Read the hidden `__RequestVerificationToken` input on the authenticated `/MyChartPRD/Home` page and keep its cookies with the token.
 
 ### CSRF Token
 
@@ -585,7 +584,7 @@ All MyChart API requests require:
 __RequestVerificationToken: {csrf_token}
 ```
 
-This replaces the `Control-Mapping-Id` header used by MHR. The token is fetched once during authentication and stored in the v2 session format.
+This replaces MHR's control-mapping header. `/Home/CSRFToken` can return an empty HTTP 200 and must not be treated as a token source. Desktop authentication reads the Home-page DOM; HTTP refresh parses the named hidden input. Login redirects, missing tokens, and conflicting tokens fail explicitly. Refresh after context changes or an auth rejection, and persist the updated desktop token/cookies together in the existing v2 format.
 
 ### Common Request Headers
 
@@ -855,11 +854,11 @@ Returns immunization records.
 
 #### CSRF Token
 
-##### GET /MyChartPRD/Home/CSRFToken
+##### GET /MyChartPRD/Home
 
-Returns the CSRF token needed for all MyChart API requests. Called once during authentication.
+The authenticated HTML contains a hidden input named `__RequestVerificationToken`. Read that specific input, not an arbitrary `value` attribute, and retain any updated cookies.
 
-**Response:** Plain text CSRF token value.
+**Response:** HTML. The old `/Home/CSRFToken` route is not a reliable source. A successful keepalive response alone also does not prove the session is authenticated.
 
 ---
 
