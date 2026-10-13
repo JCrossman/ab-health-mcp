@@ -141,6 +141,32 @@ describe('MHR backend contracts', () => {
     await expect(new MHRClient(new CookieJar()).getUser()).rejects.toThrow();
   });
 
+  it.each([
+    { group: [{ results: null }] },
+    { ...labResult(), labResultDisplayDateText: {} },
+    { ...labResult(), group: [{ ...labResult().group[0], groupName: 1 }] },
+    { ...labResult(), group: [{ ...labResult().group[0], attachment: {} }] },
+    { ...labResult(), group: [{ ...labResult().group[0], attachment: [{ name: {}, contentType: 'application/pdf' }] }] },
+    { ...labResult(), group: [{ ...labResult().group[0], results: [{ name: 'Example', values: { displayValue: {} } }] }] },
+  ])('rejects malformed fields consumed by lab and imaging formatters', async entry => {
+    fetchMock.mockImplementation(async input =>
+      Response.json(requestUrl(input).pathname === cmsPath ? cmsConfig() : [entry]));
+    for (const method of ['getLabResults', 'getDiagnosticImaging'] as const) {
+      await expect(new MHRClient(new CookieJar())[method]()).rejects.toMatchObject({ name: 'UpstreamContractError' });
+    }
+  });
+
+  it.each([
+    { ...labResult(), group: null },
+    { ...labResult(), group: [{ ...labResult().group[0], results: null }] },
+    { ...labResult(), group: [{ ...labResult().group[0], results: [{ name: 'Pending', values: null }] }] },
+    { ...labResult(), group: [{ ...labResult().group[0], results: null, attachment: [{ name: 'example.pdf', contentType: 'application/pdf' }] }] },
+  ])('preserves valid pending and attachment-only records', async entry => {
+    fetchMock.mockImplementation(async input =>
+      Response.json(requestUrl(input).pathname === cmsPath ? cmsConfig() : [entry]));
+    expect(await new MHRClient(new CookieJar()).getLabResults()).toEqual([entry]);
+  });
+
   it('rejects an expired HTTP 200 session', async () => {
     fetchMock.mockResolvedValue(Response.json({ isSessionExpired: true, numberOfMilliSecondsLeftForSessionExpire: 0 }));
     await expect(new MHRClient(new CookieJar()).getSessionStatus()).rejects.toMatchObject({ name: 'SessionExpiredError' });

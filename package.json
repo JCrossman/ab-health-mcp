@@ -21,22 +21,22 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.3.2",
+    "express-rate-limit": "^8.5.2",
     "mupdf": "^1.27.0",
     "parse5": "^8.0.1",
     "puppeteer-core": "^24.40.0",
     "tough-cookie": "^6.0.1",
-    "undici": "^8.0.2"
+    "undici": "^8.7.0"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.2",
+    "@tailwindcss/cli": "^4.3.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
     "@types/tough-cookie": "^4.0.5",
-    "sharp": "^0.34.5",
-    "tailwindcss": "^4.2.2",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.2"
+    "sharp": "^0.35.3",
+    "tailwindcss": "^4.3.0",
+    "tsx": "^4.22.5",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }

@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { isNewerVersion, OFFICIAL_DOWNLOAD_URL, parseUpdateResponse } from '../src/utils/version.js';
+import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
+
+// Exercise the API's real comparator without loading Azure clients or credentials.
+const apiSource = readFileSync(new URL('../api/check-update/index.js', import.meta.url), 'utf8');
+const apiModule = { exports: {} };
+runInNewContext(apiSource, {
+  module: apiModule,
+  require: (name: string) => {
+    if (name === '@azure/storage-blob') return {};
+    return createRequire(import.meta.url)(name);
+  },
+});
+const apiIsNewer = (apiModule.exports as { isNewer: typeof isNewerVersion }).isNewer;
 
 describe('parseUpdateResponse', () => {
   it('always uses the official download link, ignoring server-supplied URLs', () => {
@@ -19,6 +34,20 @@ describe('parseUpdateResponse', () => {
 });
 
 describe('isNewerVersion', () => {
+  it.each([
+    ['01.4.3', '1.4.2', false],
+    ['1.4.3-..', '1.4.2', false],
+    ['1.4.3-rc..1', '1.4.2', false],
+    ['1.4.3-rc.01', '1.4.2', false],
+    ['1.4.3\n', '1.4.2', false],
+    ['1.4.3+build.01', '1.4.2', true],
+    ['1.4.2+build.2', '1.4.2+build.1', false],
+    ['1.4.2-rc.2+build.1', '1.4.2-rc.1', true],
+    ['1.4.2-9007199254740993', '1.4.2-9007199254740992', true],
+  ])('uses identical strict SemVer ordering in the client and API (%s)', (candidate, current, expected) => {
+    expect(isNewerVersion(candidate, current)).toBe(expected);
+    expect(apiIsNewer(candidate, current)).toBe(expected);
+  });
   it('orders stable releases numerically', () => {
     expect(isNewerVersion('1.4.10', '1.4.9')).toBe(true);
     expect(isNewerVersion('1.4.1', '1.4.1')).toBe(false);

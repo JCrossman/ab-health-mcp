@@ -27,8 +27,19 @@ The script will:
    - Paste the prompt into Claude Desktop (Sonnet 4.6)
    - Wait for the response
    - Copy the full response text
-   - Paste it back into the capture script
+   - Press Enter in the capture script, then paste the full response (blank lines are preserved)
+   - Type `/done` on its own line and press Enter to move to the next step
 3. Build `FALLBACK-SCRIPT-SONNET.md` with all captured responses
+
+Do not press Ctrl+D or Ctrl+Z to finish a response. `/done` ends only the current
+response and keeps input open for the remaining steps. An empty response is
+rejected. If input ends early, the script exits without replacing the fallback
+file. The file is replaced only after all 13 responses are captured.
+
+Capture only fictional demo health data, never real health records, sign-in
+details, or cookies. This script does not call models or health systems: it only
+prints prompts and saves the responses you paste. Its input-time summary measures
+pasting time, not model response time; use a stopwatch for model timings.
 
 ## Method 2: Manual Capture
 
@@ -110,7 +121,7 @@ The generated `FALLBACK-SCRIPT-SONNET.md` should follow the same structure as `F
 1. Run the capture script: `npx tsx scripts/run-sonnet-demo.ts`
 2. Follow the prompts to capture all responses
 3. Review the generated `FALLBACK-SCRIPT-SONNET.md`
-4. Compare timing with the Run of Show document
+4. Compare separately measured model response timing with the Run of Show document
 5. Commit the new fallback script
 
 ## Notes

@@ -1,6 +1,10 @@
 export const OFFICIAL_DOWNLOAD_URL = 'https://www.myaihealth.ca/api/download-latest';
 
-const VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
+const VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+
+export function isValidVersion(value: unknown): value is string {
+  return typeof value === 'string' && VERSION_PATTERN.exec(value)?.[0] === value;
+}
 
 function comparePrerelease(a: string | undefined, b: string | undefined): number {
   if (a === b) return 0;
@@ -12,8 +16,8 @@ function comparePrerelease(a: string | undefined, b: string | undefined): number
   for (let i = 0; i < Math.max(left.length, right.length); i++) {
     if (left[i] === undefined) return -1;
     if (right[i] === undefined) return 1;
-    const ln = /^\d+$/.test(left[i]) ? Number(left[i]) : undefined;
-    const rn = /^\d+$/.test(right[i]) ? Number(right[i]) : undefined;
+    const ln = /^\d+$/.test(left[i]) ? BigInt(left[i]) : undefined;
+    const rn = /^\d+$/.test(right[i]) ? BigInt(right[i]) : undefined;
     if (ln !== undefined && rn !== undefined) {
       if (ln !== rn) return ln > rn ? 1 : -1;
     } else if (ln !== undefined) {
@@ -31,10 +35,11 @@ function comparePrerelease(a: string | undefined, b: string | undefined): number
 export function isNewerVersion(candidate: string, current: string): boolean {
   const c = VERSION_PATTERN.exec(candidate);
   const i = VERSION_PATTERN.exec(current);
-  if (!c || !i) return false;
+  if (!c || !i || c[0] !== candidate || i[0] !== current) return false;
   for (let j = 1; j <= 3; j++) {
-    const diff = Number(c[j]) - Number(i[j]);
-    if (diff !== 0) return diff > 0;
+    const left = BigInt(c[j]);
+    const right = BigInt(i[j]);
+    if (left !== right) return left > right;
   }
   return comparePrerelease(c[4], i[4]) > 0;
 }

@@ -82,6 +82,10 @@ This updates the version in all 5 locations automatically:
 
 The deploy script runs tests/type checks, builds, validates and smoke-tests the final package, uploads it, publishes matching blob version metadata, and deploys the static site. GitHub Actions also validates the package and deploys on `main`. The updater prefers a storage `version.json` blob, so updating only the static version file is insufficient. Publishing or pushing/merging into an auto-deploying branch requires explicit release approval.
 
+CI keeps the required `Build & Lint` check name while also running regression and package checks. Automatic installer publication requires a version newer than the published site version; merging maintenance changes cannot silently replace an existing release. The local release command pins `@anthropic-ai/mcpb@2.1.2`.
+
+Portal deployment is separate and opt-in via repository variable `PORTAL_DEPLOY_ENABLED=true`. Before enabling it, configure `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` for GitHub OIDC and confirm the target `ab-health-portal` Container App exists. Without those prerequisites, leave the variable unset so desktop maintenance cannot trigger a broken or unintended portal deployment.
+
 For publishing, do not bypass `npm run deploy` with manual packaging/upload commands. Local candidate packaging without upload is supported below.
 
 ### Building Without Deploying

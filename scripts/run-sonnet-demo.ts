@@ -5,6 +5,7 @@
  * 1. Paste the prompt into Claude Desktop (configured with Sonnet 4.6)
  * 2. Copy Sonnet's response
  * 3. Press Enter to paste the response here
+ * 4. Type /done on its own line to finish each response
  * 
  * The script then builds FALLBACK-SCRIPT-SONNET.md with all responses.
  */
@@ -82,7 +83,16 @@ interface StepResponse {
   elapsed: number;
 }
 
-async function captureResponse(rl: readline.Interface, step: typeof PERSONA_1_STEPS[0] | typeof PERSONA_2_STEPS[0], personaNum: number, stepNum: number): Promise<StepResponse> {
+async function readLine(reader: AsyncIterator<string>, prompt = ''): Promise<string> {
+  output.write(prompt);
+  const result = await reader.next();
+  if (result.done) {
+    throw new Error('Input ended before capture was complete. No fallback file was written.');
+  }
+  return result.value;
+}
+
+async function captureResponse(reader: AsyncIterator<string>, step: typeof PERSONA_1_STEPS[0] | typeof PERSONA_2_STEPS[0], personaNum: number): Promise<StepResponse> {
   console.log(`\n${'='.repeat(70)}`);
   console.log(`PERSONA ${personaNum} — ${step.title}`);
   console.log('='.repeat(70));
@@ -99,50 +109,46 @@ async function captureResponse(rl: readline.Interface, step: typeof PERSONA_1_ST
   console.log('3. Copy the full response');
   console.log('4. Press Enter here, then paste the response\n');
   
-  await rl.question('Press Enter when ready to paste response...');
+  await readLine(reader, 'Press Enter when ready to paste response...');
   
-  console.log('\nPaste the response (press Ctrl+D or Ctrl+Z when done):');
+  console.log('\nPaste the response, then type /done on its own line. Do not use Ctrl+D or Ctrl+Z:');
   
   const lines: string[] = [];
   const startTime = Date.now();
   
-  // Read multiline input
-  return new Promise((resolve) => {
-    const lineReader = readline.createInterface({
-      input,
-      output,
-      terminal: false
-    });
-    
-    lineReader.on('line', (line) => {
-      lines.push(line);
-    });
-    
-    lineReader.on('close', () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const response = lines.join('\n');
-      
-      console.log(`\n✓ Captured ${response.length} characters (${elapsed.toFixed(1)}s)`);
-      
-      resolve({
-        title: step.title,
-        prompt: ('prompt' in step) ? step.prompt : step.promptEnglish || '',
-        promptEnglish: ('promptEnglish' in step) ? step.promptEnglish : undefined,
-        promptPunjabi: ('promptPunjabi' in step) ? step.promptPunjabi : undefined,
-        response,
-        elapsed,
-      });
-    });
-  });
+  while (true) {
+    const line = await readLine(reader);
+    if (line === '/done') {
+      if (!lines.join('\n').trim()) {
+        console.log('Response is empty. Paste a response before typing /done.');
+        continue;
+      }
+      break;
+    }
+    lines.push(line);
+  }
+
+  const elapsed = (Date.now() - startTime) / 1000;
+  const response = lines.join('\n');
+  console.log(`\n✓ Captured ${response.length} characters (${elapsed.toFixed(1)}s input time)`);
+
+  return {
+    title: step.title,
+    prompt: ('prompt' in step) ? step.prompt ?? '' : step.promptEnglish || '',
+    promptEnglish: ('promptEnglish' in step) ? step.promptEnglish : undefined,
+    promptPunjabi: ('promptPunjabi' in step) ? step.promptPunjabi : undefined,
+    response,
+    elapsed,
+  };
 }
 
-async function runPersona1(rl: readline.Interface): Promise<{ markdown: string; responses: StepResponse[] }> {
+async function runPersona1(reader: AsyncIterator<string>): Promise<{ markdown: string; responses: StepResponse[] }> {
   let markdown = '# PERSONA 1 — THE CAREGIVER\n\n';
   const responses: StepResponse[] = [];
   
   for (let i = 0; i < PERSONA_1_STEPS.length; i++) {
     const step = PERSONA_1_STEPS[i];
-    const result = await captureResponse(rl, step, 1, i + 1);
+    const result = await captureResponse(reader, step, 1);
     responses.push(result);
     
     markdown += `## ${result.title}\n\n`;
@@ -154,13 +160,13 @@ async function runPersona1(rl: readline.Interface): Promise<{ markdown: string; 
   return { markdown, responses };
 }
 
-async function runPersona2(rl: readline.Interface): Promise<{ markdown: string; responses: StepResponse[] }> {
+async function runPersona2(reader: AsyncIterator<string>): Promise<{ markdown: string; responses: StepResponse[] }> {
   let markdown = '# PERSONA 2 — THE NEWCOMER\n\n';
   const responses: StepResponse[] = [];
   
   for (let i = 0; i < PERSONA_2_STEPS.length; i++) {
     const step = PERSONA_2_STEPS[i];
-    const result = await captureResponse(rl, step, 2, i + 1);
+    const result = await captureResponse(reader, step, 2);
     responses.push(result);
     
     markdown += `## ${result.title}\n\n`;
@@ -181,21 +187,21 @@ async function runPersona2(rl: readline.Interface): Promise<{ markdown: string; 
 
 async function main() {
   const rl = readline.createInterface({ input, output });
-  
-  console.log('╔════════════════════════════════════════════════════════════════════╗');
-  console.log('║        Sonnet Demo Response Capture Script                        ║');
-  console.log('╚════════════════════════════════════════════════════════════════════╝');
-  console.log('\nThis script will guide you through capturing Sonnet responses.');
-  console.log('Make sure Claude Desktop is open and configured with Sonnet 4.6.\n');
-  
-  const ready = await rl.question('Ready to begin? (y/n): ');
-  if (ready.toLowerCase() !== 'y') {
-    console.log('Cancelled.');
-    rl.close();
-    process.exit(0);
-  }
-  
-  const header = `# Demo Fallback Script — Canned Responses (Sonnet)
+  const reader = rl[Symbol.asyncIterator]();
+  try {
+    console.log('╔════════════════════════════════════════════════════════════════════╗');
+    console.log('║        Sonnet Demo Response Capture Script                        ║');
+    console.log('╚════════════════════════════════════════════════════════════════════╝');
+    console.log('\nThis script will guide you through capturing Sonnet responses.');
+    console.log('Make sure Claude Desktop is open and configured with Sonnet 4.6.\n');
+
+    const ready = await readLine(reader, 'Ready to begin? (y/n): ');
+    if (ready.toLowerCase() !== 'y') {
+      console.log('Cancelled.');
+      return;
+    }
+
+    const header = `# Demo Fallback Script — Canned Responses (Sonnet)
 
 **Use this if the network drops or a live system is unavailable mid-demo.** It
 contains the exact prompt for each step and the full response captured during the
@@ -210,35 +216,34 @@ story still lands.
 
 `;
   
-  let output = header;
-  
-  console.log('\n━━━ Running Persona 1 (The Caregiver) ━━━');
-  const p1 = await runPersona1(rl);
-  output += p1.markdown;
-  
-  console.log('\n━━━ Running Persona 2 (The Newcomer) ━━━');
-  const p2 = await runPersona2(rl);
-  output += p2.markdown;
-  
-  const outPath = join(process.cwd(), 'demo-content', 'FALLBACK-SCRIPT-SONNET.md');
-  writeFileSync(outPath, output, 'utf8');
-  
-  console.log(`\n✓ Wrote ${outPath}`);
-  
-  // Summary
-  const totalP1Time = p1.responses.reduce((sum, r) => sum + r.elapsed, 0);
-  const totalP2Time = p2.responses.reduce((sum, r) => sum + r.elapsed, 0);
-  
-  console.log('\n━━━ Summary ━━━');
-  console.log(`Persona 1: ${p1.responses.length} steps, ${totalP1Time.toFixed(1)}s total`);
-  console.log(`Persona 2: ${p2.responses.length} steps, ${totalP2Time.toFixed(1)}s total`);
-  console.log(`\n✓ Demo capture complete!`);
-  
-  rl.close();
-  process.exit(0);
+    let markdown = header;
+
+    console.log('\n━━━ Running Persona 1 (The Caregiver) ━━━');
+    const p1 = await runPersona1(reader);
+    markdown += p1.markdown;
+
+    console.log('\n━━━ Running Persona 2 (The Newcomer) ━━━');
+    const p2 = await runPersona2(reader);
+    markdown += p2.markdown;
+
+    const outPath = join(process.cwd(), 'demo-content', 'FALLBACK-SCRIPT-SONNET.md');
+    writeFileSync(outPath, markdown, 'utf8');
+
+    console.log(`\n✓ Wrote ${outPath}`);
+
+    const totalP1Time = p1.responses.reduce((sum, r) => sum + r.elapsed, 0);
+    const totalP2Time = p2.responses.reduce((sum, r) => sum + r.elapsed, 0);
+
+    console.log('\n━━━ Summary ━━━');
+    console.log(`Persona 1: ${p1.responses.length} steps, ${totalP1Time.toFixed(1)}s capture input time`);
+    console.log(`Persona 2: ${p2.responses.length} steps, ${totalP2Time.toFixed(1)}s capture input time`);
+    console.log(`\n✓ Demo capture complete!`);
+  } finally {
+    rl.close();
+  }
 }
 
 main().catch((error) => {
   console.error(`\n✗ Fatal error: ${error instanceof Error ? error.message : String(error)}`);
-  process.exit(1);
+  process.exitCode = 1;
 });

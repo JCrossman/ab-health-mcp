@@ -94,8 +94,8 @@ run('npm run lint');
 
 // 8. Pack
 console.log('\n📦 Packing .mcpb...');
-run('mcpb validate manifest.json');
-run('mcpb pack . ab-health-mcp.mcpb');
+run('npm exec --yes --package=@anthropic-ai/mcpb@2.1.2 -- mcpb validate manifest.json');
+run('npm exec --yes --package=@anthropic-ai/mcpb@2.1.2 -- mcpb pack . ab-health-mcp.mcpb');
 
 // 9. Verify bundle
 console.log('\n🔍 Verifying bundle...');

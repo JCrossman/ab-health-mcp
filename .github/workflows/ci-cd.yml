@@ -11,8 +11,10 @@ permissions:
 
 jobs:
   build:
-    name: Build, Test & Package
+    name: Build & Lint
     runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,8 +46,27 @@ jobs:
       - name: Verify packaged runtime
         run: npm run test:bundle -- ab-health-mcp.mcpb
 
-      - name: Upload build artifacts
+      - name: Check release version before publishing
+        id: release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          import { isNewerVersion, isValidVersion } from './build/utils/version.js';
+          const candidate = JSON.parse(readFileSync('package.json', 'utf8')).version;
+          const response = await fetch('https://www.myaihealth.ca/version.json', { signal: AbortSignal.timeout(30000) });
+          if (!response.ok) throw new Error(`Published-version check failed: HTTP ${response.status}`);
+          const { version } = await response.json();
+          if (!isValidVersion(candidate) || !isValidVersion(version)) {
+            throw new Error('Invalid published version; refusing to overwrite the installer.');
+          }
+          const publish = isNewerVersion(candidate, version);
+          console.log(`Candidate ${candidate}; published ${version}; publish=${publish}.`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `publish=${publish}\n`);
+          NODE
+
+      - name: Upload build artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.release.outputs.publish == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: build
@@ -58,7 +79,7 @@ jobs:
   deploy:
     name: Deploy
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -113,7 +134,7 @@ jobs:
   deploy-portal:
     name: Deploy Portal
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.PORTAL_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

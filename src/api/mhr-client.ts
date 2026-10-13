@@ -33,12 +33,33 @@ function isUserProfile(value: unknown): value is UserProfile {
 }
 
 function isLabResult(value: unknown): value is LabResult {
-  return isRecord(value) && Object.hasOwn(value, 'group') &&
+  const optionalText = (field: unknown) => field == null || typeof field === 'string';
+  return isRecord(value) &&
+    typeof value.labResultDisplayDateText === 'string' &&
+    typeof value.labResultDisplayDate === 'string' &&
+    optionalText(value.laboratoryName) &&
+    optionalText(value.orderedByName) &&
+    optionalText(value.orderByType) &&
+    optionalText(value.thingId) &&
+    (value.itemKey == null || (isRecord(value.itemKey) && optionalText(value.itemKey.thingId))) &&
+    Object.hasOwn(value, 'group') &&
     (value.group === null || (Array.isArray(value.group) &&
       value.group.every(group => isRecord(group) &&
+        typeof group.groupName === 'string' &&
+        optionalText(group.labOrderStatus) &&
+        (group.attachment == null || (Array.isArray(group.attachment) &&
+          group.attachment.every(attachment => isRecord(attachment) &&
+            typeof attachment.name === 'string' &&
+            typeof attachment.contentType === 'string'))) &&
         (group.results == null || (Array.isArray(group.results) &&
           group.results.every(result => isRecord(result) && typeof result.name === 'string' &&
-            (result.values == null || isRecord(result.values))))))));
+            optionalText(result.labOrderStatus) &&
+            optionalText(result.displayDate) &&
+            (result.values == null || (isRecord(result.values) &&
+              optionalText(result.values.value) &&
+              optionalText(result.values.displayValue) &&
+              optionalText(result.values.unitText) &&
+              optionalText(result.values.rangeDisplayText)))))))));
 }
 
 export class MHRClient {

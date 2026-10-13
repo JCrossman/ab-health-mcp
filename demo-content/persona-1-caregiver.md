@@ -91,7 +91,7 @@
 - **The platform argument:** "Two independent MCPs, two separate government APIs. The AI connects them because they share a protocol — not because we built a monolith. Any government service (Home Care, AISH, seniors' benefits) can be added the same way."
 - **The cost argument:** "This isn't a new system — it's an AI layer on systems Alberta already paid for. No new databases, no migration."
 - **The caregiver argument:** "Alberta has 800,000+ unpaid family caregivers. This turns them from overwhelmed to informed."
-- **The data-sovereignty argument:** "Both MCPs run locally. Health data passes to the AI for that conversation only — nothing stored, nothing shared between systems. The assisted-living MCP doesn't even require a login."
+- **The privacy argument:** "Both MCPs run locally and do not store health records. Only encrypted sign-in cookies are saved by the health MCP. Claude Desktop sends the records included in the conversation to Anthropic's US-based servers; Anthropic may retain conversations under its policies and your account settings. Local MCPs do not mean Canadian-only AI processing. The assisted-living MCP uses public data and doesn't require a login."
 
 ## End-to-end prompt list (copy/paste sequence)
 

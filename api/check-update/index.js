@@ -101,13 +101,14 @@ module.exports = async function (context, req) {
 
 // Mirrors src/utils/version.ts: strict semver, release > prerelease of the same core.
 function isNewer(latest, installed) {
-  const pattern = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
+  const pattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
   const l = pattern.exec(String(latest));
   const i = pattern.exec(String(installed));
-  if (!l || !i) return false;
+  if (!l || !i || l[0] !== latest || i[0] !== installed) return false;
   for (let j = 1; j <= 3; j++) {
-    const diff = Number(l[j]) - Number(i[j]);
-    if (diff !== 0) return diff > 0;
+    const left = BigInt(l[j]);
+    const right = BigInt(i[j]);
+    if (left !== right) return left > right;
   }
   const lp = l[4];
   const ip = i[4];
@@ -119,8 +120,8 @@ function isNewer(latest, installed) {
   for (let j = 0; j < Math.max(a.length, b.length); j++) {
     if (a[j] === undefined) return false;
     if (b[j] === undefined) return true;
-    const an = /^\d+$/.test(a[j]) ? Number(a[j]) : undefined;
-    const bn = /^\d+$/.test(b[j]) ? Number(b[j]) : undefined;
+    const an = /^\d+$/.test(a[j]) ? BigInt(a[j]) : undefined;
+    const bn = /^\d+$/.test(b[j]) ? BigInt(b[j]) : undefined;
     if (an !== undefined && bn !== undefined) {
       if (an !== bn) return an > bn;
     } else if (an !== undefined) {
@@ -133,6 +134,8 @@ function isNewer(latest, installed) {
   }
   return false;
 }
+
+module.exports.isNewer = isNewer;
 
 async function streamToString(readableStream) {
   const chunks = [];
