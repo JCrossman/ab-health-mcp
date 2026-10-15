@@ -20,6 +20,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+
+      - name: Install portal types used by privacy regression tests
+        run: npm ci --prefix portal --ignore-scripts --no-audit --no-fund
+
+      - uses: actions/setup-node@v4
+        with:
           node-version: 22
           cache: npm
 
