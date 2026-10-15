@@ -11,7 +11,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { logger } from './utils/logger.js';
 import { createMcpServer } from './server/create-server.js';
 
-const server = createMcpServer();
+const server = createMcpServer('stdio');
 
 async function main(): Promise<void> {
   logger.info('Starting Alberta Health MCP server (MHR + MyChart)...');

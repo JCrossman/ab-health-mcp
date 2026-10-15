@@ -6,7 +6,7 @@
  * Also serves as a session keepalive.
  */
 
-import { ensureSession, sessionManager, checkMyChartConnection, formatError } from '../helpers/session-helpers.js';
+import { ensureSession, loadSessionData, checkMyChartConnection, formatError } from '../helpers/session-helpers.js';
 import { isDemoMode } from '../helpers/demo/index.js';
 
 export const checkConnectionTool = {
@@ -19,7 +19,7 @@ export const checkConnectionTool = {
   handler: async () => {
     try {
       // Check if session file exists first
-      if (!isDemoMode() && !await sessionManager.exists()) {
+      if (!isDemoMode() && !await loadSessionData()) {
         return {
           content: [{
             type: 'text' as const,

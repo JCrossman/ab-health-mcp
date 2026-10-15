@@ -8,6 +8,8 @@
 export async function register() {
   // Only run in the Node.js runtime (not edge or browser)
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { isTelemetryEnabled } = await import("@/lib/telemetry/events");
+  if (!isTelemetryEnabled()) return;
 
   const connectionString = process.env.APPLICATIONINSIGHTS_CONNECTION_STRING;
   if (!connectionString) {
@@ -23,9 +25,27 @@ export async function register() {
     const { TelemetryClient } = await import("applicationinsights");
     const { setTelemetryClient } = await import("@/lib/telemetry/events");
 
-    const client = new TelemetryClient(connectionString);
+    const client = new TelemetryClient(connectionString, { useGlobalProviders: false });
+    // Only our allowlisted custom events: no request URLs, cookies, exceptions or disk spool.
+    Object.assign(client.config, {
+      enableAutoCollectRequests: false,
+      enableAutoCollectDependencies: false,
+      enableAutoCollectExceptions: false,
+      enableAutoCollectConsole: false,
+      enableAutoCollectExternalLoggers: false,
+      enableAutoCollectPerformance: false,
+      enableAutoCollectPreAggregatedMetrics: false,
+      enableAutoCollectHeartbeat: false,
+      enableAutoCollectExtendedMetrics: false,
+      enableAutoCollectIncomingRequestAzureFunctions: false,
+      enableSendLiveMetrics: false,
+      enableWebInstrumentation: false,
+      enableUseDiskRetryCaching: false,
+      enableInternalDebugLogging: false,
+      enableInternalWarningLogging: false,
+    });
     setTelemetryClient(client);
-  } catch (err) {
-    console.error("[telemetry] Failed to initialize App Insights:", err);
+  } catch {
+    console.error("[telemetry] Failed to initialize App Insights");
   }
 }

@@ -4,6 +4,9 @@
   "description": "MCP server for Alberta My Health Records",
   "main": "build/index.js",
   "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "scripts": {
     "build": "tsc",
     "build:css": "npx @tailwindcss/cli -i static/input.css -o static/styles.css --minify",
@@ -19,22 +22,22 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
-    "mupdf": "^1.27.0",
+    "mupdf": "^1.28.1",
     "parse5": "^8.0.1",
-    "puppeteer-core": "^24.40.0",
+    "puppeteer-core": "^25.12.0",
     "tough-cookie": "^6.0.1",
-    "undici": "^8.7.0"
+    "undici": "^8.11.2"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.0",
+    "@tailwindcss/cli": "4.3.0",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.5.0",
+    "@types/node": "^22.20.5",
     "@types/tough-cookie": "^4.0.5",
     "sharp": "^0.35.3",
-    "tailwindcss": "^4.3.0",
+    "tailwindcss": "4.3.0",
     "tsx": "^4.22.5",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"

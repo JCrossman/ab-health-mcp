@@ -51,6 +51,8 @@ function run(cmd) {
 // Validate before changing release metadata or uploading anything.
 run('npm test');
 run('npm run lint');
+run('npm audit --omit=dev --audit-level=high');
+run('npm audit --prefix api --omit=dev --audit-level=high');
 
 // 1. Read current version from package.json
 const pkg = readJson(join(root, 'package.json'));
@@ -110,6 +112,6 @@ run('az storage blob upload --account-name myaihealthdownloads --container-name 
 //     dependencies must be installed locally or the deployed functions return 500.
 console.log('\n🌐 Deploying landing page...');
 run('npm ci --prefix api --omit=dev --no-audit --no-fund');
-run('swa deploy ./static --api-location ./api --api-language node --api-version 18 --app-name myaihealth --env production');
+run('swa deploy ./static --api-location ./api --api-language node --api-version 22 --app-name myaihealth --env production');
 
 console.log(`\n✅ Deployed v${newVersion} successfully!\n`);

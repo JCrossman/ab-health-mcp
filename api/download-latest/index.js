@@ -20,16 +20,16 @@ const {
   BlobServiceClient,
   generateBlobSASQueryParameters,
   BlobSASPermissions,
+  SASProtocol,
   StorageSharedKeyCredential,
 } = require('@azure/storage-blob');
-const crypto = require('crypto');
 
-module.exports = async function (context, req) {
+module.exports = async function (context) {
   const connectionString = process.env.STORAGE_CONNECTION_STRING;
   if (!connectionString) {
     context.res = {
       status: 503,
-      headers: { 'Content-Type': 'text/html' },
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' },
       body: redirectPage(
         'Service unavailable',
         'Download service is temporarily unavailable. Please try again later.',
@@ -57,40 +57,26 @@ module.exports = async function (context, req) {
       containerName,
       blobName,
       permissions: BlobSASPermissions.parse('r'),
+      protocol: SASProtocol.Https,
       expiresOn,
     }, credential).toString();
 
     const downloadUrl = `${blobClient.url}?${sasToken}`;
-
-    try {
-      const { TableClient } = require('@azure/data-tables');
-      const tableClient = TableClient.fromConnectionString(connectionString, 'accessrequests');
-      const suffix = crypto.randomBytes(4).toString('hex');
-      tableClient.createEntity({
-        partitionKey: 'downloads',
-        rowKey: `${new Date().toISOString()}-${suffix}`,
-        token: 'latest',
-        ip: (req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim(),
-        userAgent: req.headers['user-agent'] || 'unknown',
-        timestamp: new Date().toISOString(),
-      }).catch(() => {});
-    } catch {
-      // Table logging is optional
-    }
 
     context.res = {
       status: 302,
       headers: {
         Location: downloadUrl,
         'Cache-Control': 'no-store',
+        'Referrer-Policy': 'no-referrer',
       },
       body: '',
     };
-  } catch (error) {
-    context.log.error('download-latest redirect failed:', error.message);
+  } catch {
+    context.log.error('download-latest redirect failed');
     context.res = {
       status: 500,
-      headers: { 'Content-Type': 'text/html' },
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' },
       body: redirectPage(
         'Download failed',
         'Something went wrong. Please try again in a moment.',

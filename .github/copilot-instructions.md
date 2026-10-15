@@ -73,7 +73,7 @@ This project handles protected health information under Alberta's HIA and POPA.
 
 1. **Never log PII** — no names, health data, cookie values, or identifiers in logs
 2. **Never store health data** — only session cookies are persisted, encrypted with AES-256-GCM
-3. **Canadian data residency (our infrastructure)** — all project infrastructure in Azure Canada Central. Note: Claude (Anthropic) processes conversations on US-based servers.
+3. **Accurate data residency** — storage/remote MCP are in Canada Central and the intended portal model resource in Canada East, but the public Static Web App is in Central US. Disclose operational metadata and historical collection; do not claim a planned migration or legal certification. Claude manages conversations on US-based infrastructure under Anthropic's policies.
 4. **Credentials are transient** — used once for auth, then immediately discarded
 
 ## Key Conventions
@@ -150,7 +150,7 @@ Phase 3: Remote mode — HTTP transport, zero-storage OAuth tokens, Chrome exten
 
 ### Azure Infrastructure
 
-All user-data-handling resources in `ab-health-mcp` resource group, Canada Central or Canada East. Key resources:
+Resources are in the `ab-health-mcp` resource group. Regions differ; do not infer residency for all services from the storage account's region. Key resources:
 - **Static Web App** (`myaihealth`) — Free tier, Central US ⚠️ **migration in progress** (see ADR-001; being collapsed into the Container App as Next.js SSR for Canadian residency). Hosts landing page + `/api/request-access` today.
 - **Blob Storage** (`myaihealthdownloads`) — `.mcpb` bundle distribution, Canada Central
 - **Communication Services** (`myaihealth-comm`) — transactional emails, global

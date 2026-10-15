@@ -1,85 +1,26 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Plus, MessageSquare, Trash2, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-export interface Conversation {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  preview: string;
-}
-
-const STORAGE_KEY = "ab-health-conversations";
-
-function loadConversations(): Conversation[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveConversations(convos: Conversation[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(convos));
-}
-
-export function loadMessages(conversationId: string): Array<{ id: string; role: string; parts: Array<{ type: string; text?: string }> }> {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(`ab-health-msgs-${conversationId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveMessages(conversationId: string, messages: Array<{ id: string; role: string; parts: unknown[] }>) {
-  if (typeof window === "undefined") return;
-  // Only save text parts (skip tool invocations for storage efficiency)
-  const simplified = messages.map((m) => ({
-    id: m.id,
-    role: m.role,
-    parts: (m.parts as Array<{ type: string; text?: string }>).filter((p) => p.type === "text" && p.text),
-  }));
-  localStorage.setItem(`ab-health-msgs-${conversationId}`, JSON.stringify(simplified));
-}
-
-function deleteMessages(conversationId: string) {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(`ab-health-msgs-${conversationId}`);
-}
+import type { MemoryHistory } from "@/lib/chat/memory-history";
 
 interface ConversationSidebarProps {
+  history: MemoryHistory;
   currentId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
   onUpdateTitle: (id: string, title: string, preview: string) => void;
 }
 
-export function ConversationSidebar({ currentId, onSelect, onNew }: ConversationSidebarProps) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+export function ConversationSidebar({ history, currentId, onSelect, onNew }: ConversationSidebarProps) {
+  useSyncExternalStore(history.subscribe, history.getRevision, history.getRevision);
+  const conversations = history.list();
   const [collapsed, setCollapsed] = useState(false);
-
-  const refresh = useCallback(() => {
-    setConversations(loadConversations());
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh, currentId]);
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = loadConversations().filter((c) => c.id !== id);
-    saveConversations(updated);
-    deleteMessages(id);
-    setConversations(updated);
+    history.delete(id);
     if (currentId === id) {
       onNew();
     }
@@ -145,30 +86,4 @@ export function ConversationSidebar({ currentId, onSelect, onNew }: Conversation
       </div>
     </div>
   );
-}
-
-export function createConversation(title?: string): Conversation {
-  const id = `conv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const now = new Date().toISOString();
-  const convo: Conversation = {
-    id,
-    title: title || "New Chat",
-    createdAt: now,
-    updatedAt: now,
-    preview: "",
-  };
-  const existing = loadConversations();
-  saveConversations([convo, ...existing]);
-  return convo;
-}
-
-export function updateConversation(id: string, title: string, preview: string) {
-  const convos = loadConversations();
-  const idx = convos.findIndex((c) => c.id === id);
-  if (idx >= 0) {
-    convos[idx].title = title;
-    convos[idx].preview = preview;
-    convos[idx].updatedAt = new Date().toISOString();
-    saveConversations(convos);
-  }
 }

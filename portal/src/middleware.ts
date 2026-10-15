@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isPortalEnabled, portalUnavailable } from "./lib/availability";
 
 /**
  * Middleware: static page rewrites + CSRF protection on API routes.
@@ -16,6 +17,15 @@ export function middleware(request: NextRequest) {
   const rewriteTo = staticPages[pathname];
   if (rewriteTo) {
     return NextResponse.rewrite(new URL(rewriteTo, request.url));
+  }
+
+  if (!isPortalEnabled()) {
+    if (pathname.startsWith("/api/")) return portalUnavailable()!;
+    if (/^\/(?:chat|login|settings)(?:\/|$)/.test(pathname)) {
+      return NextResponse.rewrite(new URL("/unavailable", request.url), {
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
   }
 
   // CSRF protection: validate Origin header on mutation API requests
@@ -38,5 +48,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/terms", "/demo", "/api/:path*"],
+  matcher: ["/", "/terms", "/demo", "/api/:path*", "/chat/:path*", "/login/:path*", "/settings/:path*"],
 };

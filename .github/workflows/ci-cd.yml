@@ -25,6 +25,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Audit shipped runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build Tailwind CSS
         run: npm run build:css
 
@@ -76,9 +79,37 @@ jobs:
             ab-health-mcp.mcpb
           retention-days: 1
 
+  runtime-audit:
+    name: Runtime audit (${{ matrix.directory }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: api
+            node: 22
+          - directory: portal
+            node: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci --prefix "${{ matrix.directory }}" --ignore-scripts --no-audit --no-fund
+      - run: npm audit --prefix "${{ matrix.directory }}" --omit=dev --audit-level=high
+      - name: Check disabled portal
+        if: matrix.directory == 'portal'
+        env:
+          PORTAL_DEPLOY_ENABLED: 'false'
+          PORTAL_TELEMETRY_ENABLED: 'false'
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          npm run lint --prefix portal
+          npm run build --prefix portal
+
   deploy:
     name: Deploy
-    needs: build
+    needs: [build, runtime-audit]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -133,7 +164,7 @@ jobs:
 
   deploy-portal:
     name: Deploy Portal
-    needs: build
+    needs: [build, runtime-audit]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.PORTAL_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     permissions:

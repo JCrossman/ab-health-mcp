@@ -65,7 +65,13 @@ function isLabResult(value: unknown): value is LabResult {
 export class MHRClient {
   private configuration?: Promise<unknown>;
 
-  constructor(private cookieJar: CookieJar) {}
+  constructor(private cookieJar: CookieJar, private validateSession?: () => Promise<void>) {}
+
+  private async json(response: Response): Promise<unknown> {
+    const data = await readJsonResponse(response, 'mhr');
+    await this.validateSession?.();
+    return data;
+  }
 
   private async fetch(path: string, extraHeaders: Record<string, string> = {}, signal?: AbortSignal): Promise<Response> {
     const response = await this.rawFetch(path, extraHeaders, signal);
@@ -93,6 +99,7 @@ export class MHRClient {
   }
 
   private async rawFetch(path: string, extraHeaders: Record<string, string> = {}, signal?: AbortSignal): Promise<Response> {
+    await this.validateSession?.();
     const url = `${MHR_BASE}${path}`;
     const cookies = await this.cookieJar.getCookieString(url);
 
@@ -113,13 +120,14 @@ export class MHRClient {
       throw new NetworkError();
     }
     await storeResponseCookies(this.cookieJar, response, url);
+    await this.validateSession?.();
     return response;
   }
 
   private async mappingHeaders(view: MhrView): Promise<Record<string, string>> {
     if (!this.configuration) {
       this.configuration = this.fetch('/api/cms/v1/pages/root/browser', {}, AbortSignal.timeout(30_000))
-        .then(response => readJsonResponse(response, 'mhr'))
+        .then(response => this.json(response))
         .catch(error => {
           this.configuration = undefined;
           throw error;
@@ -144,7 +152,7 @@ export class MHRClient {
   private async fetchDateRange(path: string, params: DateRangeParams = {}, defaultRange = 'All', extra: Record<string, string> = {}): Promise<unknown[]> {
     const qs = this.dateRangeQuery(params, defaultRange, extra);
     const response = await this.fetch(`${path}?${qs}`);
-    return readCompleteList(await readJsonResponse(response, 'mhr'), 'mhr');
+    return readCompleteList(await this.json(response), 'mhr');
   }
 
   async downloadAttachment(thingId: string, filename: string): Promise<{ buffer: Buffer; contentType: string }> {
@@ -153,6 +161,7 @@ export class MHRClient {
       { 'Accept': '*/*' },
     );
     const arrayBuffer = await response.arrayBuffer();
+    await this.validateSession?.();
     const contentType = response.headers.get('Content-Type') ?? 'application/pdf';
     return { buffer: Buffer.from(arrayBuffer), contentType };
   }
@@ -162,7 +171,7 @@ export class MHRClient {
     const response = await this.fetch(
       `/api/phr/v1/session?SessionMode=Patient&IsKeypressed=true&KeyPressedUnixTimeStamp=${timestamp}`,
     );
-    const status = await readJsonResponse(response, 'mhr');
+    const status = await this.json(response);
     if (!isRecord(status) || typeof status.isSessionExpired !== 'boolean' ||
       typeof status.numberOfMilliSecondsLeftForSessionExpire !== 'number' ||
       !Number.isFinite(status.numberOfMilliSecondsLeftForSessionExpire)) {
@@ -177,7 +186,7 @@ export class MHRClient {
 
   async getUser(): Promise<UserProfile> {
     const response = await this.fetch('/api/phr/v1/user');
-    const user = await readJsonResponse(response, 'mhr');
+    const user = await this.json(response);
     if (!isUserProfile(user)) throw new UpstreamContractError('mhr');
     return user;
   }
@@ -202,7 +211,7 @@ export class MHRClient {
       qs.delete('endDate');
     }
     const response = await this.fetch(`/api/phr/v1/labresult/getData?${qs}`, headers);
-    const results = readCompleteList(await readJsonResponse(response, 'mhr'), 'mhr');
+    const results = readCompleteList(await this.json(response), 'mhr');
     if (!results.every(isLabResult)) throw new UpstreamContractError('mhr');
     return results;
   }
@@ -216,7 +225,7 @@ export class MHRClient {
       '/api/phr/v1/medication?startIndex=-1&endIndex=-1&type=all&status=Medication&includeOrphanRefills=false',
       await this.mappingHeaders('medications'),
     );
-    const medications = readCompleteList(await readJsonResponse(response, 'mhr'), 'mhr');
+    const medications = readCompleteList(await this.json(response), 'mhr');
     if (!medications.every(isRecord)) throw new UpstreamContractError('mhr');
     return medications;
   }
@@ -245,9 +254,9 @@ export class MHRClient {
       this.fetch(`/api/phr/v1/bmi?${qs}`),
     ]);
     return {
-      height: await heightResp.json() as unknown[],
-      weight: await weightResp.json() as unknown[],
-      bmi: await bmiResp.json() as unknown[],
+      height: await this.json(heightResp) as unknown[],
+      weight: await this.json(weightResp) as unknown[],
+      bmi: await this.json(bmiResp) as unknown[],
     };
   }
 
@@ -278,8 +287,8 @@ export class MHRClient {
       this.fetch(`/api/phr/v1/myhealth/insulin-injection-use-data-manager?${qs}`),
     ]);
     return {
-      injections: await injectionsResp.json() as unknown[],
-      usage: await usageResp.json() as unknown[],
+      injections: await this.json(injectionsResp) as unknown[],
+      usage: await this.json(usageResp) as unknown[],
     };
   }
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCipheriv, randomBytes } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, readdir, rm, rmdir, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, rmdir, writeFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CookieJar } from 'tough-cookie';
@@ -56,6 +56,7 @@ describe('encrypted session compatibility', () => {
     const cipher = createCipheriv('aes-256-gcm', key, iv);
     const encrypted = Buffer.concat([cipher.update(JSON.stringify(await jar.serialize()), 'utf8'), cipher.final()]);
     await writeFile(join(storage, 'session.enc'), Buffer.concat([iv, cipher.getAuthTag(), encrypted]));
+    await unlink(join(storage, 'session-generation'));
     const loaded = await manager.load();
     expect(loaded?.myChartJar).toBeUndefined();
     expect(await loaded?.mhrJar.getCookieString('https://myhealthrecords.alberta.ca')).toContain('synthetic-session=synthetic-value');

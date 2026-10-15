@@ -4,7 +4,7 @@
 # Includes Chromium for headless Puppeteer (streamed cloud browser auth).
 
 # ── Build stage ────────────────────────────────────────────────────────────────
-FROM node:22-slim AS builder
+FROM node:24-slim AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY portal/ ./
 RUN npm run build
 
 # ── Runtime stage ──────────────────────────────────────────────────────────────
-FROM node:22-slim
+FROM node:24-slim
 
 # Install Chromium and dependencies for headless Puppeteer
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -59,6 +59,9 @@ RUN groupadd -r portal && useradd -r -g portal portal \
 USER portal
 
 ENV NODE_ENV=production
+ENV PORTAL_DEPLOY_ENABLED=false
+ENV PORTAL_TELEMETRY_ENABLED=false
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 # Chrome sandbox works with non-root user + --disable-setuid-sandbox

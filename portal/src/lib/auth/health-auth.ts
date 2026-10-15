@@ -1,35 +1,16 @@
 /**
- * Browser-based auth for Alberta SSO.
- *
- * Launches a VISIBLE Chrome window where the user logs in manually on
- * Alberta's actual login page. This matches the CLI approach exactly
- * (src/api/auth-client.ts) and avoids all bot detection / fingerprinting
- * issues since it's a real browser with real user interaction.
- *
- * Flow: Open Chrome → user logs in → detect is-login-token-valid 200
- *       → establish MyChart session → establish MHR session → extract cookies
+ * Helpers for finishing an isolated, caller-owned portal authentication attempt.
+ * The former shared-profile launcher is retired and always rejects.
  */
 
-import puppeteer from "puppeteer-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import type { Page, HTTPResponse } from "puppeteer-core";
+import * as fs from "node:fs";
+import type { Page } from "puppeteer-core";
 import { CookieJar, Cookie } from "tough-cookie";
-import { join } from "path";
-import { homedir } from "os";
-
-puppeteer.use(StealthPlugin());
 
 const MHR_BASE = "https://myhealthrecords.alberta.ca";
 const MYCHART_BASE = "https://myahsconnect.albertahealthservices.ca";
 const MYCHART_CSRF_URL = `${MYCHART_BASE}/MyChartPRD/Home/CSRFToken`;
 const MYCHART_SAML_URL = `${MYCHART_BASE}/MyChartPRD/Authentication/Saml/Login?idp=MADI&forceAuthn=False`;
-const SSO_LOGIN_URL = "https://account.alberta.ca/ui/sign-in/signin";
-
-// 3 minutes for manual login (matches CLI)
-const LOGIN_TIMEOUT_MS = 180_000;
-
-// Persistent browser profile — SSO cookies survive across logins
-const BROWSER_PROFILE_DIR = join(homedir(), ".mhr-records", "browser-profile");
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -96,7 +77,6 @@ export function findChrome(): string | undefined {
     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   ].filter(Boolean) as string[];
 
-  const fs = require("fs");
   for (const p of paths) {
     try {
       fs.accessSync(p);
@@ -201,106 +181,10 @@ export async function completeAuthFlow(page: Page): Promise<HealthAuthResult> {
 }
 
 /**
- * Authenticate by launching a visible Chrome window.
- *
- * The user logs in manually on Alberta's actual SSO page.
- * No credentials are passed programmatically — zero bot detection risk.
+ * Keep old callers fail-closed rather than reviving shared browser identity.
  */
 export async function authenticateWithBrowser(): Promise<HealthAuthResult> {
-  const executablePath = findChrome();
-
-  // Ensure browser profile directory exists
-  const fs = require("fs");
-  const path = require("path");
-  fs.mkdirSync(BROWSER_PROFILE_DIR, { recursive: true });
-
-  // Clean stale Chrome lock files (left behind if browser was force-closed)
-  for (const lockFile of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
-    try {
-      fs.unlinkSync(path.join(BROWSER_PROFILE_DIR, lockFile));
-    } catch {
-      /* doesn't exist — fine */
-    }
-  }
-
-  const browser = await puppeteer.launch({
-    headless: false, // Real visible browser — user logs in manually
-    executablePath,
-    defaultViewport: { width: 1280, height: 800 },
-    args: [
-      "--disable-blink-features=AutomationControlled",
-      "--disable-infobars",
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-    ],
-    userDataDir: BROWSER_PROFILE_DIR, // Persistent profile for SSO cookie reuse
-  });
-
-  try {
-    const page = await browser.newPage();
-
-    let rateLimited = false;
-    page.on("response", (response: HTTPResponse) => {
-      const url = response.url();
-      if (
-        response.status() === 429 &&
-        (url.includes("account-checks") || url.includes("signin"))
-      ) {
-        rateLimited = true;
-      }
-    });
-
-    // Step 1: Navigate to SSO login page
-    await page.goto(SSO_LOGIN_URL, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await sleep(2000);
-
-    if (rateLimited) {
-      throw new Error(
-        "Alberta SSO is rate-limiting requests. Please wait 5–10 minutes and try again."
-      );
-    }
-
-    // Step 2: Check if already authenticated (persistent profile may have valid SSO cookies)
-    const currentUrl = page.url();
-    const alreadyLoggedIn = !currentUrl.includes("account.alberta.ca");
-
-    if (!alreadyLoggedIn) {
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(
-            new Error(
-              "Login timed out. Please complete sign-in within 3 minutes."
-            )
-          );
-        }, LOGIN_TIMEOUT_MS);
-
-        page.on("response", (response: HTTPResponse) => {
-          const url = response.url();
-          if (
-            url.includes("is-login-token-valid") &&
-            response.status() === 200
-          ) {
-            clearTimeout(timeout);
-            resolve();
-          }
-        });
-      });
-    }
-
-    if (rateLimited) {
-      throw new Error(
-        "Alberta SSO is rate-limiting requests. Please wait 5–10 minutes and try again."
-      );
-    }
-
-    return await completeAuthFlow(page);
-  } finally {
-    await browser.close();
-  }
+  throw new Error("Shared-profile portal sign-in is retired. Use the desktop extension.");
 }
 
 // Keep old function name as alias for backward compatibility

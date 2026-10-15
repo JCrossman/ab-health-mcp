@@ -26,6 +26,8 @@
 .git/
 .github/
 .vscode/
+/.impeccable/
+/.download-privacy-browser/
 tsconfig.json
 /tsconfig.tests.json
 *.har

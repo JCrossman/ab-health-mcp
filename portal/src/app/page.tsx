@@ -5,8 +5,11 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { BrandLogo, BrandName, GradientText } from "@/components/ui/brand";
+import { isPortalEnabled } from "@/lib/availability";
+import { PortalUnavailable } from "@/components/portal-unavailable";
 
 export default function HomePage() {
+  if (!isPortalEnabled()) return <PortalUnavailable />;
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation — matches www.myaihealth.ca */}
@@ -83,7 +86,7 @@ export default function HomePage() {
                   step: "1",
                   icon: Shield,
                   title: "Sign in securely",
-                  desc: "Sign in with your MyAlberta Digital ID — on Alberta's real login page. We never see or store your password.",
+                  desc: "The desktop add-on opens Alberta's sign-in page in a dedicated browser. Do not enter passwords in chat.",
                 },
                 {
                   step: "2",
@@ -94,8 +97,8 @@ export default function HomePage() {
                 {
                   step: "3",
                   icon: Shield,
-                  title: "Nothing stored",
-                  desc: "Your health data passes through but is never saved. When you disconnect, it's gone from our side completely.",
+                  title: "Understand what is kept",
+                  desc: "The desktop add-on remembers sign-in cookies. Claude manages its own chat history and provider retention.",
                 },
               ].map((item) => (
                 <div key={item.step} className="text-center">
@@ -150,9 +153,9 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold">Privacy by design</h2>
             <div className="grid sm:grid-cols-2 gap-4 text-left">
               {[
-                { icon: "🔒", title: "No health data stored", desc: "We fetch your data live from government portals. Nothing is saved on our servers." },
-                { icon: "🇨🇦", title: "Canadian data residency", desc: "AI processing runs on Azure Canada East. Your data stays in Canada." },
-                { icon: "🔑", title: "You control access", desc: "Disconnect anytime. Your session is cleared instantly. We never store your credentials." },
+                { icon: "🔒", title: "Read-only access", desc: "The add-on fetches records from Alberta. Your AI app receives them and manages conversation history." },
+                { icon: "🌐", title: "Different processing locations", desc: "Claude processing and the public website are US-based. Download storage is in Canada Central." },
+                { icon: "🔑", title: "Remembered sign-in", desc: "Disconnect removes the saved MCP session. The dedicated browser may still remember your Alberta sign-in." },
                 { icon: "⚕️", title: "Not medical advice", desc: "AI helps you understand your records. Always talk to your doctor about health decisions." },
               ].map((item) => (
                 <div key={item.title} className="p-5 rounded-xl bg-background border">

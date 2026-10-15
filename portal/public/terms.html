@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
   <title>Terms of Use — MyAI Health</title>
   <meta name="description" content="Terms of Use and legal disclaimers for the MyAI Health MCP extension.">
   <link rel="canonical" href="https://www.myaihealth.ca/terms.html">
@@ -12,23 +13,14 @@
   <meta property="og:type" content="website">
   <link rel="icon" href="/favicon.png" type="image/png">
 
-  <!-- Azure Application Insights — anonymous visitor analytics -->
-  <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js" crossorigin="anonymous"></script>
-  <script>
-    var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {
-      connectionString: "InstrumentationKey=d11257e1-4ef5-4944-bd87-5d93627b3c60;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=bcdf162b-32a2-40a6-8775-437da297e092",
-      disableCookiesUsage: true
-    }});
-    appInsights.loadAppInsights();
-    appInsights.trackPageView();
-  </script>
-
   <link rel="stylesheet" href="/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    a:focus-visible { outline: 2px solid #0277b5; outline-offset: 4px; }
+    nav > div { flex-wrap: wrap; gap: 0.5rem; }
   </style>
 </head>
 <body class="bg-white text-navy-900">
@@ -50,7 +42,7 @@
 
       <h1 class="text-3xl font-bold mb-2">Terms of Use</h1>
       <p class="text-sm text-gray-500 mb-2">Effective date: May 1, 2026</p>
-      <p class="text-sm text-gray-500 mb-8">Last updated: May 19, 2026</p>
+      <p class="text-sm text-gray-500 mb-8">Last updated: October 14, 2026</p>
 
       <div class="prose prose-gray max-w-none space-y-8 text-gray-700 leading-relaxed">
 
@@ -97,11 +89,13 @@
         <!-- 7. Third-Party Services -->
         <section>
           <h2 class="text-xl font-semibold text-navy-900 mb-3">7. Third-Party Services</h2>
-          <p>The Extension and Portal rely on third-party services that are outside of our control:</p>
+          <p>The Extension and download website use third-party services:</p>
           <ul class="list-disc pl-6 mt-2 space-y-1">
             <li><strong>Alberta Health Services</strong> — My Health Records and AHS MyChart portals (data source)</li>
             <li><strong>Anthropic</strong> — Claude AI assistant (used in the Claude Desktop / .mcpb path; US-based servers)</li>
-            <li><strong>Microsoft Azure</strong> — Cloud infrastructure (Canada Central and Canada East); Azure OpenAI Service (Canada East) is used as the AI provider in the Portal beta path</li>
+            <li><strong>Microsoft Azure</strong> — Website hosting (Central US), download storage and the separate remote MCP server (Canada Central)</li>
+            <li><strong>Google Fonts</strong> — The website's Inter font; font requests disclose your IP address and browser metadata to Google</li>
+            <li><strong>GitHub</strong> — Source code and an alternative download channel, subject to GitHub's own logging and privacy policy</li>
             <li><strong>Alberta's MyAlberta Digital ID</strong> — Authentication</li>
           </ul>
           <p class="mt-3">We are not responsible for the availability, accuracy, security, or performance of these third-party services. Their use is subject to their own terms and privacy policies.</p>
@@ -111,8 +105,7 @@
         <section>
           <h2 class="text-xl font-semibold text-navy-900 mb-3">8. Data and Privacy</h2>
 
-          <p class="font-medium text-navy-900 mb-2">Two delivery paths — different data flows</p>
-          <p>MyAI Health is offered through two distinct paths, each with a different data flow. Please read the section that applies to how you use the product.</p>
+          <p>The desktop extension, download website, and separate remote server have different data flows. The experimental web-chat portal is disabled.</p>
 
           <h3 class="text-base font-semibold text-navy-900 mt-5 mb-2">8a. Claude Desktop Extension (.mcpb path)</h3>
           <p>When you install the Extension via the downloadable <code class="text-sm bg-gray-100 px-1 rounded">.mcpb</code> file and use it within Claude Desktop:</p>
@@ -120,39 +113,42 @@
             <li>The Extension runs locally on your computer.</li>
             <li>Your health data is fetched directly from Alberta's health portals to your machine. It does <strong>not</strong> pass through our servers.</li>
             <li>Your health data is then sent to Anthropic's Claude AI (servers located in the <strong>United States</strong>) for the AI conversation. See <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">Anthropic's privacy policy</a> and their <a href="https://www.anthropic.com/legal/consumer-health-data-privacy-policy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">Consumer Health Data Privacy Policy</a>.</li>
-            <li>Encrypted session cookies are stored locally on your machine only (AES-256-GCM). No health data is stored on your machine or our servers.</li>
-            <li>Your login credentials are entered on Alberta's own sign-in page and are never transmitted to or stored by us.</li>
+            <li>The MCP does not keep a health-record database. It stores encrypted sign-in cookies at <code>~/.mhr-records/session.enc</code> and a dedicated Chrome profile at <code>~/.mhr-records/browser-profile</code>. The profile can retain sign-in cookies and browser data. A session timeout is not a guarantee that those files have been erased.</li>
+            <li>Ordinary disconnect removes the saved MCP session, but the dedicated browser may remember Alberta sign-in. Local encryption does not protect against someone using the same operating-system account. Protect your computer and account.</li>
+            <li>Explicitly asking the extension to forget this device (<code>forget_device: true</code>) also removes its dedicated browser profile and saved sign-in files. The tool reports incomplete cleanup. This does not erase Claude history, normal browser data, or Alberta records, and is not a global Alberta sign-out.</li>
+            <li>You enter credentials on Alberta's own sign-in page. Do not enter passwords or health records into download links, support emails, or GitHub issues.</li>
+            <li>Claude Desktop and Anthropic manage your conversations, including health records returned to them. Retention and model-training rules depend on your account, settings, and their current policies. We do not promise a fixed retention period or manage, erase, or migrate Claude's history. Other MCP hosts have their own policies.</li>
           </ul>
 
-          <h3 class="text-base font-semibold text-navy-900 mt-5 mb-2">8b. Portal Beta (web chat path)</h3>
-          <p>When you use the MyAI Health web portal (beta) at <strong>myaihealth.ca</strong>:</p>
+          <h3 class="text-base font-semibold text-navy-900 mt-5 mb-2">8b. Website and downloads</h3>
+          <p>Downloads are public. You do not need to give us your name, email, or reason for downloading.</p>
           <ul class="list-disc pl-6 mt-2 space-y-1">
-            <li>Your health data is fetched from Alberta's health portals via our <strong>server</strong>, which runs on Microsoft Azure Canada Central. Data passes through our infrastructure during the active session.</li>
-            <li>Your health data and conversation messages are sent to <strong>Azure OpenAI Service</strong> (Microsoft-hosted, Canada East region) for AI processing. All AI inference occurs within Canada.</li>
-            <li>Health data is held in memory only for the duration of your active session. It is <strong>not persisted</strong> to any database, log file, or long-term storage on our side.</li>
-            <li>Conversation transcripts are stored <strong>locally in your browser</strong> (localStorage). They are not stored on our servers. Clearing your browser data will remove them.</li>
-            <li>Encrypted session tokens (AES-256-GCM) are stored in your browser for the duration of the active session (~10 minutes before expiry). They contain authentication state only — no health data.</li>
-            <li>Your login credentials are entered on Alberta's own sign-in page and are never transmitted to or stored by us.</li>
-            <li><strong>Azure OpenAI abuse monitoring:</strong> Microsoft Azure OpenAI may retain prompt and completion data for up to 30 days for abuse detection purposes, unless an opt-out has been approved. We do not use your data for AI model training. See <a href="https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">Azure OpenAI data, privacy, and security</a>.</li>
+            <li>The access-request endpoint is retired. It no longer reads submitted details, sends mail, checks CAPTCHA, issues invitations, or writes access-request records. Old emailed download links redirect to the public installer without forwarding their token.</li>
+            <li>We removed browser analytics, CAPTCHA scripts, and custom download records containing IP addresses or browser details. The download API makes a read-only link that expires after 30 minutes.</li>
+            <li>Hosting, CDN, and storage services still receive IP addresses and request metadata, such as timestamps, browser headers, paths, and query strings. This can include tokens in old URLs or signed download URLs in platform logs. Removing application tracking does not remove those logs. Their retention depends on service settings and provider policies; we have not verified a single retention period for every copy.</li>
+            <li>The website loads Inter from Google Fonts. Links to Claude, GitHub, Alberta, and other sites take you to services with their own privacy rules. Our pages and download redirects use a no-referrer policy.</li>
+            <li>The extension's update check sends its installed version to our download API. It does not need health records, a name, or an email.</li>
           </ul>
 
-          <h3 class="text-base font-semibold text-navy-900 mt-5 mb-2">8c. Canadian Data Residency (Portal Beta)</h3>
-          <p>All infrastructure operated by MyAI Health for the Portal beta path is located in Canada:</p>
+          <h3 class="text-base font-semibold text-navy-900 mt-5 mb-2">8c. Earlier access requests and emails</h3>
+          <p>The previous download process collected names, email addresses, optional reasons, and download metadata in Azure Tables and notification emails. Reasons may have included health details. Copies may still exist in Tables, mailboxes, operational logs, and backups. <strong>Historical cleanup is pending separate approval</strong>, including any recordkeeping needs and email or backup administrator action. Stopping new collection does not erase those copies. We do not claim that historical data has been deleted.</p>
+
+          <h3 class="text-base font-semibold text-navy-900 mt-5 mb-2">8d. Remote server, disabled portal, and hosting regions</h3>
           <ul class="list-disc pl-6 mt-2 space-y-1">
-            <li><strong>MCP server / API:</strong> Microsoft Azure Canada Central</li>
-            <li><strong>AI inference:</strong> Microsoft Azure OpenAI Service, Canada East</li>
-            <li><strong>Website hosting:</strong> Microsoft Azure Static Web Apps (Canada Central)</li>
+            <li><strong>Public website:</strong> Azure Static Web Apps, Central US. A move to Canadian website hosting has not been completed.</li>
+            <li><strong>Download storage and separate remote MCP server:</strong> Canada Central. Remote MCP requests, unlike desktop requests, pass health data through that server. Authentication state is encrypted in access tokens; this does not eliminate operational platform logs.</li>
+            <li><strong>Web-chat portal:</strong> Disabled; web chat, sign-in, and beta invitations are unavailable. Earlier versions saved transcripts in browser storage; disabling the portal does not prove that earlier copies have been removed.</li>
+            <li><strong>Dormant portal AI configuration:</strong> Azure AI Foundry Canada East. Any future activation requires a separate review of provider handling, abuse monitoring, retention, and authentication. See <a href="https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">Microsoft's data privacy documentation</a>.</li>
           </ul>
-          <p class="mt-2">This infrastructure is operated under contracts with Microsoft Azure in compliance with Alberta's Health Information Act (HIA) and Protection of Privacy Act (POPA).</p>
-          <p class="mt-2"><strong>Claude Desktop / .mcpb path exception:</strong> Conversations through Claude Desktop are processed by Anthropic on US-based servers. We do not control Anthropic's infrastructure or data handling. See Anthropic's policies for details.</p>
+          <p class="mt-2">A Canadian resource location is not a guarantee of all-Canadian processing or legal compliance. We do not claim HIA or POPA certification. Claude conversations, website delivery, and third-party services can involve processing outside Canada.</p>
         </section>
 
         <!-- 9. User Rights under HIA / POPA -->
         <section>
-          <h2 class="text-xl font-semibold text-navy-900 mb-3">9. Your Rights Under Alberta Privacy Law</h2>
-          <p>Your health information is protected by Alberta's Health Information Act (HIA) and Protection of Privacy Act (POPA). As a user, you have the right to:</p>
+          <h2 class="text-xl font-semibold text-navy-900 mb-3">9. Privacy Questions and Requests</h2>
+          <p>Applicable privacy rights depend on the service and the law. You can contact us to:</p>
           <ul class="list-disc pl-6 mt-2 space-y-1">
-            <li><strong>Access:</strong> Request a copy of any personal information we hold about you (note: we hold no health data — only session authentication state).</li>
+            <li><strong>Access:</strong> Ask about personal information we may hold, including earlier access requests and support emails.</li>
             <li><strong>Correction:</strong> Request correction of any inaccurate personal information we hold.</li>
             <li><strong>Complaint:</strong> File a complaint about our privacy practices with the <strong>Office of the Information and Privacy Commissioner of Alberta (OIPC)</strong> at <a href="https://www.oipc.ab.ca" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600">www.oipc.ab.ca</a>.</li>
           </ul>

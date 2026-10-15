@@ -24,6 +24,9 @@ import { homedir } from 'node:os';
 
 import { VERSION as CURRENT_VERSION } from '../version.js';
 import { parseUpdateResponse } from '../utils/version.js';
+import { requireDesktopExecution } from '../server/session-context.js';
+import { withDesktopOperation } from '../auth/desktop-operation.js';
+import { getSessionGeneration } from '../helpers/session-helpers.js';
 
 const UPDATE_CHECK_URL = `https://www.myaihealth.ca/api/check-update?v=${CURRENT_VERSION}`;
 
@@ -113,6 +116,8 @@ export const connectAccountTool = {
   },
   handler: async (params: { force?: boolean; demo?: boolean; accept_privacy?: boolean }) => {
     try {
+      requireDesktopExecution();
+      return await withDesktopOperation(async () => {
       // Demo mode: only enter when explicitly requested. Resolved before the
       // network update check so demo sessions don't pay a 2-4s network tax
       // for a download URL that points at a real install.
@@ -220,6 +225,7 @@ export const connectAccountTool = {
 
       // Authenticate with SSO via browser
       invalidateSessionCache();
+      const generation = getSessionGeneration();
       const { mhrCookieJar, myChartCookieJar, myChartCsrfToken } = await authenticate();
 
       // Verify the MHR session works by fetching user profile
@@ -228,6 +234,7 @@ export const connectAccountTool = {
       const user = await client.getUser();
 
       // Save encrypted session (both MHR and MyChart)
+      if (generation !== getSessionGeneration()) throw new SessionExpiredError();
       await sessionManager.save({
         mhrJar: mhrCookieJar,
         myChartJar: myChartCookieJar,
@@ -256,6 +263,7 @@ export const connectAccountTool = {
           text: JSON.stringify(response),
         }],
       };
+      });
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
       logger.error('connect_account could not complete sign-in.');

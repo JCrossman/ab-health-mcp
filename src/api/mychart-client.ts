@@ -18,6 +18,7 @@ export class MyChartClient {
     private cookieJar: CookieJar,
     private csrfToken: string,
     private onSessionUpdated?: (token: string | undefined, invalidateContext?: boolean) => Promise<void>,
+    private validateSession?: () => Promise<void>,
   ) {}
 
   /**
@@ -37,13 +38,18 @@ export class MyChartClient {
    * Avoids false "session expired" errors from transient auth failures.
    */
   private async withRetry<T>(fn: () => Promise<T>): Promise<T> {
+    await this.validateSession?.();
     if (!this.csrfToken) await this.refreshSession();
     try {
-      return await fn();
+      const result = await fn();
+      await this.validateSession?.();
+      return result;
     } catch (error) {
       if (error instanceof SessionExpiredError) {
         await this.refreshSession();
-        return await fn();
+        const result = await fn();
+        await this.validateSession?.();
+        return result;
       }
       throw error;
     }
@@ -94,6 +100,7 @@ export class MyChartClient {
   private async navigate(path: string): Promise<void> {
     let url = `${MYCHART_BASE}/MyChartPRD/${path}`;
     for (let redirects = 0; redirects <= 10; redirects++) {
+      await this.validateSession?.();
       let response: Response;
       try {
         response = await fetch(url, {
@@ -138,6 +145,7 @@ export class MyChartClient {
   }
 
   private async refreshToken(): Promise<void> {
+    await this.validateSession?.();
     let token: string;
     try {
       token = await fetchMyChartToken(this.cookieJar);
@@ -147,6 +155,7 @@ export class MyChartClient {
       throw error;
     }
     this.csrfToken = token;
+    await this.validateSession?.();
     await this.onSessionUpdated?.(token);
   }
 
@@ -450,6 +459,7 @@ export class MyChartClient {
    * A successful ping alone does not prove authentication; use refreshSession for that.
    */
   async keepAlive(): Promise<void> {
+    await this.validateSession?.();
     const url = `${MYCHART_BASE}/MyChartPRD/Home/KeepAlive?cnt=1&noCache=${Math.random()}`;
     const cookies = await this.cookieJar.getCookieString(url);
 
@@ -471,6 +481,7 @@ export class MyChartClient {
     await this.storeCookies(response, url);
     this.checkResponse(response);
     await response.body?.cancel();
+    await this.validateSession?.();
   }
 
   // --- Document Download ---
@@ -480,6 +491,7 @@ export class MyChartClient {
    * The downloadUrl comes from the GetDocumentDetails response.
    */
   async downloadDocumentBinary(downloadUrlPath: string): Promise<{ buffer: Buffer; contentType: string }> {
+    await this.validateSession?.();
     let url: string;
     if (downloadUrlPath.startsWith('http')) {
       // Only allow HTTPS URLs on the MyChart domain to prevent SSRF
@@ -521,6 +533,7 @@ export class MyChartClient {
         throw new ApiError(400, 'Download redirect left the MyChart domain.');
       }
       const nextCookies = await this.cookieJar.getCookieString(nextUrl);
+      await this.validateSession?.();
       try {
         response = await fetch(nextUrl, {
           method: 'GET',
@@ -541,6 +554,7 @@ export class MyChartClient {
 
     const arrayBuffer = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') ?? 'application/octet-stream';
+    await this.validateSession?.();
 
     return {
       buffer: Buffer.from(arrayBuffer),

@@ -5,21 +5,16 @@ import { DefaultChatTransport } from "ai";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Shield, Menu, X } from "lucide-react";
+import { Send, Loader2, Activity, Settings, Unplug, Plug, LogOut, ChevronDown, FlaskConical, Syringe, Pill, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { BrandLogo, BrandName } from "@/components/ui/brand";
 import { ConnectDialog } from "@/components/health/connect-dialog";
 import { MessageContent } from "@/components/chat/message-content";
-import {
-  ConversationSidebar,
-  createConversation,
-  updateConversation,
-  loadMessages,
-  saveMessages,
-} from "@/components/chat/conversation-sidebar";
+import { ConversationSidebar } from "@/components/chat/conversation-sidebar";
+import { ChatSessionBoundary } from "@/components/chat/session-boundary";
+import type { MemoryHistory } from "@/lib/chat/memory-history";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 
 interface HealthStatus {
   connected: boolean;
@@ -37,12 +32,14 @@ interface AvailableModel {
 }
 
 export default function ChatPage() {
+  return <ChatSessionBoundary workspace={ChatWorkspace} />;
+}
+
+function ChatWorkspace({ history, endSession }: { history: MemoryHistory; endSession: () => void }) {
   const { status: authStatus } = useSession();
   const router = useRouter();
 
   const [selectedModel, setSelectedModel] = useState("gpt-4o");
-  const selectedModelRef = useRef(selectedModel);
-  selectedModelRef.current = selectedModel;
 
   const [conversationId, setConversationId] = useState<string | null>(null);
 
@@ -50,10 +47,11 @@ export default function ChatPage() {
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
-        body: () => ({ model: selectedModelRef.current }),
+        fetch: history.fetch,
       })
   );
-  const { messages, sendMessage, setMessages, status, error } = useChat({ transport });
+  const { messages, sendMessage, setMessages, status, error, stop } = useChat({ transport });
+  useEffect(() => () => { void stop(); }, [stop]);
 
   const [input, setInput] = useState("");
   const [healthStatus, setHealthStatus] = useState<HealthStatus>({
@@ -67,58 +65,40 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Re-auth state for graceful session-expiry recovery
-  type ReauthState = "idle" | "needed" | "loading" | "error";
-  const [reauthState, setReauthState] = useState<ReauthState>("idle");
-  const [reauthMsgId, setReauthMsgId] = useState<string | null>(null);
-  const [lastUserMessage, setLastUserMessage] = useState("");
-  // Tracks the highest message index already handled for session-expiry detection,
-  // preventing re-detection of old messages after a successful re-auth.
-  const lastHandledReauthIndex = useRef(-1);
-  // Caps auto-retry at 1 per reauth cycle to prevent infinite loops.
-  const reauthAutoRetryDone = useRef(false);
-
   const isLoading = status === "submitted" || status === "streaming";
 
   const checkHealthStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/health/status");
+      const res = await history.fetch("/api/health/status");
       if (res.ok) {
         setHealthStatus(await res.json());
       }
     } catch { /* MCP server not available */ }
-  }, []);
+  }, [history]);
 
   const handleDisconnect = async () => {
     try {
-      await fetch("/api/health/disconnect", { method: "POST" });
+      await history.fetch("/api/health/disconnect", { method: "POST" });
       setHealthStatus({ connected: false, mhr: false, myChart: false });
     } catch { /* ignore */ }
   };
 
-  // Detect session_expired marker in tool results OR in assistant text mentioning sign-in timeout.
-  // Only fires for messages beyond lastHandledReauthIndex to avoid re-triggering
-  // after a successful re-auth when old expired messages are still in the array.
+  // Do not retain records or auto-replay a question after a health session expires.
   useEffect(() => {
-    if (reauthState === "loading") return;
-
     for (let i = 0; i < messages.length; i++) {
-      if (i <= lastHandledReauthIndex.current) continue;
       const msg = messages[i];
       if (msg.role !== "assistant") continue;
 
       // Check tool results for session_expired flag
       for (const part of msg.parts) {
         if (!part.type.startsWith("tool-")) continue;
-        const tp = part as { type: string; state: string; result?: unknown };
+        const tp = part as { type: string; state: string; result?: unknown; output?: unknown };
         if (tp.state !== "output-available") continue;
         try {
-          const r = typeof tp.result === "string" ? JSON.parse(tp.result) : tp.result;
+          const output = tp.output ?? tp.result;
+          const r = typeof output === "string" ? JSON.parse(output) : output;
           if (r?.session_expired === true) {
-            lastHandledReauthIndex.current = i;
-            setReauthMsgId(msg.id);
-            setReauthState("needed");
-            checkHealthStatus();
+            history.invalidate();
             return;
           }
         } catch { /* ignore malformed tool results */ }
@@ -128,25 +108,18 @@ export default function ChatPage() {
       for (const part of msg.parts) {
         if (part.type === "text" && part.text) {
           if (part.text.includes("sign-in has timed out") || part.text.includes("session expired") || part.text.includes("Sign in again")) {
-            lastHandledReauthIndex.current = i;
-            setReauthMsgId(msg.id);
-            setReauthState("needed");
-            checkHealthStatus();
+            history.invalidate();
             return;
           }
         }
       }
     }
-  }, [messages, reauthState, checkHealthStatus]);
-
-  const handleReauth = () => {
-    setReauthState("idle");
-    setReauthMsgId(null);
-    setShowConnect(true);
-  };
+  }, [messages, history]);
 
   // Poll health status every 30s
   useEffect(() => {
+    // This callback updates state only after an external network response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkHealthStatus();
     const interval = setInterval(checkHealthStatus, 30000);
     return () => clearInterval(interval);
@@ -155,7 +128,7 @@ export default function ChatPage() {
   // Fetch available models (re-fetch when window regains focus, e.g. returning from settings)
   const fetchModels = useCallback(async () => {
     try {
-      const res = await fetch("/api/models");
+      const res = await history.fetch("/api/models");
       if (res.ok) {
         const data = await res.json();
         setAvailableModels(data.models);
@@ -166,9 +139,11 @@ export default function ChatPage() {
         }
       }
     } catch { /* ignore */ }
-  }, []);
+  }, [history]);
 
   useEffect(() => {
+    // This callback updates state only after an external network response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchModels();
     const onFocus = () => fetchModels();
     window.addEventListener("focus", onFocus);
@@ -178,6 +153,8 @@ export default function ChatPage() {
   // Close model picker on outside click; re-fetch models on open
   useEffect(() => {
     if (!showModelPicker) return;
+    // Refresh external model configuration after the picker opens.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchModels();
     const handleClick = () => setShowModelPicker(false);
     const timer = setTimeout(() => document.addEventListener("click", handleClick), 0);
@@ -201,52 +178,46 @@ export default function ChatPage() {
     inputRef.current?.focus();
   }, []);
 
-  // Save messages to localStorage when they change
+  // Keep history only inside this verified, visible account's page lifetime.
   useEffect(() => {
     if (conversationId && messages.length > 0 && status === "ready") {
-      saveMessages(conversationId, messages);
+      history.save(conversationId, messages);
       // Update conversation title from first user message
       const firstUserMsg = messages.find((m) => m.role === "user");
       const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant");
       if (firstUserMsg) {
         const title = (firstUserMsg.parts.find((p: { type: string; text?: string }) => p.type === "text") as { text: string } | undefined)?.text?.slice(0, 60) || "Chat";
         const preview = (lastAssistantMsg?.parts.find((p: { type: string; text?: string }) => p.type === "text") as { text: string } | undefined)?.text?.slice(0, 80) || "";
-        updateConversation(conversationId, title, preview);
+        history.update(conversationId, title, preview);
       }
     }
-  }, [messages, conversationId, status]);
+  }, [messages, conversationId, status, history]);
 
   const handleNewChat = useCallback(() => {
+    void stop();
     setConversationId(null);
     setMessages([]);
-    setReauthState("idle");
-    setReauthMsgId(null);
-    lastHandledReauthIndex.current = -1;
-    reauthAutoRetryDone.current = false;
-  }, [setMessages]);
+  }, [setMessages, stop]);
 
   const handleSelectConversation = useCallback((id: string) => {
+    if (isLoading || !history.isActive()) return;
     setConversationId(id);
-    const saved = loadMessages(id);
+    const saved = history.load(id);
     setMessages(saved as typeof messages);
-    setReauthState("idle");
-    setReauthMsgId(null);
-    lastHandledReauthIndex.current = -1;
-    reauthAutoRetryDone.current = false;
-  }, [setMessages]);
+  }, [setMessages, history, isLoading]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !history.isActive()) return;
     const text = input.trim();
     setInput("");
-    setLastUserMessage(text);
     // Auto-create conversation on first message
     if (!conversationId) {
-      const convo = createConversation(text.slice(0, 60));
+      const convo = history.create(text.slice(0, 60));
+      if (!convo) return;
       setConversationId(convo.id);
     }
-    sendMessage({ text });
+    sendMessage({ text }, { body: { model: selectedModel } });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -269,6 +240,7 @@ export default function ChatPage() {
       {/* Conversation Sidebar — desktop: always visible; mobile: slide-over */}
       <div className="hidden md:flex">
         <ConversationSidebar
+          history={history}
           currentId={conversationId}
           onSelect={handleSelectConversation}
           onNew={handleNewChat}
@@ -300,6 +272,7 @@ export default function ChatPage() {
               </Button>
             </div>
             <ConversationSidebar
+              history={history}
               currentId={conversationId}
               onSelect={(id) => {
                 handleSelectConversation(id);
@@ -419,7 +392,7 @@ export default function ChatPage() {
               variant="ghost"
               size="icon"
               aria-label="Sign out"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={endSession}
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -558,24 +531,6 @@ export default function ChatPage() {
                 return null;
               })}
 
-              {/* Inline re-auth prompt — shown after the assistant message that triggered a session expiry */}
-              {reauthMsgId === message.id && message.role === "assistant" && reauthState === "needed" && (
-                <div aria-live="polite" className="flex justify-start">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm max-w-[85%] space-y-2">
-                    <p className="text-amber-800 font-medium">
-                      Your Alberta Health sign-in has timed out.
-                    </p>
-                    <Button
-                      size="sm"
-                      onClick={handleReauth}
-                      className="bg-[#0277b5] hover:bg-[#026a9e]"
-                    >
-                      <Shield className="h-3 w-3 mr-1.5" />
-                      Sign in again
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
 

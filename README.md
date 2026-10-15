@@ -15,13 +15,15 @@ The MCP server authenticates with Alberta's SSO (shared across both portals), fe
 
 ### Option 1: One-Click Install (Recommended)
 
-1. **[Request access](https://www.myaihealth.ca/#request-access)** — we'll email you a download link
+1. **[Download the extension](https://www.myaihealth.ca/api/download-latest)** — no name, email, or reason required. [GitHub Releases](https://github.com/JCrossman/ab-health-mcp/releases/latest) is an alternative.
 2. **Double-click** the downloaded file — Claude Desktop installs it automatically
 3. Tell Claude: **"Connect to My Health Records"**
 4. Chrome opens to Alberta's real login page — sign in with your MyAlberta credentials
 5. Start asking: **"Show me my lab results"**, **"Am I up to date on immunizations?"**, etc.
 
 **No Node.js. No terminal. No configuration files. No API keys.**
+
+Updating? Install the new `.mcpb` file over the existing extension and restart Claude Desktop. Read the [privacy details](https://www.myaihealth.ca/terms.html) before connecting. Web chat and beta invitations are disabled.
 
 > **Requirements:** [Claude Desktop](https://claude.ai/download) and Google Chrome. You need a [MyAlberta](https://account.alberta.ca) account with My Health Records access.
 
@@ -152,7 +154,7 @@ Claude Desktop ──HTTPS──▶ MCP Server (Azure Canada Central) ──REST
 - **Transport:** Streamable HTTP over HTTPS
 - **Auth:** OAuth 2.1 with PKCE — Claude Desktop acts as an OAuth client
 - **Session:** Zero server-side storage — SSO cookies are encrypted into the OAuth access token itself. The server is fully stateless.
-- **Infrastructure:** Azure Container Apps (Canada Central) — HIA/POPA compliant
+- **Infrastructure:** Azure Container Apps (Canada Central); location alone does not establish legal compliance
 
 Both modes share the same 48 tools and session keepalive logic. Session timeout is ~10 minutes per system. Tools auto-keepalive both MHR and MyChart on each call.
 
@@ -184,7 +186,7 @@ Puppeteer handles this automatically. The persistent browser profile at `~/.mhr-
 |------|-------------|
 | `connect_account` | Opens Chrome for MyAlberta SSO login. Captures and encrypts session cookies for both MHR and MyChart. |
 | `check_connection` | Verifies session is active, returns time remaining. Also serves as keepalive. |
-| `disconnect_account` | Clears stored encrypted session data. |
+| `disconnect_account` | Clears the saved MCP session; ordinary disconnect preserves the dedicated browser's remembered sign-in. Explicit `forget_device: true` also removes the MCP-owned profile, not Claude history or your normal browser data. |
 
 ### Health Data (MHR)
 
@@ -309,7 +311,7 @@ ab-health-mcp/
 │   ├── flatIcons.png               # Icon set
 │   └── favicon.png                 # Site favicon
 ├── api/                            # Azure Functions for landing page
-│   └── request-access/             # Access request form handler (ACS email + SAS URL)
+│   └── request-access/             # Retired: fixed 410, no personal-data processing
 ├── portal/                         # Next.js web portal (chat UI)
 ├── Dockerfile                      # Multi-stage build for Azure Container Apps
 ├── staticwebapp.config.json        # Azure Static Web Apps config
@@ -378,16 +380,16 @@ Conversational AI removes the barriers that make health portals difficult to use
 
 ## Security
 
-This project handles protected health information under Alberta's Health Information Act (HIA) and Protection of Privacy Act (POPA).
+This project handles sensitive health information. Canadian hosting alone is not a compliance guarantee; we do not claim HIA or POPA certification.
 
 ### Non-Negotiable Rules
 
 1. **No PII in logs.** No names, health data, cookie values, or identifiers in log output.
-2. **No health data stored by the extension.** Only encrypted session cookies are persisted (local mode) or encrypted into tokens (remote mode). All health data is returned to Claude and discarded by the extension. See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for how Claude handles conversation data.
-3. **Credentials never touch the server.** In local mode, users enter credentials in the browser via Puppeteer. In remote mode, credentials are entered on the Alberta SSO page in the user's own browser.
+2. **No health-record database.** The MCP returns records to its host, which controls conversation storage. Desktop mode saves encrypted sign-in cookies and a dedicated browser profile that can retain browser data. See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for Claude's conversation handling.
+3. **Use Alberta's sign-in page.** Desktop users enter credentials in the dedicated Chrome browser. Never put credentials in tool arguments, download requests, or logs.
 4. **Encryption at rest.** Local: AES-256-GCM at `~/.mhr-records/session.enc`. Remote: AES-256-GCM in the OAuth access token (held on user's machine by Claude Desktop).
-5. **Zero server-side storage (remote mode).** The server stores nothing — no database, no user data. Session cookies are encrypted into the OAuth token. If the server is compromised, there is no stored user data to leak.
-6. **Canadian data residency (our infrastructure).** Azure Canada Central for HIA/POPA compliance. Note: Claude (Anthropic) processes conversations on US-based servers.
+5. **Remote session storage.** Session cookies are encrypted into OAuth tokens rather than a server-side health-record database. This does not eliminate operational platform logs or the exposure of data during processing.
+6. **Disclose actual regions.** The public Static Web App is in Central US; download storage and the separate remote MCP server are in Canada Central. The dormant portal AI configuration is Canada East. Claude processes conversations in the United States.
 7. **No clinical action suggestions.** The MCP server never flags lab values, suggests calling healthcare providers, recommends medication changes, or cross-references clinical data to surface concerns. All clinical interpretation is Claude's responsibility.
 
 ### Passthrough Principle
@@ -416,21 +418,24 @@ The MCP server is a pipe. It does **NOT**:
 
 The project has a landing page at [www.myaihealth.ca](https://www.myaihealth.ca) for explaining the extension and distributing downloads. Includes Open Graph meta tags for rich link previews in chat apps and a section recommending the free PubMed connector for medical research.
 
-- **Hosting:** Azure Static Web Apps (Free tier)
-- **API function:** `/api/request-access` — accepts form submissions, generates a 3-month SAS download link for the `.mcpb` file, and emails the link via Azure Communication Services. Email includes privacy messaging that pre-frames the Claude Desktop security warning.
-- **API function:** `/api/check-update` — called by the extension to check for updates. Returns a 30-minute SAS download URL when a newer version is available.
-- **Email:** `noreply@myaihealth.ca` via Azure Communication Services (custom domain, verified SPF/DKIM/DMARC)
-- **Download storage:** Azure Blob Storage (`myaihealthdownloads` account, `downloads` container)
-- **Analytics:** Azure Application Insights (`myaihealth-insights`) — anonymous visitor tracking (pageviews, sessions, geography, referrers). No cookies used (`disableCookiesUsage: true`). JS SDK loaded on all pages (index, demo, terms, 404).
-- **Privacy messaging:** Landing page and email explain that the Claude Desktop "grant access" warning applies to all extensions and that the local architecture is an intentional privacy feature (data flows directly between user and Alberta Health, no middleman)
+- **Hosting:** Azure Static Web Apps (Free tier), Central US. No website migration is claimed.
+- **Downloads:** `/api/download-latest` returns a 30-minute, read-only HTTPS SAS redirect. No custom per-download Table logging. GitHub Releases is an alternative channel.
+- **Retired endpoint:** `/api/request-access` always returns `410` with the official download URL. It does not inspect personal details, send mail, check CAPTCHA, write Tables, or issue beta invitations. `scripts/send-beta-invite.ts` exits without reading arguments or making requests.
+- **Legacy links:** `/api/download?token=...` redirects to `/api/download-latest` without reading or propagating the token. No-referrer and no-store headers limit onward exposure; they cannot erase URLs already received by platform logs.
+- **Updates:** `/api/check-update` reads the installed version and returns the public download redirector when an update is available.
+- **Download storage:** Azure Blob Storage (`myaihealthdownloads`, `downloads`), Canada Central.
+- **Website telemetry:** Browser analytics and CAPTCHA were removed. Azure hosting/CDN/storage can still receive IP addresses, URLs, timestamps, and browser headers. Google Fonts receives font requests; GitHub and other linked providers apply their own policies.
+- **Historical records:** Earlier request/download Tables, notification emails, logs, and backups may remain. Cleanup needs separately approved scope and retention review; these source changes do not delete them.
 
 ### Deployment
+
+Requires separate release approval. The supported API runtime is Node 22.19.0 or later; both Static Web Apps configurations declare Node 22. Align deployment workflow/CLI runtime settings before rollout.
 
 ```bash
 # Deploy static site + API function
 swa deploy ./static \
   --api-location ./api \
-  --api-language node --api-version 18 \
+  --api-language node --api-version 22 \
   --deployment-token <TOKEN> \
   --env production
 ```
@@ -442,9 +447,8 @@ swa deploy ./static \
 | `STORAGE_CONNECTION_STRING` | Azure Blob Storage connection string |
 | `STORAGE_CONTAINER` | Container name (default: `downloads`) |
 | `MCPB_BLOB_NAME` | Blob name (default: `ab-health-mcp.mcpb`) |
-| `NOTIFY_EMAIL` | Email to receive access request notifications |
-| `ACS_CONNECTION_STRING` | Azure Communication Services connection string |
-| `ACS_FROM_EMAIL` | Verified sender email (default: `noreply@myaihealth.ca`) |
+
+Email, CAPTCHA, download-signing, and beta-invite settings are no longer used by these functions. Remove obsolete production credentials only through a separately approved configuration change.
 
 ## Roadmap
 
@@ -452,7 +456,7 @@ swa deploy ./static \
 - [x] **MyChart Integration** — 20 tools for AHS Connect Care (visits, allergies, care team, messages, documents, scan downloads, proxy access, etc.)
 - [x] **Session auto-refresh** — Cross-keepalives, authenticated MyChart Home/token refresh on auth failures, and desktop cookie/token persistence after context changes
 - [x] **Desktop Extension** — One-click `.mcpb` install for Claude Desktop
-- [x] **Landing Page** — myaihealth.ca with gated download access via Azure Communication Services email
+- [x] **Landing Page** — direct public downloads, with no access-request form or email collection
 - [x] **Open Source** — [Public repository](https://github.com/JCrossman/ab-health-mcp) with security-audited codebase
 - [x] **Phase 3: Remote Mode** — OAuth 2.1 remote connector, Azure Container Apps deployment, zero-storage architecture (implemented, not yet productized)
 - [x] **Update notifications** — In-app update check via `/api/check-update` with direct download link (30-minute SAS URL)
@@ -460,33 +464,34 @@ swa deploy ./static \
 
 ## Privacy Policy
 
-This project accesses personal health information on your behalf. There are two delivery paths with different data flows:
+This project accesses health information on your behalf. The desktop extension, download website, and separate remote MCP server have different data flows. The experimental web-chat portal is disabled.
 
 ### Data flow
 
-| | .mcpb (Claude Desktop extension) | Portal beta (web chat) |
-|---|---|---|
-| **Health data route** | Your machine → Alberta Health (direct, no middleman) | Your browser → Our server (Azure Canada Central) → Alberta Health |
-| **AI provider** | Anthropic Claude (US-based servers) | Azure OpenAI (Microsoft, Canada East) |
-| **Conversation data leaves Canada?** | Yes — sent to Anthropic (US) | No — processed within Canada |
-| **Health data stored by us?** | No | No — in memory only during session |
-| **AI training on your data?** | Opt-in via Anthropic settings | No (Azure OpenAI API data is never used for training) |
+| Surface | Data flow and storage |
+|---|---|
+| Desktop `.mcpb` | Fetches records directly from Alberta's portals, then returns them to Claude. Anthropic processes the conversation in the US and controls retention under its policies and your account settings. |
+| Public website/downloads | Website hosted in Central US, installer storage in Canada Central. No personal details required; platform metadata and third-party font requests still exist. |
+| Separate remote MCP | Health data passes through the Canada Central server. Auth state is encrypted in access tokens; hosting infrastructure may retain operational metadata. This is not the desktop path. |
+| Disabled web-chat portal | No active chat or beta invitations. Dormant AI configuration uses Azure AI Foundry Canada East; future activation needs a separate privacy, retention, and authentication review. |
 
 ### Details
 
-- **No health data is stored by the extension.** Data fetched from Alberta Health portals is returned to the AI and immediately discarded. Nothing is written to disk or any server by this extension.
-- **Session cookies only.** The only data persisted is an encrypted session cookie (AES-256-GCM) stored locally at `~/.mhr-records/session.enc` (local mode) or in the browser (portal mode). It contains authentication state only — no health data.
-- **Credentials never transmitted to us.** You log in through the real Alberta SSO page. Credentials are entered on Alberta's own page and never touch this extension's server.
-- **Canadian data residency (portal path).** The portal uses Azure Canada Central (server) and Azure OpenAI Canada East (AI inference). All portal-path processing stays within Canada (HIA/POPA compliant).
-- **Claude Desktop path exception.** When using the .mcpb extension with Claude Desktop, conversations are processed by Anthropic (US-based servers). See [Anthropic's privacy policy](https://www.anthropic.com/privacy) for details.
+- **Local sign-in state.** The MCP does not maintain a health-record database. It saves encrypted cookies at `~/.mhr-records/session.enc` and a dedicated Chrome profile at `~/.mhr-records/browser-profile`, which may retain cookies and browser data. Session expiry does not prove file erasure.
+- **Disconnect is not complete sign-out.** Ordinary disconnect removes the saved MCP session, but the dedicated browser can remember Alberta sign-in. Local encryption does not protect against someone using the same OS account. It does not clear normal Chrome data, Alberta records, or Claude conversations.
+- **Explicitly forgetting this device.** Use `disconnect_account` with `forget_device: true` only when you want the MCP-owned sign-in files and dedicated browser profile removed. If cleanup is incomplete, the tool reports it. This is local cleanup, not an upstream account logout or deletion of Claude history.
+- **Provider-controlled conversations.** Claude Desktop history is not ours. Retention and model-training rules depend on your plan, settings, and [Anthropic's current privacy policy](https://www.anthropic.com/privacy). No fixed Claude retention period is promised. Other MCP hosts have their own policies.
+- **Sign-in.** Enter credentials only on Alberta's own sign-in page, not in tool arguments, download URLs, support emails, or public issues.
+- **No all-Canadian or compliance promise.** The website is in Central US; Claude processing and other providers can be outside Canada. Resource locations do not establish HIA or POPA certification.
 - **First-run privacy consent.** On first connection via Claude Desktop, a notice explains that health data will be sent to Anthropic's US servers. You must acknowledge before proceeding.
-- **Azure OpenAI data handling.** Microsoft Azure OpenAI may retain prompts for up to 30 days for abuse monitoring unless an opt-out is approved. Data is never used for model training. See [Azure OpenAI data, privacy, and security](https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy).
+- **Dormant portal.** Earlier portal versions stored transcripts in browser localStorage. Disabling the portal does not establish that old copies are gone. Any future activation needs a separate review of [Microsoft's AI data handling](https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy), including configured retention and abuse monitoring.
 - **Data completeness.** Health records may not reflect your complete medical history. Results may take 24–72 hours to appear after testing. Records from out-of-province providers may not be included.
-- **Anonymous website analytics only.** The landing page (myaihealth.ca) uses Azure Application Insights to collect anonymous visitor statistics — page views, session counts, country, browser, and referral source. No cookies are used, no personally identifiable information is collected, and no health data is involved. The MCP extension itself collects no analytics or telemetry.
+- **Website metadata.** No browser analytics, CAPTCHA, access form, or custom download events remain. Platform logs may still contain IP addresses, browser headers, timestamps, request paths, legacy query tokens, or signed download URLs. Google Fonts sees font requests. No-referrer headers limit onward disclosure, not the platform's receipt of a request. Retention depends on each service's settings and policies; a single retention period has not been verified.
+- **Historical data remains pending review.** Earlier names, emails, optional reasons (which may contain health details), and download metadata may persist in Azure Tables, notification mailboxes, logs, or backups. A counts-only inventory and separately approved cleanup are needed. No historical deletion is claimed.
 
 Full privacy policy: **https://www.myaihealth.ca/terms.html**
 
-For privacy concerns, email support@myaihealth.ca or open an issue at https://github.com/JCrossman/ab-health-mcp/issues.
+For privacy concerns, email support@myaihealth.ca. Do not include health records or credentials in email or public GitHub issues.
 
 ## License
 

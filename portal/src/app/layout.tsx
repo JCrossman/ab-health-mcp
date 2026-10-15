@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { isPortalEnabled } from "@/lib/availability";
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,7 +42,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Providers>{children}</Providers>
+        {isPortalEnabled() ? <Providers>{children}</Providers> : children}
       </body>
     </html>
   );

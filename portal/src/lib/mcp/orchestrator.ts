@@ -5,9 +5,9 @@
  * with namespaced tool names to prevent conflicts between servers.
  */
 
-import { tool } from "ai";
+import { tool, type ToolSet } from "ai";
 import { z } from "zod";
-import { getUserMcps, type McpServerConfig } from "./registry";
+import { getUserMcps } from "./registry";
 import { callMcpTool, initMcpSession, listMcpTools } from "./client";
 
 interface McpConnection {
@@ -38,10 +38,7 @@ function isConnectionStale(conn: McpConnection): boolean {
 /**
  * Connect to an MCP server and discover its tools.
  */
-async function connectToMcp(
-  url: string,
-  apiKey?: string
-): Promise<McpConnection> {
+async function connectToMcp(url: string): Promise<McpConnection> {
   // Initialize session
   const sessionId = await initMcpSession(url);
 
@@ -152,11 +149,10 @@ function jsonSchemaToZod(
  * @param userId - The authenticated user ID
  * @param excludeServerIds - Server IDs to exclude (e.g., "ab-health" which has static tools)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getOrchestatedTools(
   userId: string,
   excludeServerIds: string[] = ["ab-health"]
-): Promise<Record<string, any>> {
+): Promise<ToolSet> {
   const userMcps = getUserMcps(userId);
   const enabledMcps = userMcps.filter(
     (mcp) => mcp.enabled && mcp.url && !excludeServerIds.includes(mcp.id)
@@ -167,8 +163,7 @@ export async function getOrchestatedTools(
   }
 
   const userConns = getUserConnections(userId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tools: Record<string, any> = {};
+  const tools: ToolSet = {};
 
   // Connect to each enabled MCP in parallel
   const connectionResults = await Promise.allSettled(
