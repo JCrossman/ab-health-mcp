@@ -1,11 +1,16 @@
 import { ensureMyChartSession, formatError } from '../helpers/session-helpers.js';
 import { MEDICAL_DISCLAIMER_SHORT } from './tool-factory.js';
+import { isDesktopExecution } from '../server/session-context.js';
+import { AuthRequiredError } from '../utils/errors.js';
 
 export const mcSwitchContextTool = {
   name: 'mc_switch_context',
   description: 'Switch MyChart to view a different patient\'s records (Friends & Family proxy access). You MUST call this before using mc_* tools to view shared records. Use mc_list_proxy_access first to get available patient IDs. After switching, use mc_get_test_results for lab results (not get_lab_results — that only shows the logged-in user\'s MHR data). All mc_* prefixed tools will return the selected patient\'s data. Use proxy_id="self" to switch back to your own records.',
   handler: async (params: { proxy_id: string }) => {
     try {
+      if (!isDesktopExecution()) {
+        throw new AuthRequiredError('Patient switching is not supported by this stateless remote connector. Use the desktop extension to select a shared record.');
+      }
       const client = await ensureMyChartSession();
 
       if (params.proxy_id === 'self') {

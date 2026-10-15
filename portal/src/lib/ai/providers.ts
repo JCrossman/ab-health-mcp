@@ -48,7 +48,7 @@ export const SUPPORTED_PROVIDERS: ProviderConfig[] = [
   {
     id: "azure-openai",
     name: "Azure OpenAI (Canada)",
-    description: "GPT-4o on Azure Canada Central — data stays in Canada 🇨🇦",
+    description: "Azure-hosted GPT-4o — processing and retention depend on the deployment and provider terms",
     canadianHosted: true,
     models: ["gpt-4o"],
     keyPlaceholder: "your-azure-key",

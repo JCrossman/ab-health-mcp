@@ -2,6 +2,9 @@
   "name": "portal",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,24 +12,24 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.63",
-    "@ai-sdk/azure": "^3.0.48",
-    "@ai-sdk/google": "^3.0.52",
-    "@ai-sdk/openai": "^3.0.47",
-    "@ai-sdk/react": "^3.0.136",
+    "@ai-sdk/anthropic": "^3.0.128",
+    "@ai-sdk/azure": "^3.0.135",
+    "@ai-sdk/google": "^3.0.131",
+    "@ai-sdk/openai": "^3.0.124",
+    "@ai-sdk/react": "^3.0.305",
     "@types/tough-cookie": "^4.0.5",
-    "ai": "^6.0.134",
-    "applicationinsights": "^3.14.0",
+    "ai": "^6.0.302",
+    "applicationinsights": "^3.17.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
-    "next": "16.2.3",
-    "next-auth": "^5.0.0-beta.30",
-    "puppeteer-core": "^24.40.0",
+    "next": "16.4.0",
+    "next-auth": "5.0.0-beta.32",
+    "puppeteer-core": "^25.12.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "react": "19.2.5",
-    "react-dom": "19.2.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.8.0",
     "remark-gfm": "^4.0.1",
@@ -35,13 +38,13 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.3",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3"
   }
 }

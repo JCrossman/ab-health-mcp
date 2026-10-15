@@ -59,6 +59,8 @@ export default function ApiKeysPage() {
     if (authStatus === "unauthenticated") {
       router.push("/login");
     } else if (authStatus === "authenticated") {
+      // Synchronize with external settings; state changes follow the network response.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchProviders();
     }
   }, [authStatus, router, fetchProviders]);

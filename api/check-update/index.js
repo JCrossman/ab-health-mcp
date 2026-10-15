@@ -2,8 +2,8 @@
  * Azure Function: /api/check-update
  *
  * Called by the MCP extension's connect_account tool to check if a
- * newer version is available. If an update exists, returns a short-lived
- * (24-hour) SAS download URL so the user can update immediately.
+ * newer version is available. If an update exists, returns the public
+ * download redirector so the user can update immediately.
  *
  * Query params:
  *   v — installed version (e.g., "1.1.15")
@@ -12,10 +12,9 @@
  *   { updateAvailable: false } — if current
  *   { updateAvailable: true, latestVersion: "1.1.16", downloadUrl: "https://..." } — if outdated
  *
- * Environment variables (shared with request-access):
+ * Environment variables (shared with download-latest):
  *   STORAGE_CONNECTION_STRING
  *   STORAGE_CONTAINER
- *   MCPB_BLOB_NAME
  */
 
 const { BlobServiceClient } = require('@azure/storage-blob');
@@ -25,7 +24,7 @@ let cachedVersion = null;
 let cacheExpiry = 0;
 
 module.exports = async function (context, req) {
-  const installedVersion = (req.query.v || '').trim();
+  const installedVersion = typeof req.query?.v === 'string' ? req.query.v.trim() : '';
 
   if (!installedVersion) {
     context.res = { status: 400, body: { error: 'Missing version parameter (v)' } };
@@ -40,8 +39,6 @@ module.exports = async function (context, req) {
 
   try {
     const containerName = process.env.STORAGE_CONTAINER || 'downloads';
-    const blobName = process.env.MCPB_BLOB_NAME || 'ab-health-mcp.mcpb';
-
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
@@ -93,8 +90,8 @@ module.exports = async function (context, req) {
         downloadUrl,
       },
     };
-  } catch (err) {
-    context.log.error('check-update error:', err.message);
+  } catch {
+    context.log.error('check-update failed');
     context.res = { status: 200, body: { updateAvailable: false } };
   }
 };

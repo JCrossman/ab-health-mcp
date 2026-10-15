@@ -65,6 +65,10 @@ export default function WelcomePage() {
           >
             Welcome to MyAI Health
           </h1>
+          <p className="mb-4 font-semibold">
+            Web chat is unavailable. These examples describe the separate desktop
+            add-on, which you can download from the home page.
+          </p>
           <p>
             MyAI Health is an assistant that reads your Alberta health records
             and answers your questions in plain English. You can ask things like{" "}
@@ -146,19 +150,14 @@ export default function WelcomePage() {
             How to sign in
           </h2>
           <p>
-            When you click{" "}
-            <strong>
-              &ldquo;I&apos;m ready &mdash; sign me in&rdquo;
-            </strong>{" "}
-            below, a sign-in screen will appear. It&apos;s Alberta&apos;s own
-            login page &mdash; the same one used for My Health Records.
-            You&apos;ll enter your MyAlberta Digital ID and password there, on
-            Alberta&apos;s website.
+            Install the desktop add-on and ask Claude to connect your account.
+            A dedicated browser opens Alberta&apos;s sign-in page. Enter your
+            credentials only there, not in a chat.
           </p>
           <p className="mt-3">
-            We <strong>never</strong> see your password. Alberta handles the
-            login and then lets us know you&apos;ve been approved. Your
-            password stays between you and Alberta.
+            The add-on keeps sign-in cookies in an encrypted local file and
+            uses a dedicated browser profile. Ordinary disconnect removes the
+            MCP session, but that browser may remember your Alberta sign-in.
           </p>
         </section>
 
@@ -230,8 +229,7 @@ export default function WelcomePage() {
             <p>
               Your data comes from My Health Records and AHS MyChart. If
               something looks wrong or missing, check those sites directly.
-              This assistant shows exactly what they show &mdash; nothing more,
-              nothing less.
+              AI summaries can be incomplete or wrong; check the original records.
             </p>
           </div>
         </section>
@@ -251,13 +249,12 @@ export default function WelcomePage() {
             Getting signed out
           </h2>
           <p>
-            For your safety, you&apos;ll be signed out after about{" "}
-            <strong>10 minutes</strong> of not using the chat. This is the same
-            rule that Alberta&apos;s health websites use.
+            Alberta&apos;s health sessions can expire after about 10 minutes
+            of inactivity. This is separate from your Claude sign-in.
           </p>
           <p className="mt-3">
-            If that happens, just sign in again. No data is lost &mdash; your
-            health records are stored by Alberta, not here.
+            Reconnect when asked. Your Alberta records are unchanged. Claude
+            Desktop manages its own conversation history.
           </p>
         </section>
 
@@ -276,15 +273,15 @@ export default function WelcomePage() {
             Your privacy
           </h2>
           <p>
-            Your health data is read straight from Alberta Health and shown to
-            you. We don&apos;t save your lab results, medicines, or any other
-            health details on our end. When your visit ends, the data is gone
-            from our side.
+            The desktop add-on reads records from Alberta and returns them to
+            Claude. Claude and its provider receive the information used in your
+            chat and control their own storage and retention. This project does
+            not delete or change Claude&apos;s history.
           </p>
           <p className="mt-3">
-            The AI that helps read and explain your data runs on{" "}
-            <strong>Microsoft Azure servers in Canada</strong>. Our
-            setup follows Alberta&apos;s privacy rules.
+            Claude processes conversations on US-based servers. The public
+            website is currently hosted in Azure Central US; download storage
+            is in Canada Central. Hosting location is not a legal certification.
           </p>
           <p className="mt-3">
             Read our full{" "}
@@ -350,8 +347,8 @@ export default function WelcomePage() {
             </li>
           </ul>
           <p className="mt-3">
-            We&apos;ll get back to you as quickly as we can &mdash; usually
-            within one business day.
+            Please do not send health records, passwords or screenshots with
+            personal details in a support email.
           </p>
         </section>
 
@@ -363,18 +360,18 @@ export default function WelcomePage() {
             Ready to get started
           </h2>
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-6 sm:p-8 text-center space-y-4">
-            <p className="text-lg font-medium">You&apos;re all set!</p>
+            <p className="text-lg font-medium">Use the desktop add-on</p>
             <p className="text-muted-foreground">
-              Click the button below to go to the chat and sign in with your
-              MyAlberta Digital ID.
+              Web chat and web sign-in remain turned off. Download the desktop
+              add-on from the home page.
             </p>
             <Link
-              href="/chat"
+              href="/"
               className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold px-8 py-4 text-lg shadow hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-2"
               style={{ minHeight: "3.25rem" }}
             >
               <LogIn className="h-5 w-5" aria-hidden="true" />
-              I&apos;m ready &mdash; sign me in
+              Go to desktop downloads
             </Link>
           </div>
         </section>

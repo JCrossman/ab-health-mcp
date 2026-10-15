@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
+import { portalUnavailable } from "@/lib/availability";
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export async function POST(req: NextRequest) {
+  const unavailable = portalUnavailable();
+  if (unavailable) return unavailable;
   const secret = process.env.BETA_INVITE_SECRET;
   if (!secret) {
     return NextResponse.json({ valid: false }, { status: 503 });

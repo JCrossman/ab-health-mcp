@@ -2,6 +2,10 @@
 
 ## Base URL
 
+### MCP transport security
+
+These upstream APIs are distinct from the MCP HTTP endpoint. The desktop extension uses stdio and explicit local session scope. The separate HTTP server requires OAuth authorization on every MCP request and never inherits a desktop session. Web chat is experimental and disabled; an `mcp-session-id` without authorization cannot grant access. OAuth access tokens and cookies must not be included in diagnostics.
+
 ```
 https://myhealthrecords.alberta.ca
 ```

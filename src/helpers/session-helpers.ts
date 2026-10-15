@@ -14,7 +14,7 @@ import { SessionManager, type SessionData } from '../auth/session-manager.js';
 import { MHRClient } from '../api/mhr-client.js';
 import { MyChartClient } from '../api/mychart-client.js';
 import { AuthRequiredError, SessionExpiredError, ApiError, NetworkError, UpstreamContractError } from '../utils/errors.js';
-import { sessionContext } from '../server/session-context.js';
+import { sessionContext, isDesktopExecution, requireRemoteSession } from '../server/session-context.js';
 import { isDemoMode, createDemoMHRClient, createDemoMyChartClient } from './demo/index.js';
 
 const sessionManager = new SessionManager();
@@ -33,15 +33,19 @@ export function invalidateSessionCache(): void {
   pendingSession = undefined;
 }
 
+export function getSessionGeneration(): number {
+  return sessionGeneration;
+}
+
 async function loadSession(): Promise<SessionData | null> {
-  // Check for per-request session (HTTP/OAuth mode) first
-  const contextSession = sessionContext.getStore();
-  if (contextSession) {
-    return contextSession;
-  }
+  if (!isDesktopExecution()) return requireRemoteSession();
 
   // Fall back to global session cache (stdio mode)
-  if (cachedSession) return cachedSession;
+  if (cachedSession) {
+    try { await sessionManager.assertCurrent(cachedSession); }
+    catch (error) { invalidateSessionCache(); throw error; }
+    return cachedSession;
+  }
   const pending = pendingSession ??= {
     generation: sessionGeneration,
     promise: sessionManager.load(),
@@ -66,12 +70,13 @@ let lastMhrKeepAlive = 0;
  * Debounced to at most once per minute.
  */
 async function keepAliveMyChart(): Promise<void> {
+  if (!isDesktopExecution()) return;
   if (Date.now() - lastMyChartKeepAlive < KEEPALIVE_INTERVAL_MS) return;
   lastMyChartKeepAlive = Date.now();
   try {
     const data = await loadSession();
     if (data?.myChartJar && data?.myChartCsrfToken) {
-      const client = new MyChartClient(data.myChartJar, data.myChartCsrfToken);
+      const client = new MyChartClient(data.myChartJar, data.myChartCsrfToken, undefined, () => sessionManager.assertCurrent(data));
       await client.keepAlive();
     }
   } catch {
@@ -84,12 +89,13 @@ async function keepAliveMyChart(): Promise<void> {
  * Debounced to at most once per minute.
  */
 async function keepAliveMHR(): Promise<void> {
+  if (!isDesktopExecution()) return;
   if (Date.now() - lastMhrKeepAlive < KEEPALIVE_INTERVAL_MS) return;
   lastMhrKeepAlive = Date.now();
   try {
     const data = await loadSession();
     if (data?.mhrJar) {
-      const client = new MHRClient(data.mhrJar);
+      const client = new MHRClient(data.mhrJar, () => sessionManager.assertCurrent(data));
       await client.getSessionStatus();
     }
   } catch {
@@ -114,7 +120,7 @@ export async function ensureSession(): Promise<MHRClient> {
   // Cross-keepalive: ping MyChart in the background
   keepAliveMyChart().catch(() => {});
 
-  return new MHRClient(data.mhrJar);
+  return new MHRClient(data.mhrJar, isDesktopExecution() ? () => sessionManager.assertCurrent(data) : undefined);
 }
 
 /**
@@ -151,7 +157,7 @@ export async function ensureMyChartSession(): Promise<MyChartClient> {
       cachedSession = data;
       await sessionManager.save(data);
     }
-  });
+  }, requestScoped ? undefined : () => sessionManager.assertCurrent(data));
 }
 
 /**

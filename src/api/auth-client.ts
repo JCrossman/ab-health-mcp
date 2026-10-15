@@ -11,7 +11,7 @@
 
 import puppeteer, { type Page, type HTTPResponse } from 'puppeteer-core';
 import { CookieJar, Cookie } from 'tough-cookie';
-import { rm } from 'node:fs/promises';
+import { rm, lstat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { logger } from '../utils/logger.js';
@@ -27,6 +27,28 @@ const SSO_LOGIN_URL = 'https://account.alberta.ca/ui/sign-in/signin';
 
 const BROWSER_PROFILE_DIR = join(homedir(), '.mhr-records', 'browser-profile');
 const LOGIN_TIMEOUT_MS = 180_000; // 3 min to handle login
+
+export async function forgetBrowserProfile(): Promise<void> {
+  const missing = (error: unknown) => error instanceof Error && 'code' in error && error.code === 'ENOENT';
+  const parent = await lstat(join(homedir(), '.mhr-records'));
+  if (parent.isSymbolicLink() || !parent.isDirectory()) throw new AuthRequiredError('Cannot safely remove the saved sign-in profile.');
+  try {
+    const profile = await lstat(BROWSER_PROFILE_DIR);
+    if (profile.isSymbolicLink() || !profile.isDirectory()) throw new AuthRequiredError('Cannot safely remove the saved sign-in profile.');
+  } catch (error) {
+    if (missing(error)) return;
+    throw error;
+  }
+  for (const marker of ['SingletonLock', 'SingletonSocket', 'SingletonCookie']) {
+    try {
+      await lstat(join(BROWSER_PROFILE_DIR, marker));
+      throw new AuthRequiredError('Close the MCP sign-in browser before forgetting this device.');
+    } catch (error) {
+      if (!missing(error)) throw error;
+    }
+  }
+  await rm(BROWSER_PROFILE_DIR, { recursive: true });
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

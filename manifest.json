@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "ab-health-mcp",
   "display_name": "Alberta Health Records",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Access your Alberta Health Records and MyChart data through Claude. 44 tools for lab results, immunizations, medications, vitals, appointments, clinical documents, and more.",
-  "long_description": "Connect Claude to your Alberta health data — lab results, immunizations, medications, vitals, appointments, clinical documents, and more. Uses Alberta's official My Health Records portal and AHS MyChart (Connect Care).\n\nOn first use, Chrome opens and you log in at Alberta's real portal with your MyAlberta Digital ID. The extension fetches your data and passes it to Claude for your conversation — nothing is stored.\n\nRequires Chrome and a MyAlberta account with My Health Records access.",
+  "long_description": "Connect Claude to your Alberta health data — lab results, immunizations, medications, vitals, appointments, clinical documents, and more. Uses Alberta's official My Health Records portal and AHS MyChart (Connect Care).\n\nOn first use, Chrome opens and you log in at Alberta's real portal. The extension passes requested records to Claude, which manages your conversation under its own policies. The MCP saves encrypted session cookies and uses a dedicated Chrome profile that can remember your Alberta sign-in. Ordinary disconnect clears the MCP session; explicitly choosing to forget this device also removes its sign-in profile. Neither action deletes Claude conversations.\n\nRequires Chrome, Node 22.19 or newer, and an Alberta.ca account with My Health Records access.",
   "author": {
     "name": "Jeremy Crossman",
     "url": "https://github.com/jcrossman"
@@ -42,7 +42,7 @@
       "win32"
     ],
     "runtimes": {
-      "node": ">=22.0.0"
+      "node": ">=22.19.0"
     }
   },
   "privacy_policies": [

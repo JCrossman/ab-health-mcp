@@ -36,7 +36,7 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 
 ## Technology Stack
 
-- **Runtime:** Node.js 22+
+- **Runtime:** Node.js 22.19+ (patched dependency baseline)
 - **Language:** TypeScript (strict mode)
 - **MCP SDK:** `@modelcontextprotocol/sdk`
 - **HTTP Client:** `undici`
@@ -52,6 +52,7 @@ MCP server that provides a passthrough API to Alberta's My Health Records portal
 - **MHR requests:** Medications, labs, and imaging resolve their control mappings from authenticated CMS metadata. Mappings are per-view and reused within a client instance, never fixed deployment IDs.
 - **MyChart Auth:** `__RequestVerificationToken` from the authenticated Home page. DOM capture is used at sign-in; `parse5` handles HTML refresh. Cookie/token changes persist together in desktop sessions.
 - **Failure handling:** Unsupported/incomplete responses are errors, not empty records. Overviews retain successful sections and identify failed sections with `null`, structured errors, and `partial: true`.
+- **Execution isolation:** Server construction explicitly selects stdio or remote mode. Only stdio may load local sessions; HTTP requires authorization on every request and supplies request-scoped cookies. Missing context is an error, never a desktop fallback.
 
 ## Key Domains
 
@@ -81,13 +82,13 @@ Identical to the DATS project. This MCP server:
 
 ## Data Residency
 
-**Beta (portal):** The portal uses Azure OpenAI Canada East (`abhealthmcp-openai-cae`) as the sole AI provider, controlled by `PORTAL_MODEL_MODE=beta-azure-ca` (default). All AI inference stays within Canada. The MCP server infrastructure is in Azure Canada Central. Both comply with POPA and HIA.
+**Experimental portal (disabled):** The intended beta provider is Azure OpenAI Canada East (`abhealthmcp-openai-cae`), controlled by `PORTAL_MODEL_MODE=beta-azure-ca`. Provider retention and abuse-monitoring settings require verification before activation. Hosting location alone does not establish compliance with privacy legislation.
 
 **MCP extension:** Conversations are processed by Claude (Anthropic) on US-based servers — health data leaves Canada when sent to Claude for interpretation. This extension does not control Anthropic's data handling.
 
 ## Azure Infrastructure
 
-All resources live in the `ab-health-mcp` resource group, Health MCP subscription (`e247b2e9-...`), Canada Central.
+Resources are in the `ab-health-mcp` resource group, Health MCP subscription (`e247b2e9-...`). The Static Web App is in **Central US**, not Canada Central; storage and the remote MCP Container App are in Canada Central and the AI resource is in Canada East. A planned migration is not a completed migration. Platform request metadata can be processed even when application-level collection is disabled.
 
 | Resource | Type | Purpose |
 |----------|------|---------|

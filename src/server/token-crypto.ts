@@ -114,7 +114,7 @@ export async function encryptSessionToToken(
  * Decrypt an access token back into SessionData.
  * Throws if the token is invalid, tampered with, or expired.
  */
-export async function decryptTokenToSession(token: string): Promise<SessionData> {
+export async function decryptTokenToSession(token: string): Promise<SessionData & { expiresAt: number }> {
   let raw: string;
   try {
     raw = decrypt(token);
@@ -128,7 +128,7 @@ export async function decryptTokenToSession(token: string): Promise<SessionData>
     throw new Error(`Unsupported token version: ${envelope.version}`);
   }
 
-  if (envelope.expiresAt < Math.floor(Date.now() / 1000)) {
+  if (!Number.isSafeInteger(envelope.expiresAt) || envelope.expiresAt <= Math.floor(Date.now() / 1000)) {
     throw new Error('Token has expired');
   }
 
@@ -138,6 +138,7 @@ export async function decryptTokenToSession(token: string): Promise<SessionData>
     : undefined;
 
   return {
+    expiresAt: envelope.expiresAt,
     mhrJar,
     myChartJar,
     myChartCsrfToken: envelope.myChartCsrfToken,

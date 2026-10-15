@@ -47,12 +47,22 @@ This project handles protected health information under Alberta's Health Informa
 
 1. **Never log PII.** No names, health data, cookie values, or identifiers in logs.
 2. **Never store health data.** Only session cookies are persisted, encrypted.
-3. **Canadian data residency (our infrastructure).** All user-data-handling infrastructure in Canada Central or Canada East. The `myaihealth` Static Web App in Central US is migrating to the Container App (no user data on the current SWA beyond email addresses in the request-access flow). Azure OpenAI (`abhealthmcp-openai-cae`) in Canada East is the only LLM for the portal beta. Claude (Anthropic) for the `.mcpb` path still processes on US servers — disclosed in terms/privacy.
+3. **Accurate data-residency disclosure.** The `myaihealth` Static Web App is in Central US. Storage and remote MCP run in Canada Central; the intended, disabled portal model resource is in Canada East. Historical access requests collected names, emails, reasons and request metadata. Disabling new collection is not deletion of existing copies. Claude processes conversations under Anthropic's policies on US infrastructure. Do not present planned migration, region selection or encryption as certification of privacy-law compliance.
 4. **Encrypt at rest.** AES-256-GCM for stored session cookies.
 5. **Credentials never touch the server.** Users enter credentials directly in the Puppeteer browser window. Only session cookies are captured.
 6. **Never suggest clinical actions.** The MCP server is a data passthrough — it must never flag lab values as abnormal/critical, suggest calling healthcare providers (including 911 or Health Link 811), recommend medication changes, alert about drug interactions, cross-reference clinical data to surface potential issues, or suggest screenings/follow-ups. All clinical interpretation and action recommendations are Claude's responsibility, not the MCP server's. This boundary keeps the tool clearly outside Health Canada's medical device regulations.
 
 ## Build Commands
+
+Use Node 22.19 or newer. Security remediation does not authorize publication, enabling the experimental portal, or deleting historical request/download records. Treat source changes and the publicly released installer as separate states.
+
+### Security regression requirements
+
+HTTP tests must exercise actual loopback MCP requests with synthetic tokens for two users, including anonymous requests when a desktop session exists. No remote operation may load/save/clear desktop state or mutate global demo/patient context. Desktop forgetting tests use isolated HOME/profile directories and must preserve unrelated files.
+
+Only `createMcpServer('stdio')` grants desktop execution context. HTTP uses `createMcpServer('remote')` within `runWithSession`; missing context fails closed. Calling a desktop-only tool without `runOnDesktop` is deliberately rejected, including in test harnesses.
+
+Run scoped runtime dependency audits for the root, API and disabled portal. Do not use blanket forced upgrades or equate an advisory count with proof of runtime exploitation. Browser/PDF compatibility checks must use synthetic local pages/documents, never stored profiles or real health records.
 
 ```bash
 npm install

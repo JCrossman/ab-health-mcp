@@ -20,11 +20,14 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { CookieJar } from 'tough-cookie';
 import { logger } from '../utils/logger.js';
+import { withDesktopStorageLock } from './desktop-operation.js';
+import { SessionExpiredError } from '../utils/errors.js';
 
 const STORAGE_DIR = join(homedir(), '.mhr-records');
 const SESSION_FILE = join(STORAGE_DIR, 'session.enc');
 const KEY_FILE = join(STORAGE_DIR, 'key');
 const SALT_FILE = join(STORAGE_DIR, 'salt');
+const GENERATION_FILE = join(STORAGE_DIR, 'session-generation');
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
@@ -34,6 +37,7 @@ export interface SessionData {
   mhrJar: CookieJar;
   myChartJar?: CookieJar;
   myChartCsrfToken?: string;
+  desktopGeneration?: string;
 }
 
 interface SerializedSessionV2 {
@@ -41,6 +45,7 @@ interface SerializedSessionV2 {
   mhr: object;
   myChart?: object;
   myChartCsrfToken?: string;
+  desktopGeneration?: string;
 }
 
 async function ensureStorageDir(): Promise<void> {
@@ -98,13 +103,8 @@ function decrypt(data: Buffer, key: Buffer): string {
 }
 
 export class SessionManager {
-  private pendingWrite: Promise<void> = Promise.resolve();
-
   private queueWrite(operation: () => Promise<void>): Promise<void> {
-    const result = this.pendingWrite.then(operation);
-    // The caller receives the failure; later writes and disconnects can still run.
-    this.pendingWrite = result.catch(() => {});
-    return result;
+    return withDesktopStorageLock(operation);
   }
 
   /**
@@ -116,6 +116,12 @@ export class SessionManager {
 
   private async writeSession(data: SessionData): Promise<void> {
     await ensureStorageDir();
+    if (data.desktopGeneration) {
+      await this.assertCurrent(data);
+    } else {
+      data.desktopGeneration = randomBytes(32).toString('hex');
+      await writeFile(GENERATION_FILE, data.desktopGeneration, { mode: 0o600 });
+    }
     const key = await getEncryptionKey();
 
     const envelope: SerializedSessionV2 = {
@@ -123,6 +129,7 @@ export class SessionManager {
       mhr: await data.mhrJar.serialize(),
       myChart: data.myChartJar ? await data.myChartJar.serialize() : undefined,
       myChartCsrfToken: data.myChartCsrfToken,
+      desktopGeneration: data.desktopGeneration,
     };
 
     const encrypted = encrypt(JSON.stringify(envelope), key);
@@ -148,12 +155,18 @@ export class SessionManager {
    * Returns null if no session exists.
    */
   async load(): Promise<SessionData | null> {
-    await this.pendingWrite;
+    return withDesktopStorageLock(async () => {
     try {
-      const key = await getEncryptionKey();
       const encrypted = await readFile(SESSION_FILE);
+      const key = await getEncryptionKey();
       const serialized = decrypt(encrypted, key);
       const parsed = JSON.parse(serialized);
+      let generation: string | undefined;
+      try { generation = await readFile(GENERATION_FILE, 'utf8'); }
+      catch (error) {
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+      }
+      if (generation !== undefined && generation !== parsed.desktopGeneration) return null;
 
       // v2 format: { version: 2, mhr: {...}, myChart?: {...}, myChartCsrfToken?: "..." }
       if (parsed.version === 2) {
@@ -162,33 +175,54 @@ export class SessionManager {
           ? await CookieJar.deserialize(parsed.myChart)
           : undefined;
         logger.info('Session loaded (v2)');
-        return {
+        const data: SessionData = {
           mhrJar,
           myChartJar,
           myChartCsrfToken: parsed.myChartCsrfToken,
+          desktopGeneration: parsed.desktopGeneration,
         };
+        if (generation === undefined) {
+          data.desktopGeneration = undefined;
+          await this.writeSession(data);
+        }
+        return data;
       }
 
       // v1 format: plain serialized CookieJar (backward compatibility)
       const mhrJar = await CookieJar.deserialize(parsed);
       logger.info('Session loaded (v1 — MHR only)');
-      return { mhrJar };
+      const data = { mhrJar };
+      await this.writeSession(data);
+      return data;
     } catch {
       return null;
     }
+    });
   }
 
   /**
    * Check if a stored session exists.
    */
   async exists(): Promise<boolean> {
-    await this.pendingWrite;
+    return withDesktopStorageLock(async () => {
     try {
       await access(SESSION_FILE);
       return true;
     } catch {
       return false;
     }
+    });
+  }
+
+  async assertCurrent(data: SessionData): Promise<void> {
+    await withDesktopStorageLock(async () => {
+      if (!data.desktopGeneration) throw new SessionExpiredError();
+      let generation: string;
+      try { generation = await readFile(GENERATION_FILE, 'utf8'); }
+      catch { throw new SessionExpiredError(); }
+      if (generation !== data.desktopGeneration) throw new SessionExpiredError();
+      try { await access(SESSION_FILE); } catch { throw new SessionExpiredError(); }
+    });
   }
 
   /**
@@ -196,6 +230,7 @@ export class SessionManager {
    */
   clear(): Promise<void> {
     return this.queueWrite(async () => {
+      await writeFile(GENERATION_FILE, randomBytes(32).toString('hex'), { mode: 0o600 });
       try {
         await unlink(SESSION_FILE);
         logger.info('Session cleared');
@@ -203,6 +238,22 @@ export class SessionManager {
         if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT') return;
         logger.error('Could not remove the saved health portal session.');
         throw error;
+      }
+    });
+  }
+
+  forget(): Promise<void> {
+    return this.queueWrite(async () => {
+      await writeFile(GENERATION_FILE, randomBytes(32).toString('hex'), { mode: 0o600 });
+      for (const file of [SESSION_FILE, KEY_FILE, SALT_FILE]) {
+        try {
+          await unlink(file);
+        } catch (error) {
+          if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
+            logger.error('Could not remove a saved desktop authentication file.');
+            throw error;
+          }
+        }
       }
     });
   }

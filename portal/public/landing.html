@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
   <title>MyAI Health — Your Alberta Health Records, Powered by AI</title>
   <meta name="description" content="Access your Alberta health records with AI. Connect Claude Desktop to My Health Records and AHS MyChart — ask about lab results, vaccines, medicines, vitals, and appointments in plain language.">
   <link rel="canonical" href="https://www.myaihealth.ca/">
@@ -26,26 +27,18 @@
   <meta name="twitter:image" content="https://www.myaihealth.ca/og-image.png">
 
   <link rel="icon" href="/favicon.png" type="image/png">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-  <!-- Azure Application Insights — anonymous visitor analytics -->
-  <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js" crossorigin="anonymous"></script>
-  <script>
-    var appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: {
-      connectionString: "InstrumentationKey=d11257e1-4ef5-4944-bd87-5d93627b3c60;IngestionEndpoint=https://canadacentral-1.in.applicationinsights.azure.com/;LiveEndpoint=https://canadacentral.livediagnostics.monitor.azure.com/;ApplicationId=bcdf162b-32a2-40a6-8775-437da297e092",
-      disableCookiesUsage: true
-    }});
-    appInsights.loadAppInsights();
-    appInsights.trackPageView();
-  </script>
-
   <link rel="stylesheet" href="/styles.css">
-  <link rel="preconnect" href="https://challenges.cloudflare.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; overflow-wrap: anywhere; }
+    :is(a, button, summary):focus-visible { outline: 2px solid #0277b5; outline-offset: 4px; }
+    section[id] { scroll-margin-top: 6rem; }
+    @media (max-width: 1279px) { .desktop-links { display: none; } }
+    @media (max-width: 360px) {
+      h1 { font-size: 2.5rem !important; }
+    }
     .gradient-text {
       background: linear-gradient(135deg, #0277b5, #035f8a);
       -webkit-background-clip: text;
@@ -57,8 +50,8 @@
       scroll-behavior: smooth;
     }
     .fade-in {
-      opacity: 0;
-      transform: translateY(20px);
+      opacity: 1;
+      transform: none;
       transition: opacity 0.6s ease, transform 0.6s ease;
     }
     .fade-in.visible {
@@ -98,7 +91,7 @@
       "priceCurrency": "CAD"
     },
     "softwareVersion": "1.2",
-    "downloadUrl": "https://www.myaihealth.ca/#request-access",
+    "downloadUrl": "https://www.myaihealth.ca/api/download-latest",
     "featureList": "Lab results, immunizations, medications, vitals, blood pressure, blood glucose, diagnostic imaging, procedures, referrals, appointments, allergies, care team, messages, clinical documents",
     "screenshot": "https://www.myaihealth.ca/demo-screenshot.png"
   }
@@ -121,7 +114,7 @@
         "name": "Is my health data stored or shared?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No health data is stored by us. The details depend on how you use it. Claude Desktop extension: your health data goes directly between your computer and Alberta Health — our servers never see it. Your data is then sent to Claude (Anthropic, US-based servers) for your conversation. Web portal beta: your data passes through our Canadian server (Azure Canada Central) and AI (Azure OpenAI Canada East) — everything stays in Canada. In both cases, no health records are written to any database. Only an encrypted sign-in session is kept, for about 10 minutes. Your credentials are entered on Alberta's own sign-in page and never touch our extension."
+          "text": "The desktop extension fetches records directly from Alberta's health portals, then gives them to Claude. Anthropic processes your conversations in the United States and manages their retention under its policies and your settings. The extension saves encrypted sign-in cookies and a dedicated browser profile on your computer. Disconnecting does not delete Claude's conversations or fully sign you out of Alberta. The web portal is disabled. See our Terms of Use for website logs and legacy access-request data."
         }
       },
       {
@@ -161,7 +154,7 @@
         "name": "Why does Claude Desktop say 'Installing will grant access to everything on your computer'?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Claude Desktop shows this warning for all extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The source code is open source on GitHub so you can verify this yourself."
+          "text": "Claude Desktop warns that local extensions run with your operating-system permissions. MyAI Health uses a dedicated Chrome profile and saves encrypted sign-in cookies on your computer. This warning is not a security guarantee. Only install software you trust; the source is available on GitHub."
         }
       },
       {
@@ -193,15 +186,14 @@
         </div>
         <span class="text-lg font-semibold text-navy-900">MyAI Health</span>
       </div>
-      <div class="hidden md:flex items-center gap-8 text-sm text-gray-600">
+      <div class="desktop-links hidden md:flex items-center gap-8 text-sm text-gray-600">
         <a href="#features" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Features</a>
         <a href="#how-it-works" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">How It Works</a>
         <a href="/demo" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">See It In Action</a>
         <a href="#accessibility" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Accessibility</a>
         <a href="#research" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Research</a>
         <a href="#privacy" class="hover:text-brand-500 transition-colors focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Privacy</a>
-        <a href="/chat" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Try Web Chat</a>
-        <a href="#request-access" class="px-4 py-2 border border-brand-500 text-brand-500 rounded-lg hover:bg-brand-50 transition-colors font-medium focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Get Extension</a>
+        <a href="/api/download-latest" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 rounded">Download</a>
       </div>
     </div>
   </nav>
@@ -227,11 +219,8 @@
           medicines, appointments, and more — just by asking.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="/chat" class="px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40">
-            Try Web Chat
-          </a>
-          <a href="#request-access" class="px-8 py-4 border-2 border-brand-200 text-brand-600 rounded-xl hover:bg-brand-50 transition-all text-lg font-semibold">
-            Get Desktop Extension
+          <a href="/api/download-latest" class="px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40">
+            Download extension
           </a>
           <a href="#demo" class="px-8 py-4 text-gray-600 hover:text-brand-500 transition-colors text-lg font-medium flex items-center gap-2">
             Try demo mode
@@ -346,7 +335,7 @@
           <div class="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
           <h3 class="text-xl font-semibold mb-3">Install</h3>
           <p class="text-gray-600 leading-relaxed">
-            Download the extension file and double-click it. Claude Desktop installs it automatically. You'll see a security warning — that's normal and means your data stays on your computer.
+            Download the extension file and double-click it. Claude Desktop installs it automatically. Review its local-access warning and only install software you trust.
           </p>
         </div>
         <!-- Step 2 -->
@@ -377,7 +366,7 @@
             </div>
             <div>
               <h3 class="font-semibold text-green-900 text-lg mb-2">Why does it run on your computer?</h3>
-              <p class="text-green-800 leading-relaxed">With the Claude Desktop extension, your health data goes directly between your computer and Alberta's health portals — it never passes through our servers. Claude Desktop shows a security warning during install because the extension runs locally. <strong>That's the point — it's how we keep your data private.</strong> We chose this approach specifically to protect your health information. (The web portal beta works differently — see the <a href="#privacy" class="underline hover:text-green-900">privacy section</a> below.)</p>
+              <p class="text-green-800 leading-relaxed">The desktop extension fetches records directly from Alberta's health portals, without routing them through our servers. Claude then sends the records used in your conversation to Anthropic. The extension saves sign-in cookies and a dedicated browser profile on your computer. Read <a href="#privacy" class="underline hover:text-green-900">where your data goes</a> before connecting.</p>
             </div>
           </div>
         </div>
@@ -554,7 +543,7 @@
 
         <!-- CTA -->
         <div class="text-center mt-10">
-          <a href="#request-access" class="inline-flex items-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25">
+          <a href="/api/download-latest" class="inline-flex items-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25">
             Get the Extension
             <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -671,7 +660,7 @@
       <div class="text-center mb-12 fade-in">
         <h2 id="privacy-heading" class="text-3xl md:text-4xl font-bold mb-4">Where your data goes</h2>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Here's exactly what happens when you use MyAI Health. We offer two paths — they work differently.
+          The desktop extension is available now. The experimental web portal is disabled.
         </p>
       </div>
 
@@ -683,8 +672,8 @@
             <p class="text-sm text-gray-600">Data goes direct — our servers never see your health records.</p>
           </div>
           <div class="bg-white rounded-xl border border-brand-200 p-4">
-            <p class="font-semibold text-brand-700 mb-1">🌐 Web portal (beta)</p>
-            <p class="text-sm text-gray-600">Data passes through our Canadian server. Everything stays in Canada.</p>
+            <p class="font-semibold text-brand-700 mb-1">🌐 Web portal — disabled</p>
+            <p class="text-sm text-gray-600">Web chat and beta invitations are not available.</p>
           </div>
         </div>
       </div>
@@ -700,7 +689,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-lg text-gray-900">Your computer talks directly to Alberta Health</h3>
-            <p class="text-gray-600 mt-1 leading-relaxed">The extension runs on your computer and fetches your health data straight from Alberta's official portals. With the Claude Desktop extension, your data does not pass through our servers — there's no middleman. <em>(The web portal beta routes data through our Canadian server — see the portal path section above.)</em></p>
+            <p class="text-gray-600 mt-1 leading-relaxed">The extension runs on your computer and fetches your health data straight from Alberta's official portals. These records do not pass through our download website or our remote MCP server.</p>
           </div>
         </div>
 
@@ -716,7 +705,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-lg text-gray-900">Your health data is sent to Claude for your conversation</h3>
-            <p class="text-gray-600 mt-1 leading-relaxed">Claude is an AI made by Anthropic. Their servers are in the <strong>United States</strong>. When Claude reads your health data to answer your questions, that data is sent to Anthropic's servers. Anthropic may keep your conversations for up to 30 days. See <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">Anthropic's privacy policy</a> for details.</p>
+            <p class="text-gray-600 mt-1 leading-relaxed">Claude is made by Anthropic, which processes conversations in the <strong>United States</strong>. Your health data becomes part of that conversation. How long it is kept depends on your account, settings, and <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 font-medium">Anthropic's privacy policy</a>. We do not manage or delete Claude Desktop's conversation history.</p>
           </div>
         </div>
 
@@ -725,14 +714,14 @@
           <svg aria-hidden="true" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
         </div>
 
-        <!-- Step 3: Nothing stored by us -->
+        <!-- Step 3: Local sign-in state -->
         <div class="flex items-start gap-4 md:gap-6 p-6 bg-white border border-gray-100 border-b-0">
           <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
             <span class="text-2xl" role="img" aria-label="Wastebasket">🗑️</span>
           </div>
           <div>
-            <h3 class="font-semibold text-lg text-gray-900">Nothing stored by us</h3>
-            <p class="text-gray-600 mt-1 leading-relaxed">The extension throws away your health data after each conversation. The only thing saved on your computer is an encrypted login session — no health records, no personal information. Your password is entered directly on Alberta's website and never touches the extension.</p>
+            <h3 class="font-semibold text-lg text-gray-900">Sign-in details stay on your computer</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">The MCP does not keep a health-record database. It saves encrypted sign-in cookies and a dedicated Chrome profile, which may retain cookies and browser data. Ordinary disconnect removes the saved MCP session, not the browser's remembered sign-in or Claude's history. Protect your computer account: local encryption does not protect against someone using that same account.</p>
           </div>
         </div>
 
@@ -747,12 +736,14 @@
             <span class="text-2xl" role="img" aria-label="Shield">🛡️</span>
           </div>
           <div>
-            <h3 class="font-semibold text-lg text-gray-900">Protect yourself: turn off AI training</h3>
-            <p class="text-gray-600 mt-1 leading-relaxed">By default, Anthropic may use your conversations to improve Claude. To prevent this, open Claude Desktop and go to <strong>Settings → Privacy → turn off "Improve Claude"</strong>. This tells Anthropic not to use your health conversations for AI training.</p>
+            <h3 class="font-semibold text-lg text-gray-900">Review your AI privacy settings</h3>
+            <p class="text-gray-600 mt-1 leading-relaxed">Check Claude's privacy settings before sharing health records. Training and retention rules depend on your plan and settings. Turning off model improvement is not the same as deleting conversations. Other AI hosts have their own policies.</p>
           </div>
         </div>
 
       </div>
+
+      <p class="text-sm text-gray-600 mt-8 leading-relaxed">Downloads need no name, email, or reason. This website is hosted in Azure Central US; download storage and the separate remote MCP server are in Canada Central. We have removed browser analytics and custom download tracking, but hosting services can still see IP addresses and request metadata. Earlier access requests, emails, and logs may remain pending separately approved cleanup. <a href="/terms" class="text-brand-500 underline">Read the full privacy details</a>.</p>
 
       <!-- Supporting details -->
       <div class="mt-8 grid md:grid-cols-2 gap-4 fade-in max-w-lg mx-auto">
@@ -889,9 +880,9 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-lg font-semibold text-green-800 mb-2">Your health information stays private</h3>
+              <h3 class="text-lg font-semibold text-green-800 mb-2">Check what you share with other tools</h3>
               <p class="text-green-700 leading-relaxed">
-                When Claude searches PubMed, it only sends search words — like "high cholesterol treatment studies." Your name, health data, and personal details are never shared with PubMed. Claude uses your records to pick the right search words, but your private information never leaves your conversation.
+                PubMed receives the search words sent by its connector. Those words can reveal health interests. Review tool requests and avoid including names or personal details. Other connectors have their own privacy policies.
               </p>
             </div>
           </div>
@@ -939,51 +930,21 @@
     </div>
   </section>
 
-  <!-- Request Access Section -->
-  <section id="request-access" aria-labelledby="request-access-heading" class="py-24 px-6">
+  <!-- Keep the old fragment working for bookmarked links. -->
+  <section id="request-access" aria-labelledby="download-heading" class="py-24 px-6">
     <div class="max-w-xl mx-auto">
       <div class="text-center mb-10 fade-in">
-        <h2 id="request-access-heading" class="text-3xl md:text-4xl font-bold mb-4">Request early access</h2>
+        <h2 id="download-heading" class="text-3xl md:text-4xl font-bold mb-4">Download for Claude Desktop</h2>
         <p class="text-lg text-gray-600">
-          We're rolling this out carefully. Submit your info and we'll send you a download link.
+          No sign-up. No name, email, or reason needed.
         </p>
       </div>
-      <form id="access-form" class="space-y-5 fade-in" onsubmit="handleSubmit(event)">
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-          <input type="text" id="name" name="name" required maxlength="200"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all"
-            placeholder="Your name">
-        </div>
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input type="email" id="email" name="email" required maxlength="254"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all"
-            placeholder="you@example.com">
-        </div>
-        <div>
-          <label for="reason" class="block text-sm font-medium text-gray-700 mb-1">Why are you interested? <span class="text-gray-500">(optional)</span></label>
-          <textarea id="reason" name="reason" rows="3" maxlength="2000"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-2 focus:outline-offset-2 focus:outline-brand-600 focus:border-brand-600 transition-all resize-none"
-            placeholder="Tell us a bit about yourself..."></textarea>
-        </div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAACvoY7v_eP-XzIR1" data-theme="light"></div>
-        <button type="submit" id="submit-btn"
-          class="w-full px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-all text-lg font-semibold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40">
-          Request Access
-        </button>
-        <p class="text-xs text-gray-500 text-center mt-3">This tool is not medical advice. By requesting access, you agree to our <a href="/terms" class="underline hover:text-brand-500">Terms of Use</a>.</p>
-      </form>
-      <div id="success-message" role="status" aria-live="polite" class="hidden text-center py-12 fade-in visible">
-        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-          <svg aria-hidden="true" class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-        </div>
-        <h3 class="text-2xl font-semibold mb-2">Request received!</h3>
-        <p class="text-gray-600">We'll review your request and send you a download link by email. This usually takes less than 24 hours.</p>
+      <div class="space-y-5 text-center">
+        <a href="/api/download-latest" class="block px-8 py-4 bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition-colors text-lg font-semibold">Download extension (.mcpb)</a>
+        <p><a href="https://github.com/JCrossman/ab-health-mcp/releases/latest" class="text-brand-500 underline">Or download from GitHub Releases</a></p>
+        <p class="text-sm text-gray-600">Double-click the downloaded file to install. Updating? Install the new file over the existing extension, then restart Claude Desktop.</p>
+        <p class="text-sm text-gray-600">Read our <a href="/terms" class="text-brand-500 underline">Terms of Use and privacy details</a> before connecting. This tool is not medical advice. Web chat and beta invitations are disabled.</p>
       </div>
-      <div id="form-status" role="status" aria-live="polite" class="sr-only"></div>
     </div>
   </section>
 
@@ -1026,7 +987,7 @@
             Is my health data stored or shared?
             <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
-          <p class="mt-4 text-gray-600 leading-relaxed">No health data is stored by us — but the details depend on which path you use. <strong>Claude Desktop extension:</strong> your health data goes directly between your computer and Alberta Health; it never hits our servers. It's then sent to Claude (Anthropic) on US-based servers for your AI conversation. <strong>Web portal beta:</strong> your data passes through our Canadian server (Azure Canada Central) and the AI (Azure OpenAI Canada East) — everything stays in Canada. In both cases, no health data is saved to any database. Only an encrypted sign-in session is stored, and only for about 10 minutes. Your username and password are entered directly on Alberta's sign-in page and never touch our servers.</p>
+          <p class="mt-4 text-gray-600 leading-relaxed">The desktop extension fetches records directly from Alberta's health portals, then gives them to Claude. Anthropic processes your conversations in the United States and manages their retention under its policies and your settings. The extension saves encrypted sign-in cookies and a dedicated browser profile on your computer. Disconnecting does not delete Claude's conversations or fully sign you out of Alberta. The web portal is disabled. See our <a href="/terms" class="text-brand-500 underline">Terms of Use</a> for website logs and legacy access-request data.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
@@ -1061,7 +1022,7 @@
             Why does Claude Desktop say "Installing will grant access to everything on your computer"?
             <svg aria-hidden="true" class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </summary>
-          <p class="mt-4 text-gray-600 leading-relaxed">Claude Desktop shows this warning for <strong>all</strong> extensions that run on your computer — it's not specific to MyAI Health. The extension only connects to Alberta's health portals over the internet. It does not read your files, browse your folders, or access anything else on your computer. The <a href="https://github.com/JCrossman/ab-health-mcp" class="text-brand-500 hover:text-brand-600 underline" target="_blank" rel="noopener noreferrer">source code is open source</a> on GitHub so you can verify this yourself.</p>
+          <p class="mt-4 text-gray-600 leading-relaxed">Claude Desktop warns that local extensions run with your operating-system permissions. MyAI Health uses a dedicated Chrome profile and saves encrypted sign-in cookies on your computer. This warning is not a security guarantee. Only install software you trust; the <a href="https://github.com/JCrossman/ab-health-mcp" class="text-brand-500 hover:text-brand-600 underline" target="_blank" rel="noopener noreferrer">source is available on GitHub</a>.</p>
         </details>
         <details class="bg-white rounded-xl border border-gray-100 p-6 group">
           <summary class="text-lg font-semibold cursor-pointer list-none flex items-center justify-between">
@@ -1128,87 +1089,6 @@
     }, { threshold: 0.1 });
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-    // Form submission
-    async function handleSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submit-btn');
-      const form = document.getElementById('access-form');
-      const success = document.getElementById('success-message');
-
-      btn.disabled = true;
-      btn.textContent = 'Submitting...';
-
-      const data = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        reason: document.getElementById('reason').value,
-        turnstileToken: document.querySelector('[name="cf-turnstile-response"]')?.value || '',
-      };
-
-      if (!data.turnstileToken) {
-        btn.textContent = 'Please complete the verification';
-        document.getElementById('form-status').textContent = 'Error: Please complete the verification checkbox.';
-        btn.disabled = false;
-        setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
-        return;
-      }
-
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 25000);
-        const response = await fetch('/api/request-access', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-
-        if (response.ok) {
-          form.classList.add('hidden');
-          success.classList.remove('hidden');
-          document.getElementById('form-status').textContent = 'Request submitted successfully.';
-        } else {
-          btn.textContent = 'Something went wrong — try again';
-          document.getElementById('form-status').textContent = 'Error: Something went wrong. Please try again.';
-          btn.disabled = false;
-          if (window.turnstile) turnstile.reset();
-          setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
-        }
-      } catch (err) {
-        // First attempt may fail due to Azure cold start — auto-retry once
-        if (!e.target.dataset.retried) {
-          e.target.dataset.retried = 'true';
-          btn.textContent = 'Still working, please wait...';
-          if (window.turnstile) turnstile.reset();
-          // Wait for Turnstile to regenerate token, then retry
-          await new Promise(r => setTimeout(r, 2000));
-          const newToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
-          if (newToken) {
-            data.turnstileToken = newToken;
-          }
-          try {
-            const retryRes = await fetch('/api/request-access', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-            });
-            if (retryRes.ok) {
-              form.classList.add('hidden');
-              success.classList.remove('hidden');
-              document.getElementById('form-status').textContent = 'Request submitted successfully.';
-              return;
-            }
-          } catch {}
-        }
-        btn.textContent = 'Network error — try again';
-        document.getElementById('form-status').textContent = 'Error: Network error. Please try again.';
-        btn.disabled = false;
-        if (window.turnstile) turnstile.reset();
-        setTimeout(() => { btn.textContent = 'Request Access'; }, 3000);
-      }
-    }
 
     // Lightbox for demo images
     const lightbox = document.getElementById('demo-lightbox');

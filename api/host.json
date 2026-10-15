@@ -9,8 +9,7 @@
   },
   "logging": {
     "logLevel": {
-      "default": "Warning",
-      "Function.request-access": "Information"
+      "default": "Warning"
     }
   }
 }

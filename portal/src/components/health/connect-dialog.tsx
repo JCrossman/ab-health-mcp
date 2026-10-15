@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, AlertTriangle, CheckCircle2, Monitor } from "lucide-react";
 import { AuthStreamCanvas } from "./auth-stream-canvas";
@@ -15,8 +15,8 @@ interface ConnectDialogProps {
  * Health account connection dialog.
  *
  * Opens a streamed cloud browser showing Alberta's real SSO login page.
- * The user types credentials directly into the streamed view — our code
- * never sees passwords.
+ * Input is relayed through the portal backend; do not claim credentials
+ * bypass our infrastructure.
  */
 export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps) {
   const [streaming, setStreaming] = useState(false);
@@ -24,6 +24,12 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
   const [success, setSuccess] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<Element | null>(null);
+  const handleClose = useCallback(() => {
+    setError(null);
+    setSuccess(false);
+    setStreaming(false);
+    onClose();
+  }, [onClose]);
 
   // Capture trigger element and manage focus on open/close.
   useEffect(() => {
@@ -71,8 +77,7 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, streaming]);
+  }, [open, streaming, handleClose]);
 
   if (!open) return null;
 
@@ -81,7 +86,7 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
     setError(null);
   };
 
-  const handleConnected = (result: { mhr: boolean; myChart: boolean }) => {
+  const handleConnected = () => {
     setSuccess(true);
     setStreaming(false);
     onConnected();
@@ -94,13 +99,6 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
   const handleStreamError = (message: string) => {
     setError(message);
     setStreaming(false);
-  };
-
-  const handleClose = () => {
-    setError(null);
-    setSuccess(false);
-    setStreaming(false);
-    onClose();
   };
 
   return (
@@ -140,7 +138,7 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
               <ul className="space-y-1 list-disc list-inside">
                 <li>Alberta&apos;s login page appears in a secure browser below</li>
                 <li>You type your credentials directly — they go straight to Alberta</li>
-                <li>We never see your password</li>
+                <li>Your input passes through our server-hosted browser</li>
                 <li>After you sign in, you&apos;re connected automatically</li>
                 <li>Your sign-in expires after about 10 minutes of no activity</li>
               </ul>
@@ -194,7 +192,7 @@ export function ConnectDialog({ open, onClose, onConnected }: ConnectDialogProps
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          Protected under Alberta&apos;s Health Information Act (HIA)
+          Read the privacy details before connecting. Web chat remains unavailable.
         </p>
       </div>
     </div>

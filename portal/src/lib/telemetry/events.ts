@@ -1,111 +1,75 @@
-/**
- * Typed App Insights event emitter.
- *
- * All events are anonymous — no PII, no prompt content, no health data.
- * A PII guard strips any prop value longer than 64 chars or containing '@'
- * (email shape) before emission.
- */
-
 import type { TelemetryClient } from "applicationinsights";
+import { isPortalEnabled } from "../availability";
 
-let _client: TelemetryClient | null = null;
+type Quota = "daily-messages" | "conversation-tokens" | "daily-conversations" |
+  "per-user-spend" | "global-daily-spend" | "global-monthly-spend" | "abuse-throttle";
+type Events = {
+  "chat.message.sent": { messageIndex: number; inputTokensEstimated: number };
+  "chat.message.completed": { inputTokens: number; outputTokens: number; estCostUsd: number; latencyMs: number };
+  "chat.off_topic.blocked": Record<string, never>;
+  "chat.quota.hit": { quota: Quota };
+  "chat.abuse.throttled": Record<string, never>;
+  "chat.error": { errorType: "request" | "provider" | "unknown" };
+  "chat.suspicious_output": Record<string, never>;
+};
 
-/** Called once from instrumentation.ts after App Insights is initialized. */
-export function setTelemetryClient(client: TelemetryClient): void {
-  _client = client;
+const fields: Record<keyof Events, Record<string, "number" | readonly string[]>> = {
+  "chat.message.sent": { messageIndex: "number", inputTokensEstimated: "number" },
+  "chat.message.completed": { inputTokens: "number", outputTokens: "number", estCostUsd: "number", latencyMs: "number" },
+  "chat.off_topic.blocked": {},
+  "chat.quota.hit": { quota: ["daily-messages", "conversation-tokens", "daily-conversations", "per-user-spend", "global-daily-spend", "global-monthly-spend", "abuse-throttle"] },
+  "chat.abuse.throttled": {},
+  "chat.error": { errorType: ["request", "provider", "unknown"] },
+  "chat.suspicious_output": {},
+};
+
+let client: Pick<TelemetryClient, "trackEvent"> | null = null;
+
+export function isTelemetryEnabled(): boolean {
+  return isPortalEnabled() && process.env.PORTAL_TELEMETRY_ENABLED === "true";
 }
 
-/** Strip values that look like PII. */
-function redactPiiProps(
-  props: Record<string, string>
-): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(props)) {
-    if (v.length > 64 || v.includes("@")) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(`[telemetry] PII guard redacted prop "${k}"`);
+export function setTelemetryClient(value: Pick<TelemetryClient, "trackEvent">): void {
+  client = isTelemetryEnabled() ? value : null;
+}
+
+/** No user, conversation, prompt-derived hashes, free text, URLs or health fields. */
+export function trackEvent<N extends keyof Events>(name: N, props: Events[N]): void {
+  if (!isTelemetryEnabled() || !client || !Object.hasOwn(fields, name)) return;
+  const properties: Record<string, string> = {};
+  for (const [key, rule] of Object.entries(fields[name])) {
+    const value = (props as Record<string, unknown>)[key];
+    if (rule === "number") {
+      if (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1e9) {
+        properties[key] = String(value);
       }
-      out[k] = "<redacted>";
-    } else {
-      out[k] = v;
+    } else if (typeof value === "string" && rule.includes(value)) {
+      properties[key] = value;
     }
   }
-  return out;
+  client.trackEvent({ name, properties });
 }
 
-/**
- * Emit a named App Insights event.
- * Props are serialized to strings; all values pass through the PII guard.
- * No-op if App Insights is not initialized.
- */
-export function trackEvent(
-  name: string,
-  props: Record<string, string | number | boolean>
-): void {
-  if (!_client) return;
-  const stringProps: Record<string, string> = {};
-  for (const [k, v] of Object.entries(props)) {
-    stringProps[k] = String(v);
-  }
-  _client.trackEvent({ name, properties: redactPiiProps(stringProps) });
+export function trackMessageSent(messageIndex: number, inputTokensEstimated: number): void {
+  trackEvent("chat.message.sent", { messageIndex, inputTokensEstimated });
 }
 
-// ── Typed event helpers ────────────────────────────────────────────────────
-
-export function trackMessageSent(
-  userHash: string,
-  conversationIdHash: string,
-  messageIndex: number,
-  inputTokensEstimated: number
-): void {
-  trackEvent("chat.message.sent", {
-    userHash,
-    conversationIdHash,
-    messageIndex,
-    inputTokensEstimated,
-  });
+export function trackMessageCompleted(inputTokens: number, outputTokens: number, estCostUsd: number, latencyMs: number): void {
+  trackEvent("chat.message.completed", { inputTokens, outputTokens, estCostUsd, latencyMs });
 }
 
-export function trackMessageCompleted(
-  userHash: string,
-  conversationIdHash: string,
-  inputTokens: number,
-  outputTokens: number,
-  estCostUsd: number,
-  latencyMs: number
-): void {
-  trackEvent("chat.message.completed", {
-    userHash,
-    conversationIdHash,
-    inputTokens,
-    outputTokens,
-    estCostUsd,
-    latencyMs,
-  });
+export function trackOffTopicBlocked(): void {
+  trackEvent("chat.off_topic.blocked", {});
 }
 
-export function trackOffTopicBlocked(userHash: string, reason: string): void {
-  trackEvent("chat.off_topic.blocked", { userHash, reason });
+export function trackQuotaHit(quota: Quota): void {
+  trackEvent("chat.quota.hit", { quota });
 }
 
-export function trackQuotaHit(
-  userHash: string,
-  quota:
-    | "daily-messages"
-    | "conversation-tokens"
-    | "daily-conversations"
-    | "per-user-spend"
-    | "global-daily-spend"
-    | "global-monthly-spend"
-    | "abuse-throttle"
-): void {
-  trackEvent("chat.quota.hit", { userHash, quota });
+export function trackAbuseThrottled(): void {
+  trackEvent("chat.abuse.throttled", {});
 }
 
-export function trackAbuseThrottled(userHash: string): void {
-  trackEvent("chat.abuse.throttled", { userHash });
-}
-
-export function trackChatError(userHash: string, errorType: string): void {
-  trackEvent("chat.error", { userHash, errorType });
+export function trackChatError(errorType: Events["chat.error"]["errorType"]): void {
+  trackEvent("chat.error", { errorType });
 }

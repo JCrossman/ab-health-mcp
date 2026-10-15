@@ -27,7 +27,7 @@ export function extractPdfText(buffer: Buffer): string | null {
 
     for (let i = 0; i < pageCount; i++) {
       const page = doc.loadPage(i);
-      const text = page.toStructuredText().asText();
+      const text = page.toStructuredText({}).asText();
       if (text?.trim()) {
         parts.push(text.trim());
       }
@@ -39,8 +39,8 @@ export function extractPdfText(buffer: Buffer): string | null {
       return null;
     }
     return fullText;
-  } catch (error) {
-    logger.warn(`PDF text extraction failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+  } catch {
+    logger.warn('PDF text extraction failed');
     return null;
   }
 }
@@ -67,8 +67,8 @@ export function renderPdfAsImages(buffer: Buffer): Array<{ data: string; page: n
     }
 
     return pages.length > 0 ? pages : null;
-  } catch (error) {
-    logger.warn(`PDF rendering failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+  } catch {
+    logger.warn('PDF rendering failed');
     return null;
   }
 }

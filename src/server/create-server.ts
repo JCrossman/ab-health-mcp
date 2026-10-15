@@ -13,7 +13,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { VERSION } from '../version.js';
-import { withPerfTiming } from '../utils/perf.js';
+import { withPerfTiming as timeTool } from '../utils/perf.js';
+import { runOnDesktop, requireRemoteSession } from './session-context.js';
 
 // MHR tools (complex — individual files)
 import { connectAccountTool } from '../tools/connect-account.js';
@@ -81,7 +82,15 @@ import { getProviderDetailsTool } from '../tools/get-provider-details.js';
 /**
  * Create a fully configured MCP server with all 44 tools registered.
  */
-export function createMcpServer(): McpServer {
+export function createMcpServer(mode: 'stdio' | 'remote'): McpServer {
+  function withPerfTiming<Args extends unknown[], Result>(name: string, handler: (...args: Args) => Result) {
+    const timed = timeTool(name, handler);
+    return (...args: Args): Result => {
+      if (mode === 'stdio') return runOnDesktop(() => timed(...args));
+      requireRemoteSession();
+      return timed(...args);
+    };
+  }
   const server = new McpServer(
     {
       name: 'ab-health-mcp',
@@ -125,7 +134,9 @@ export function createMcpServer(): McpServer {
   );
 
   server.tool(checkConnectionTool.name, checkConnectionTool.description, {}, { title: 'Check Connection',readOnlyHint: true, destructiveHint: false }, withPerfTiming(checkConnectionTool.name, checkConnectionTool.handler));
-  server.tool(disconnectAccountTool.name, disconnectAccountTool.description, {}, { title: 'Disconnect Account',readOnlyHint: false, destructiveHint: false }, withPerfTiming(disconnectAccountTool.name, disconnectAccountTool.handler));
+  server.tool(disconnectAccountTool.name, disconnectAccountTool.description, {
+    forget_device: z.boolean().optional().describe('Only when the user explicitly asks to forget this device: remove MCP saved sign-in and its dedicated browser profile. Does not delete Claude conversations.'),
+  }, { title: 'Disconnect Account', readOnlyHint: false, destructiveHint: true }, withPerfTiming(disconnectAccountTool.name, disconnectAccountTool.handler));
   server.tool(getHealthOverviewTool.name, getHealthOverviewTool.description, {}, { title: 'Health Overview',readOnlyHint: true, destructiveHint: false }, withPerfTiming(getHealthOverviewTool.name, getHealthOverviewTool.handler));
 
   // Shared pagination params (reused across many tools)

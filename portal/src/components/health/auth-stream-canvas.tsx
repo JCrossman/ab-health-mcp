@@ -34,6 +34,7 @@ export function AuthStreamCanvas({
   const [state, setState] = useState<StreamState>("connecting");
   const [statusMessage, setStatusMessage] = useState("Launching secure browser...");
   const viewportRef = useRef({ width: 1280, height: 800 });
+  const [viewport, setViewport] = useState({ width: 1280, height: 800 });
 
   // Track pending mousemove for debouncing
   const pendingMoveRef = useRef<{ x: number; y: number } | null>(null);
@@ -79,8 +80,6 @@ export function AuthStreamCanvas({
   useEffect(() => {
     if (!active) return;
 
-    setState("connecting");
-    setStatusMessage("Launching secure browser...");
     sessionIdRef.current = null;
 
     const es = new EventSource("/api/auth-stream");
@@ -103,6 +102,7 @@ export function AuthStreamCanvas({
             width: (data.width as number) || 1280,
             height: (data.height as number) || 800,
           };
+          setViewport(viewportRef.current);
           setState("streaming");
           setStatusMessage("");
           break;
@@ -287,7 +287,7 @@ export function AuthStreamCanvas({
         className={`relative rounded-lg overflow-hidden border border-border bg-black ${
           showCanvas ? "" : "hidden"
         }`}
-        style={{ aspectRatio: `${viewportRef.current.width} / ${viewportRef.current.height}` }}
+        style={{ aspectRatio: `${viewport.width} / ${viewport.height}` }}
       >
         <canvas
           ref={canvasRef}
@@ -314,8 +314,8 @@ export function AuthStreamCanvas({
 
       {showCanvas && (
         <p className="text-xs text-muted-foreground text-center">
-          This is Alberta&apos;s official login page running in a secure browser.
-          Your password goes directly to Alberta — we never see it.
+          Alberta&apos;s login page runs in a server-hosted browser.
+          Your input passes through this service before reaching Alberta.
         </p>
       )}
     </div>

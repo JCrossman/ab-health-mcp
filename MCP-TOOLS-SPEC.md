@@ -95,9 +95,11 @@ Verifies that the auth session is established and valid.
 
 ### disconnect_account
 
-Clears stored session cookies.
+Clears the desktop MCP session. Ordinary disconnect preserves the dedicated browser's remembered Alberta sign-in; it is not an upstream logout.
 
-**Parameters:** None
+**Parameters:** `forget_device` (optional boolean, default false). Set only when the user explicitly asks to forget this device. Removes the MCP's saved session/key material and dedicated browser profile, not Claude conversations, the normal Chrome profile, or Alberta records. An active browser or deletion failure returns an error instead of claiming complete cleanup.
+
+Remote HTTP clients must disconnect through connector settings. They cannot use this tool to clear desktop files. The stateless connector also rejects interactive `connect_account`, demo changes and `mc_switch_context`; it must never mutate shared sign-in state. Data and connection-status tools use only the authenticated request's health session.
 
 **Behavior:**
 1. Delete encrypted session file (local) or Cosmos DB record (remote)

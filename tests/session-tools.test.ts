@@ -1,16 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it as baseIt, vi } from 'vitest';
 import { CookieJar } from 'tough-cookie';
 import type { SessionData } from '../src/auth/session-manager.js';
 import { MHRClient } from '../src/api/mhr-client.js';
 import { MyChartClient } from '../src/api/mychart-client.js';
 import { ensureMyChartSession, invalidateSessionCache, sessionManager } from '../src/helpers/session-helpers.js';
-import { runWithSession } from '../src/server/session-context.js';
+import { runWithSession, runOnDesktop } from '../src/server/session-context.js';
 import { checkConnectionTool } from '../src/tools/check-connection.js';
 import { disconnectAccountTool } from '../src/tools/disconnect-account.js';
 import { homePage, profile, requestUrl } from './fixtures.js';
 
 const fetchMock = vi.fn<typeof fetch>();
+vi.mock('../src/auth/desktop-operation.js', () => ({
+  withDesktopOperation: (operation: () => Promise<unknown>) => operation(),
+  withDesktopStorageLock: (operation: () => Promise<unknown>) => operation(),
+}));
 let session: SessionData;
+const it = (name: string, fn: () => Promise<void>) => baseIt(name, () => runOnDesktop(fn));
 
 beforeEach(() => {
   vi.restoreAllMocks();
@@ -24,6 +29,7 @@ beforeEach(() => {
   vi.spyOn(sessionManager, 'exists').mockResolvedValue(true);
   vi.spyOn(sessionManager, 'save').mockResolvedValue();
   vi.spyOn(sessionManager, 'clear').mockResolvedValue();
+  vi.spyOn(sessionManager, 'assertCurrent').mockResolvedValue();
   vi.spyOn(MHRClient.prototype, 'getSessionStatus').mockResolvedValue({
     isSessionExpired: false,
     numberOfMilliSecondsLeftForSessionExpire: 600_000,

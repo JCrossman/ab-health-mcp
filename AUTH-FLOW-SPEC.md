@@ -89,6 +89,16 @@ Uses `~/.mhr-records/browser-profile` to preserve SSO cookies across auth attemp
 - Subsequent logins: SSO cookies auto-authenticate (0 rate-limited calls)
 - If stale cookies cause issues (429/loops), profile is cleared and retried
 
+Ordinary desktop disconnect deletes the encrypted MCP session but preserves this remembered sign-in. Explicit `disconnect_account(forget_device=true)` removes the dedicated profile and MCP credential files after serialized sign-in operations finish. It does not clear Claude conversations, the user's normal Chrome profile, or sessions on other devices. Cleanup errors and active-profile locks are reported. Local encryption does not defend against another process already operating as the same OS user.
+
+A non-secret `session-generation` marker remains after cleanup to revoke cached sessions across updated MCP processes. Reads, refreshes and saves validate that marker under the shared desktop lock. Legacy v1/v2 files migrate only when no revocation marker exists. Stop old-version MCP processes before upgrading; they do not implement this guard, and no local mechanism revokes copies already held by other software or upstream sessions. Interrupted lock directories fail closed and are not automatically reclaimed from a possibly stale PID. Recover only `desktop-operation.lock` after confirming all MCP/sign-in processes have stopped; never remove the revocation marker as a recovery shortcut.
+
+### HTTP isolation boundary
+
+Every HTTP MCP operation requires a valid OAuth access token with `health:read`; a transport session ID is never authorization. The HTTP endpoint is stateless and accepts JSON POSTs, with the parsed body passed to the SDK. A request-scoped cookie jar is derived from that request's verified token. Missing request context fails closed even when a desktop session exists under the service's OS account.
+
+Only explicitly constructed stdio servers can use desktop storage, interactive browser sign-in, global demo state or local forgetting. Remote patient switching is unsupported until context changes can be retained safely. Anonymous portal transport initialization is removed; experimental web chat remains disabled.
+
 ## Auth Architecture (Historical Context)
 
 Two approaches were evaluated. The original spec recommended starting with Option B.

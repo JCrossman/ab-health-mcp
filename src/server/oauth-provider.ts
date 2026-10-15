@@ -16,6 +16,7 @@ import type { OAuthServerProvider, AuthorizationParams } from '@modelcontextprot
 import type { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import type { OAuthClientInformationFull, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
+import { InvalidTokenError } from '@modelcontextprotocol/sdk/server/auth/errors.js';
 import type { SessionData } from '../auth/session-manager.js';
 import { encryptSessionToToken, decryptTokenToSession } from './token-crypto.js';
 import { logger } from '../utils/logger.js';
@@ -301,14 +302,18 @@ export class HealthOAuthProvider implements OAuthServerProvider {
    * The decrypted session data is stored in AuthInfo.extra for downstream use.
    */
   async verifyAccessToken(token: string): Promise<AuthInfo> {
-    const sessionData = await decryptTokenToSession(token);
-
-    return {
-      token,
-      clientId: 'verified',
-      scopes: ['health:read'],
-      extra: { sessionData },
-    };
+    try {
+      const sessionData = await decryptTokenToSession(token);
+      return {
+        token,
+        clientId: 'verified',
+        scopes: ['health:read'],
+        expiresAt: sessionData.expiresAt,
+        extra: { sessionData },
+      };
+    } catch {
+      throw new InvalidTokenError('Invalid or expired authorization.');
+    }
   }
 
   destroy(): void {

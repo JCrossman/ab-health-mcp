@@ -13,6 +13,7 @@
  */
 
 import { resetActivePersona } from './context.js';
+import { isDesktopExecution, requireDesktopExecution } from '../../server/session-context.js';
 
 export { createDemoMHRClient, createDemoMyChartClient } from './clients.js';
 export { getAllPersonas, getPersonaById, getSelfPersona, type Persona } from './personas/index.js';
@@ -22,6 +23,7 @@ export { DEMO_NOTE } from './shared.js';
 let _runtimeDemoMode = false;
 
 export function setDemoMode(enabled: boolean): void {
+  requireDesktopExecution();
   _runtimeDemoMode = enabled;
   if (!enabled) {
     // Always start a fresh demo session from Self.
@@ -30,5 +32,5 @@ export function setDemoMode(enabled: boolean): void {
 }
 
 export function isDemoMode(): boolean {
-  return _runtimeDemoMode;
+  return isDesktopExecution() && _runtimeDemoMode;
 }
