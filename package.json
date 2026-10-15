@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "build:css": "npx @tailwindcss/cli -i static/input.css -o static/styles.css --minify",
+    "build:css": "tailwindcss -i static/input.css -o static/styles.css --minify",
     "start": "node build/index.js",
     "start:http": "node build/server/http-index.js",
     "test": "vitest run",
